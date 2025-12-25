@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -19,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/Logo";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard", active: true },
@@ -31,26 +34,147 @@ const sidebarItems = [
   { icon: Sparkles, label: "Documents IA", path: "/documents-ia" },
 ];
 
-const stats = [
-  { label: "Revenus du mois", value: "45.2M GNF", change: "+12%", positive: true, icon: TrendingUp },
-  { label: "Dépenses du mois", value: "12.8M GNF", change: "+5%", positive: false, icon: TrendingDown },
-  { label: "Bénéfice estimé", value: "32.4M GNF", change: "+18%", positive: true, icon: TrendingUp },
-  { label: "Factures non payées", value: "8", change: "3 en retard", positive: false, icon: Receipt },
-];
+interface DashboardStats {
+  revenus: number;
+  depenses: number;
+  facturesNonPayees: number;
+}
 
-const tasks = [
-  { title: "Relancer devis #0024 - M. Diallo", priority: "high" },
-  { title: "Facture #0089 arrive à échéance", priority: "medium" },
-  { title: "Appeler Mme. Camara pour suivi", priority: "low" },
-];
+interface Profile {
+  nom: string;
+}
 
-const recentClients = [
-  { name: "Mamadou Diallo", email: "m.diallo@email.com", status: "actif" },
-  { name: "Fatoumata Camara", email: "f.camara@email.com", status: "actif" },
-  { name: "Ibrahima Sow", email: "i.sow@email.com", status: "prospect" },
-];
+interface Tache {
+  id: string;
+  titre: string;
+  statut: string;
+}
+
+interface Client {
+  id: string;
+  nom: string;
+  email: string | null;
+}
 
 const Dashboard = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [stats, setStats] = useState<DashboardStats>({ revenus: 0, depenses: 0, facturesNonPayees: 0 });
+  const [taches, setTaches] = useState<Tache[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user) return;
+
+      // Fetch profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("nom, entreprise_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profileData) {
+        setProfile({ nom: profileData.nom });
+
+        const entrepriseId = profileData.entreprise_id;
+
+        if (entrepriseId) {
+          // Fetch revenus for this month
+          const startOfMonth = new Date();
+          startOfMonth.setDate(1);
+          startOfMonth.setHours(0, 0, 0, 0);
+
+          const { data: revenusData } = await supabase
+            .from("revenus")
+            .select("montant")
+            .eq("entreprise_id", entrepriseId)
+            .gte("date", startOfMonth.toISOString().split("T")[0]);
+
+          const totalRevenus = revenusData?.reduce((sum, r) => sum + Number(r.montant), 0) || 0;
+
+          // Fetch depenses for this month
+          const { data: depensesData } = await supabase
+            .from("depenses")
+            .select("montant")
+            .eq("entreprise_id", entrepriseId)
+            .gte("date", startOfMonth.toISOString().split("T")[0]);
+
+          const totalDepenses = depensesData?.reduce((sum, d) => sum + Number(d.montant), 0) || 0;
+
+          // Fetch unpaid invoices count
+          const { count: unpaidCount } = await supabase
+            .from("factures")
+            .select("*", { count: "exact", head: true })
+            .eq("entreprise_id", entrepriseId)
+            .eq("statut", "non_paye");
+
+          setStats({
+            revenus: totalRevenus,
+            depenses: totalDepenses,
+            facturesNonPayees: unpaidCount || 0,
+          });
+
+          // Fetch today's tasks
+          const today = new Date().toISOString().split("T")[0];
+          const { data: tachesData } = await supabase
+            .from("taches")
+            .select("id, titre, statut")
+            .eq("entreprise_id", entrepriseId)
+            .eq("date", today)
+            .eq("statut", "a_faire")
+            .limit(5);
+
+          setTaches(tachesData || []);
+
+          // Fetch recent clients
+          const { data: clientsData } = await supabase
+            .from("clients")
+            .select("id, nom, email")
+            .eq("entreprise_id", entrepriseId)
+            .order("created_at", { ascending: false })
+            .limit(3);
+
+          setClients(clientsData || []);
+        }
+      }
+
+      setIsLoading(false);
+    };
+
+    fetchDashboardData();
+  }, [user]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("fr-GN", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount) + " GNF";
+  };
+
+  const statsDisplay = [
+    { label: "Revenus du mois", value: formatCurrency(stats.revenus), positive: true, icon: TrendingUp },
+    { label: "Dépenses du mois", value: formatCurrency(stats.depenses), positive: false, icon: TrendingDown },
+    { label: "Bénéfice estimé", value: formatCurrency(stats.revenus - stats.depenses), positive: stats.revenus > stats.depenses, icon: TrendingUp },
+    { label: "Factures non payées", value: String(stats.facturesNonPayees), positive: stats.facturesNonPayees === 0, icon: Receipt },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -84,7 +208,10 @@ const Dashboard = () => {
             <Settings className="w-5 h-5" />
             <span className="font-medium text-sm">Paramètres</span>
           </Link>
-          <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full">
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full"
+          >
             <LogOut className="w-5 h-5" />
             <span className="font-medium text-sm">Déconnexion</span>
           </button>
@@ -109,7 +236,9 @@ const Dashboard = () => {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
               </Button>
               <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">JD</span>
+                <span className="text-sm font-bold text-primary">
+                  {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
+                </span>
               </div>
             </div>
           </div>
@@ -122,7 +251,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold mb-2">Bonjour, Jean 👋</h1>
+            <h1 className="text-3xl font-bold mb-2">Bonjour, {profile?.nom?.split(" ")[0] || "Utilisateur"} 👋</h1>
             <p className="text-muted-foreground">
               Voici un aperçu de votre activité aujourd'hui
             </p>
@@ -156,7 +285,7 @@ const Dashboard = () => {
             transition={{ delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
           >
-            {stats.map((stat, index) => (
+            {statsDisplay.map((stat) => (
               <div
                 key={stat.label}
                 className="p-6 rounded-xl card-gradient border border-border/50 hover:border-primary/30 transition-all duration-300"
@@ -168,9 +297,6 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                <div className={`text-sm ${stat.positive ? "text-success" : "text-destructive"}`}>
-                  {stat.change}
-                </div>
               </div>
             ))}
           </motion.div>
@@ -191,19 +317,22 @@ const Dashboard = () => {
                 </Button>
               </div>
               <div className="space-y-3">
-                {tasks.map((task, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-border/30 hover:border-primary/20 transition-colors"
-                  >
-                    <div className={`w-2 h-2 rounded-full ${
-                      task.priority === "high" ? "bg-destructive" :
-                      task.priority === "medium" ? "bg-warning" : "bg-success"
-                    }`} />
-                    <span className="flex-1 text-sm">{task.title}</span>
-                    <Button variant="ghost" size="sm">Terminer</Button>
-                  </div>
-                ))}
+                {taches.length > 0 ? (
+                  taches.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-border/30 hover:border-primary/20 transition-colors"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-warning" />
+                      <span className="flex-1 text-sm">{task.titre}</span>
+                      <Button variant="ghost" size="sm">Terminer</Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-sm text-center py-8">
+                    Aucune tâche pour aujourd'hui
+                  </p>
+                )}
               </div>
             </motion.div>
 
@@ -221,24 +350,25 @@ const Dashboard = () => {
                 </Button>
               </div>
               <div className="space-y-4">
-                {recentClients.map((client, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {client.name.split(" ").map(n => n[0]).join("")}
-                      </span>
+                {clients.length > 0 ? (
+                  clients.map((client) => (
+                    <div key={client.id} className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+                        <span className="text-sm font-medium">
+                          {client.nom.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{client.nom}</div>
+                        <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{client.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{client.email}</div>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      client.status === "actif" ? "bg-success/10 text-success" : "bg-info/10 text-info"
-                    }`}>
-                      {client.status}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-sm text-center py-4">
+                    Aucun client pour le moment
+                  </p>
+                )}
               </div>
             </motion.div>
           </div>
