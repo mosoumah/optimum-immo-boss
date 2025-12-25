@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, Mail, Lock, User, Upload, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Building2, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Inscription = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signUp, user } = useAuth();
 
   const [formData, setFormData] = useState({
     nom: "",
@@ -21,12 +23,34 @@ const Inscription = () => {
     entreprise: "",
   });
 
+  // Redirect if already logged in
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate registration
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const { error } = await signUp(
+      formData.email,
+      formData.password,
+      formData.nom,
+      formData.entreprise
+    );
+
+    if (error) {
+      toast({
+        title: "Erreur lors de l'inscription",
+        description: error.message === "User already registered" 
+          ? "Cet email est déjà utilisé. Veuillez vous connecter."
+          : error.message,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     toast({
       title: "Compte créé avec succès!",
@@ -160,6 +184,7 @@ const Inscription = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"

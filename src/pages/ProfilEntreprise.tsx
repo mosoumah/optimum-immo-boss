@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Building2, Phone, Mail, Upload, ArrowRight, Image } from "lucide-react";
@@ -8,11 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfilEntreprise = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     nom: "",
@@ -22,11 +26,81 @@ const ProfilEntreprise = () => {
     signature: "",
   });
 
+  useEffect(() => {
+    const fetchEntreprise = async () => {
+      if (!user) return;
+
+      // Get the user's profile to find entreprise_id
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("entreprise_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.entreprise_id) {
+        const { data: entreprise } = await supabase
+          .from("entreprises")
+          .select("*")
+          .eq("id", profile.entreprise_id)
+          .maybeSingle();
+
+        if (entreprise) {
+          setFormData({
+            nom: entreprise.nom || "",
+            telephone: entreprise.telephone || "",
+            email: entreprise.email || "",
+            adresse: entreprise.adresse || "",
+            signature: entreprise.signature || "",
+          });
+        }
+      }
+      setIsFetching(false);
+    };
+
+    fetchEntreprise();
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // Get the user's entreprise_id
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("entreprise_id")
+      .eq("id", user?.id)
+      .maybeSingle();
+
+    if (!profile?.entreprise_id) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de trouver votre entreprise.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("entreprises")
+      .update({
+        nom: formData.nom,
+        telephone: formData.telephone,
+        email: formData.email,
+        adresse: formData.adresse,
+        signature: formData.signature,
+      })
+      .eq("id", profile.entreprise_id);
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le profil.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     toast({
       title: "Profil enregistré!",
@@ -36,6 +110,14 @@ const ProfilEntreprise = () => {
     setIsLoading(false);
     navigate("/dashboard");
   };
+
+  if (isFetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-12 px-6">
@@ -108,7 +190,6 @@ const ProfilEntreprise = () => {
                       className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                       value={formData.telephone}
                       onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                      required
                     />
                   </div>
                 </div>
@@ -124,7 +205,6 @@ const ProfilEntreprise = () => {
                       className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
                     />
                   </div>
                 </div>
