@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Users, Plus, ArrowLeft, Eye, Pencil, Trash2 } from "lucide-react";
+import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
@@ -93,9 +94,14 @@ const Clients = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-4 mb-8 premium-header rounded-xl p-4">
+    <div className="min-h-screen bg-background p-8 relative mesh-gradient">
+      <FloatingParticles count={25} />
+      <div className="max-w-6xl mx-auto relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-4 mb-8 premium-header rounded-xl p-4"
+        >
           <Button variant="ghost" size="icon" asChild>
             <Link to="/dashboard">
               <ArrowLeft className="w-5 h-5" />
@@ -105,11 +111,12 @@ const Clients = () => {
             <h1 className="text-3xl font-bold">Clients</h1>
             <p className="text-muted-foreground">Gérez vos clients</p>
           </div>
-        </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="flex justify-end mb-6"
         >
           <Button onClick={() => setDialogOpen(true)} className="premium-button">
@@ -121,13 +128,19 @@ const Clients = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.2 }}
           className="rounded-xl border border-border/50 overflow-hidden premium-card"
         >
           {clients.length > 0 ? (
             <div className="divide-y divide-border/50">
-              {clients.map((client) => (
-                <div key={client.id} className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item">
+              {clients.map((client, index) => (
+                <motion.div 
+                  key={client.id} 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
+                >
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <Users className="w-6 h-6 text-primary" />
                   </div>
@@ -150,7 +163,7 @@ const Clients = () => {
                       </Link>
                     </Button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (
