@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import logoIcon from "@/assets/logo-icon.jpg";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
@@ -19,24 +18,41 @@ export const Logo = ({ size = "md", animated = true }: LogoProps) => {
     lg: "text-2xl",
   };
 
+  // Grid pattern matching the brand reference - 4x4 grid with specific dots
+  const dotPositions = [
+    // Row 1
+    { row: 0, col: 1 }, { row: 0, col: 2 },
+    // Row 2
+    { row: 1, col: 0 }, { row: 1, col: 1 }, { row: 1, col: 2 }, { row: 1, col: 3 },
+    // Row 3
+    { row: 2, col: 0 }, { row: 2, col: 1 }, { row: 2, col: 2 }, { row: 2, col: 3 },
+    // Row 4
+    { row: 3, col: 1 }, { row: 3, col: 2 },
+  ];
+
   return (
     <div className="flex items-center gap-3">
-      <motion.div 
-        className={`${sizeClasses[size]} relative`}
-        initial={animated ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          duration: 0.3,
-          type: "spring",
-          stiffness: 200,
-        }}
-      >
-        <img 
-          src={logoIcon} 
-          alt="Optimum Immo" 
-          className="w-full h-full object-contain rounded"
-        />
-      </motion.div>
+      <div className={`${sizeClasses[size]} relative`}>
+        <svg viewBox="0 0 40 40" className="w-full h-full">
+          {dotPositions.map((pos, i) => (
+            <motion.circle
+              key={i}
+              cx={5 + pos.col * 10}
+              cy={5 + pos.row * 10}
+              r="4"
+              fill="hsl(var(--primary))"
+              initial={animated ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                delay: animated ? i * 0.04 : 0,
+                duration: 0.3,
+                type: "spring",
+                stiffness: 200,
+              }}
+            />
+          ))}
+        </svg>
+      </div>
       <span className={`${textSizes[size]} font-bold text-foreground tracking-tight`}>
         optimum <span className="text-primary">immo</span>
       </span>
