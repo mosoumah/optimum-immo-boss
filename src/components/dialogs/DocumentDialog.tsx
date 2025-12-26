@@ -105,12 +105,12 @@ export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: 
           </div>
           <div className="space-y-2">
             <Label>Client (optionnel)</Label>
-            <Select value={clientId} onValueChange={setClientId}>
+            <Select value={clientId} onValueChange={(val) => setClientId(val === "none" ? "" : val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun client</SelectItem>
+                <SelectItem value="none">Aucun client</SelectItem>
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.nom}
