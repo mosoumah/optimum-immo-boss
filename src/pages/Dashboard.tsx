@@ -407,16 +407,22 @@ const Dashboard = () => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-secondary/20 border border-border/20 hover:border-primary/20 hover:bg-secondary/30 transition-all duration-300 group"
+                      className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-warning/10 to-transparent border-l-4 border-warning hover:from-warning/20 transition-all duration-300 group"
                     >
-                      <div className="w-3 h-3 rounded-full bg-warning animate-pulse" />
-                      <span className="flex-1 text-sm font-medium">{task.titre}</span>
+                      <div className="p-2 rounded-lg bg-warning/20">
+                        <Bell className="w-5 h-5 text-warning" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="font-medium text-sm">{task.titre}</span>
+                        <p className="text-xs text-muted-foreground mt-0.5">À faire aujourd'hui</p>
+                      </div>
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         onClick={() => markTaskDone(task.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-success/10 hover:text-success rounded-lg"
                       >
+                        <CheckSquare className="w-4 h-4 mr-1" />
                         Terminer
                       </Button>
                     </motion.div>
