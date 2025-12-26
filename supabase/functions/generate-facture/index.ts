@@ -6,6 +6,76 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Fonction de conversion du montant en lettres (français)
+function nombreEnLettres(n: number): string {
+  const unites = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+  const dizaines = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
+  
+  if (n === 0) return 'zéro';
+  if (n < 0) return 'moins ' + nombreEnLettres(-n);
+  
+  const convertirMoinsDeMillle = (num: number): string => {
+    if (num === 0) return '';
+    if (num < 20) return unites[num];
+    if (num < 100) {
+      const d = Math.floor(num / 10);
+      const u = num % 10;
+      if (d === 7 || d === 9) {
+        return dizaines[d] + (u === 1 && d !== 9 ? '-et-' : '-') + unites[10 + u];
+      }
+      if (u === 0) return dizaines[d] + (d === 8 ? 's' : '');
+      if (u === 1 && d !== 8) return dizaines[d] + '-et-un';
+      return dizaines[d] + '-' + unites[u];
+    }
+    if (num < 1000) {
+      const c = Math.floor(num / 100);
+      const reste = num % 100;
+      let result = c === 1 ? 'cent' : unites[c] + ' cent';
+      if (reste === 0 && c > 1) result += 's';
+      else if (reste > 0) result += ' ' + convertirMoinsDeMillle(reste);
+      return result;
+    }
+    return '';
+  };
+
+  const milliards = Math.floor(n / 1000000000);
+  const millions = Math.floor((n % 1000000000) / 1000000);
+  const milliers = Math.floor((n % 1000000) / 1000);
+  const reste = n % 1000;
+
+  let result = '';
+  
+  if (milliards > 0) {
+    result += (milliards === 1 ? 'un milliard' : convertirMoinsDeMillle(milliards) + ' milliards');
+    if (millions > 0 || milliers > 0 || reste > 0) result += ' ';
+  }
+  if (millions > 0) {
+    result += (millions === 1 ? 'un million' : convertirMoinsDeMillle(millions) + ' millions');
+    if (milliers > 0 || reste > 0) result += ' ';
+  }
+  if (milliers > 0) {
+    result += (milliers === 1 ? 'mille' : convertirMoinsDeMillle(milliers) + ' mille');
+    if (reste > 0) result += ' ';
+  }
+  if (reste > 0) {
+    result += convertirMoinsDeMillle(reste);
+  }
+
+  return result.trim();
+}
+
+// Fonction de nettoyage du contenu généré
+function nettoyerContenu(texte: string): string {
+  return texte
+    .replace(/^[\s]*[-•*]\s*/gm, '') // Supprimer les puces en début de ligne
+    .replace(/\*\*/g, '') // Supprimer le markdown bold
+    .replace(/\*/g, '') // Supprimer les astérisques
+    .replace(/#{1,6}\s*/g, '') // Supprimer les titres markdown
+    .replace(/\n{3,}/g, '\n\n') // Limiter les sauts de ligne
+    .replace(/^\s+|\s+$/g, '') // Trim
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,52 +102,61 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `Tu es un assistant professionnel spécialisé dans la création de factures immobilières en Guinée.
-Tu génères des factures professionnelles, claires et bien structurées en français.
+    // Convertir le montant en lettres
+    const montantNumerique = parseInt(String(montant).replace(/\s/g, ''), 10) || 0;
+    const montantEnLettres = nombreEnLettres(montantNumerique);
 
-IMPORTANT:
-- Génère uniquement du texte formaté, pas d'images
-- Utilise un format professionnel adapté aux entreprises guinéennes
-- Le montant doit être écrit en chiffres ET en lettres (en francs guinéens)
-- Inclure tous les éléments légaux d'une facture
-- Structure claire avec séparations visuelles (lignes, espaces)`;
+    const systemPrompt = `Tu es un expert en rédaction de documents commerciaux haut de gamme pour les agences immobilières en Guinée.
 
-    const userPrompt = `Génère une facture professionnelle avec les informations suivantes:
+STYLE D'ÉCRITURE :
+- Langage professionnel, formel et élégant
+- Phrases claires et concises
+- Vocabulaire juridique approprié mais accessible
+- Ton respectueux et courtois
 
-ENTREPRISE:
-- Nom: ${entrepriseNom || 'Non spécifié'}
-- Adresse: ${entrepriseAdresse || 'Non spécifiée'}
-- Téléphone: ${entrepriseTelephone || 'Non spécifié'}
-- Email: ${entrepriseEmail || 'Non spécifié'}
+FORMAT OBLIGATOIRE :
+- Génère UNIQUEMENT le détail de la prestation (pas de titre FACTURE, pas d'en-tête, pas d'informations entreprise)
+- Structure en paragraphes fluides, SANS puces ni tirets ni astérisques
+- Espacement logique entre les idées
+- Pas de markdown, pas de caractères spéciaux
 
-NUMÉRO DE FACTURE: ${numeroFacture || 'À générer'}
+INTERDICTIONS STRICTES :
+- Pas de points de liste (•, -, *, →)
+- Pas de markdown (**, ##, etc.)
+- Pas de répétition des informations déjà présentes (nom client, montant chiffré, date)
+- Pas de formules génériques ("Cher client", "Cordialement", "Merci")
+- Pas d'en-tête de facture (le design s'en charge)`;
 
-CLIENT:
-- Nom: ${clientNom}
-- Téléphone: ${clientTelephone || 'Non spécifié'}
-- Email: ${clientEmail || 'Non spécifié'}
+    const userPrompt = `Rédige le détail de la prestation pour une facture immobilière professionnelle.
 
-PRESTATION:
-${description || 'Service immobilier'}
+DONNÉES DE LA PRESTATION :
+Client : ${clientNom}
+Description : ${description || 'Service de conseil et accompagnement immobilier'}
+Montant : ${montant} GNF
+Montant en lettres : ${montantEnLettres} francs guinéens
+Date : ${date}
 
-MONTANT: ${montant} GNF
+STRUCTURE ATTENDUE (en 3 paragraphes séparés) :
 
-DATE: ${date}
+PARAGRAPHE 1 - Description élégante de la prestation :
+Décris le service rendu de manière professionnelle en 2-3 phrases. Mentionne le type de service immobilier, l'accompagnement fourni, et la valeur ajoutée apportée au client.
 
-Instructions:
-1. Titre "FACTURE" bien visible
-2. Informations complètes de l'entreprise en en-tête
-3. Numéro de facture
-4. Informations du client
-5. Description détaillée de la prestation
-6. Montant en chiffres et en lettres
-7. Date d'émission
-8. Conditions de paiement
-9. Zone pour signature et cachet
+PARAGRAPHE 2 - Montant arrêté :
+"La présente facture est arrêtée à la somme de ${montantEnLettres} francs guinéens (${montant} GNF), correspondant aux honoraires convenus pour cette prestation."
 
-Génère la facture complète maintenant.`;
+PARAGRAPHE 3 - Clause de validité :
+"Ce document constitue une facture originale et fait foi pour toutes fins légales et comptables."
 
-    console.log('Generating invoice for:', clientNom, 'Amount:', montant);
+EXEMPLE DE RENDU PARFAIT :
+"Dans le cadre de notre collaboration, nous avons assuré l'accompagnement complet pour votre projet immobilier. Notre intervention a couvert l'ensemble des démarches nécessaires, incluant l'évaluation du bien, les négociations avec les parties concernées, ainsi que la coordination administrative jusqu'à la finalisation du dossier.
+
+La présente facture est arrêtée à la somme de cinq cent mille francs guinéens (500 000 GNF), correspondant aux honoraires convenus pour cette prestation.
+
+Ce document constitue une facture originale et fait foi pour toutes fins légales et comptables."
+
+Maintenant, génère le texte pour cette prestation spécifique. Adapte le premier paragraphe selon la description fournie : "${description || 'Service immobilier'}". Ne répète PAS le mot "Description" ou les informations brutes.`;
+
+    console.log('Generating premium invoice for:', clientNom, 'Amount:', montant, 'Amount in words:', montantEnLettres);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -91,8 +170,8 @@ Génère la facture complète maintenant.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
+        temperature: 0.5,
+        max_tokens: 800,
       }),
     });
 
@@ -110,13 +189,16 @@ Génère la facture complète maintenant.`;
     }
 
     const data = await response.json();
-    const generatedContent = data.choices?.[0]?.message?.content;
+    let generatedContent = data.choices?.[0]?.message?.content;
 
     if (!generatedContent) {
       throw new Error('Aucun contenu généré');
     }
 
-    console.log('Invoice generated successfully');
+    // Nettoyer le contenu généré
+    generatedContent = nettoyerContenu(generatedContent);
+
+    console.log('Premium invoice generated successfully');
 
     return new Response(JSON.stringify({ content: generatedContent }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
