@@ -11,6 +11,7 @@ import Connexion from "./pages/Connexion";
 import ProfilEntreprise from "./pages/ProfilEntreprise";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
+import ClientDetail from "./pages/ClientDetail";
 import Devis from "./pages/Devis";
 import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
@@ -54,6 +55,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Clients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id"
+              element={
+                <ProtectedRoute>
+                  <ClientDetail />
                 </ProtectedRoute>
               }
             />
