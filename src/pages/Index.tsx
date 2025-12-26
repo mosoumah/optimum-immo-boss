@@ -136,47 +136,6 @@ const Index = () => {
             </motion.div>
           </motion.div>
 
-          {/* Dashboard Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-20 relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="glass rounded-2xl p-2 glow-primary">
-              <div className="bg-card rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
-                  <div className="w-3 h-3 rounded-full bg-destructive/80" />
-                  <div className="w-3 h-3 rounded-full bg-warning/80" />
-                  <div className="w-3 h-3 rounded-full bg-success/80" />
-                </div>
-                <div className="p-6 space-y-6">
-                  {/* Mock Dashboard */}
-                  <div className="flex items-center justify-between">
-                    <Logo size="sm" animated={false} />
-                    <div className="flex gap-2">
-                      <div className="w-8 h-8 rounded-full bg-secondary" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-4">
-                    {["Revenus", "Dépenses", "Bénéfice", "Factures"].map((label, i) => (
-                      <div key={label} className="p-4 rounded-xl bg-secondary/50 border border-border/30">
-                        <div className="text-xs text-muted-foreground mb-1">{label}</div>
-                        <div className="text-xl font-bold text-foreground">
-                          {i === 0 && "45.2M GNF"}
-                          {i === 1 && "12.8M GNF"}
-                          {i === 2 && "32.4M GNF"}
-                          {i === 3 && "12"}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="h-32 rounded-xl bg-secondary/30 border border-border/20" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
