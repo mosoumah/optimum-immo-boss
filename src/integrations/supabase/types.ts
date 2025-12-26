@@ -99,6 +99,8 @@ export type Database = {
           entreprise_id: string
           id: string
           montant: number
+          numero_devis: string | null
+          pdf_url: string | null
           statut: Database["public"]["Enums"]["devis_statut"]
           updated_at: string
         }
@@ -110,6 +112,8 @@ export type Database = {
           entreprise_id: string
           id?: string
           montant?: number
+          numero_devis?: string | null
+          pdf_url?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
           updated_at?: string
         }
@@ -121,6 +125,8 @@ export type Database = {
           entreprise_id?: string
           id?: string
           montant?: number
+          numero_devis?: string | null
+          pdf_url?: string | null
           statut?: Database["public"]["Enums"]["devis_statut"]
           updated_at?: string
         }
