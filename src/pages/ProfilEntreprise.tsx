@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, Phone, Mail, Upload, ArrowRight, Image } from "lucide-react";
+import { Building2, Phone, Mail, Upload, ArrowRight, Image, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 const ProfilEntreprise = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -38,6 +42,7 @@ const ProfilEntreprise = () => {
         .maybeSingle();
 
       if (profile?.entreprise_id) {
+        setEntrepriseId(profile.entreprise_id);
         const { data: entreprise } = await supabase
           .from("entreprises")
           .select("*")
@@ -52,6 +57,7 @@ const ProfilEntreprise = () => {
             adresse: entreprise.adresse || "",
             signature: entreprise.signature || "",
           });
+          setLogoUrl(entreprise.logo || null);
         }
       }
       setIsFetching(false);
@@ -59,6 +65,76 @@ const ProfilEntreprise = () => {
 
     fetchEntreprise();
   }, [user]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !entrepriseId) return;
+
+    // Check if it's an image
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Fichier invalide",
+        description: "Veuillez sélectionner une image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximale est de 2 Mo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingLogo(true);
+
+    try {
+      // Create unique file name
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${entrepriseId}/logo.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("logos")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from("logos")
+        .getPublicUrl(fileName);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      // Update the entreprise with the logo URL
+      const { error: updateError } = await supabase
+        .from("entreprises")
+        .update({ logo: publicUrl })
+        .eq("id", entrepriseId);
+
+      if (updateError) throw updateError;
+
+      setLogoUrl(publicUrl);
+      toast({
+        title: "Logo importé!",
+        description: "Votre logo a été enregistré avec succès.",
+      });
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'importer le logo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,12 +228,33 @@ const ProfilEntreprise = () => {
               <div className="space-y-2">
                 <Label>Logo de l'entreprise</Label>
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-xl bg-secondary/50 border border-dashed border-border flex items-center justify-center">
-                    <Image className="w-8 h-8 text-muted-foreground" />
+                  <div className="w-20 h-20 rounded-xl bg-secondary/50 border border-dashed border-border flex items-center justify-center overflow-hidden">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                    ) : (
+                      <Image className="w-8 h-8 text-muted-foreground" />
+                    )}
                   </div>
-                  <Button type="button" variant="outline" size="sm">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Importer le logo
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleLogoUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingLogo}
+                  >
+                    {isUploadingLogo ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    {isUploadingLogo ? "Importation..." : "Importer le logo"}
                   </Button>
                 </div>
               </div>
