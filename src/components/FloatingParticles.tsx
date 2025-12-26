@@ -26,10 +26,10 @@ export const FloatingParticles = ({ count = 30, className = "" }: FloatingPartic
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: Math.random() * 4 + 2,
-        duration: Math.random() * 15 + 10,
-        delay: Math.random() * 5,
-        opacity: Math.random() * 0.4 + 0.1,
+        size: Math.random() * 2 + 1,
+        duration: Math.random() * 25 + 20,
+        delay: Math.random() * 8,
+        opacity: Math.random() * 0.15 + 0.05,
       });
     }
     setParticles(generatedParticles);
@@ -51,10 +51,10 @@ export const FloatingParticles = ({ count = 30, className = "" }: FloatingPartic
             boxShadow: `0 0 ${particle.size * 2}px hsl(72, 100%, 50%, 0.5)`,
           }}
           animate={{
-            y: [0, -30, 0, 20, 0],
-            x: [0, 15, -10, 5, 0],
-            scale: [1, 1.2, 0.9, 1.1, 1],
-            opacity: [particle.opacity, particle.opacity * 1.5, particle.opacity * 0.7, particle.opacity * 1.2, particle.opacity],
+            y: [0, -10, 0, 8, 0],
+            x: [0, 5, -3, 2, 0],
+            scale: [1, 1.05, 0.98, 1.02, 1],
+            opacity: [particle.opacity, particle.opacity * 1.2, particle.opacity * 0.9, particle.opacity * 1.1, particle.opacity],
           }}
           transition={{
             duration: particle.duration,
@@ -73,14 +73,14 @@ export const FloatingParticles = ({ count = 30, className = "" }: FloatingPartic
           style={{
             left: `${20 + i * 15}%`,
             top: `${15 + i * 18}%`,
-            width: 80 + i * 20,
-            height: 80 + i * 20,
-            background: `radial-gradient(circle, hsl(72, 100%, 50%, 0.08) 0%, transparent 70%)`,
+            width: 60 + i * 15,
+            height: 60 + i * 15,
+            background: `radial-gradient(circle, hsl(72, 100%, 50%, 0.04) 0%, transparent 70%)`,
           }}
           animate={{
-            y: [0, -40, 0],
-            x: [0, 20, 0],
-            scale: [1, 1.1, 1],
+            y: [0, -15, 0],
+            x: [0, 8, 0],
+            scale: [1, 1.03, 1],
           }}
           transition={{
             duration: 20 + i * 3,
