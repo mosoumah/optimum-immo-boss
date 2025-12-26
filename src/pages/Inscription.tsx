@@ -231,9 +231,9 @@ const Inscription = () => {
 
             <p className="text-xs text-center text-muted-foreground">
               En créant un compte, vous acceptez nos{" "}
-              <a href="#" className="text-primary hover:underline">conditions d'utilisation</a>
+              <span className="text-primary hover:underline cursor-pointer">conditions d'utilisation</span>
               {" "}et notre{" "}
-              <a href="#" className="text-primary hover:underline">politique de confidentialité</a>.
+              <span className="text-primary hover:underline cursor-pointer">politique de confidentialité</span>.
             </p>
           </form>
         </motion.div>
