@@ -70,7 +70,7 @@ const Depenses = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-8 premium-header rounded-xl p-4">
           <Button variant="ghost" size="icon" asChild>
             <Link to="/dashboard">
               <ArrowLeft className="w-5 h-5" />
@@ -86,7 +86,7 @@ const Depenses = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-xl card-gradient border border-border/50 mb-6"
+          className="p-6 rounded-xl card-gradient border border-border/50 mb-6 premium-card"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -104,7 +104,7 @@ const Depenses = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-end mb-6"
         >
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} className="premium-button">
             <Plus className="w-4 h-4 mr-2" />
             Nouvelle dépense
           </Button>
@@ -114,12 +114,12 @@ const Depenses = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-xl border border-border/50 overflow-hidden"
+          className="rounded-xl border border-border/50 overflow-hidden premium-card"
         >
           {depenses.length > 0 ? (
             <div className="divide-y divide-border/50">
               {depenses.map((depense) => (
-                <div key={depense.id} className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors">
+                <div key={depense.id} className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item">
                   <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
                     <TrendingDown className="w-6 h-6 text-destructive" />
                   </div>
