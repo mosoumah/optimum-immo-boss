@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Settings, ArrowLeft, User, Building2, LogOut, Save } from "lucide-react";
+import { ArrowLeft, User, Building2, LogOut, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { LogoUpload } from "@/components/LogoUpload";
 
 interface Profile {
   nom: string;
@@ -19,6 +20,7 @@ interface Entreprise {
   adresse: string | null;
   telephone: string | null;
   email: string | null;
+  logo: string | null;
 }
 
 const Parametres = () => {
@@ -26,7 +28,7 @@ const Parametres = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile>({ nom: "", email: "" });
-  const [entreprise, setEntreprise] = useState<Entreprise>({ nom: "", adresse: "", telephone: "", email: "" });
+  const [entreprise, setEntreprise] = useState<Entreprise>({ nom: "", adresse: "", telephone: "", email: "", logo: null });
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,7 +50,7 @@ const Parametres = () => {
         if (profileData.entreprise_id) {
           const { data: entrepriseData } = await supabase
             .from("entreprises")
-            .select("nom, adresse, telephone, email")
+            .select("nom, adresse, telephone, email, logo")
             .eq("id", profileData.entreprise_id)
             .maybeSingle();
 
@@ -58,6 +60,7 @@ const Parametres = () => {
               adresse: entrepriseData.adresse || "",
               telephone: entrepriseData.telephone || "",
               email: entrepriseData.email || "",
+              logo: entrepriseData.logo || null,
             });
           }
         }
@@ -102,6 +105,10 @@ const Parametres = () => {
         description: "Paramètres sauvegardés avec succès",
       });
     }
+  };
+
+  const handleLogoUpdated = (newLogoUrl: string) => {
+    setEntreprise((prev) => ({ ...prev, logo: newLogoUrl }));
   };
 
   const handleSignOut = async () => {
@@ -175,6 +182,14 @@ const Parametres = () => {
               <h2 className="text-lg font-semibold">Entreprise</h2>
             </div>
             <div className="space-y-4">
+              {/* Logo Upload */}
+              {entrepriseId && (
+                <LogoUpload
+                  entrepriseId={entrepriseId}
+                  currentLogo={entreprise.logo}
+                  onLogoUpdated={handleLogoUpdated}
+                />
+              )}
               <div>
                 <Label htmlFor="entreprise-nom">Nom de l'entreprise</Label>
                 <Input
