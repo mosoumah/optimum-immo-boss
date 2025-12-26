@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Plus, ArrowLeft } from "lucide-react";
+import { Users, Plus, ArrowLeft, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useEntreprise } from "@/hooks/useEntreprise";
+import { ClientDialog } from "@/components/dialogs/ClientDialog";
 
 interface Client {
   id: string;
@@ -15,36 +16,31 @@ interface Client {
 }
 
 const Clients = () => {
-  const { user } = useAuth();
+  const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fetchClients = useCallback(async () => {
+    if (!entrepriseId) return;
+
+    const { data } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("entreprise_id", entrepriseId)
+      .order("created_at", { ascending: false });
+
+    setClients(data || []);
+    setIsLoading(false);
+  }, [entrepriseId]);
 
   useEffect(() => {
-    const fetchClients = async () => {
-      if (!user) return;
+    if (entrepriseId) {
+      fetchClients();
+    }
+  }, [entrepriseId, fetchClients]);
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profileData?.entreprise_id) {
-        const { data } = await supabase
-          .from("clients")
-          .select("*")
-          .eq("entreprise_id", profileData.entreprise_id)
-          .order("created_at", { ascending: false });
-
-        setClients(data || []);
-      }
-      setIsLoading(false);
-    };
-
-    fetchClients();
-  }, [user]);
-
-  if (isLoading) {
+  if (entrepriseLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -72,7 +68,7 @@ const Clients = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-end mb-6"
         >
-          <Button>
+          <Button onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nouveau client
           </Button>
@@ -96,6 +92,12 @@ const Clients = () => {
                     <div className="text-sm text-muted-foreground">{client.email || "Pas d'email"}</div>
                   </div>
                   <div className="text-sm text-muted-foreground">{client.telephone || "-"}</div>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to={`/clients/${client.id}`}>
+                      <Eye className="w-4 h-4 mr-1" />
+                      Voir fiche
+                    </Link>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -107,6 +109,15 @@ const Clients = () => {
           )}
         </motion.div>
       </div>
+
+      {entrepriseId && (
+        <ClientDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          entrepriseId={entrepriseId}
+          onSuccess={fetchClients}
+        />
+      )}
     </div>
   );
 };
