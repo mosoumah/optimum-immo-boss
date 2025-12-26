@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +61,7 @@ export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: D
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Nouvelle dépense</DialogTitle>
+          <DialogDescription>Enregistrez une nouvelle dépense.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
