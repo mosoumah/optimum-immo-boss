@@ -1,12 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TrendingDown, Plus, ArrowLeft } from "lucide-react";
+import { TrendingDown, Plus, ArrowLeft, Calendar, CalendarDays, CalendarRange, List } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
+import { isToday, isThisWeek, isThisMonth, parseISO } from "date-fns";
 
 interface Depense {
   id: string;
@@ -15,12 +16,21 @@ interface Depense {
   date: string;
 }
 
+type FilterPeriod = 'today' | 'week' | 'month' | 'all';
+
+const filterLabels: Record<FilterPeriod, { label: string; icon: React.ReactNode }> = {
+  today: { label: "Aujourd'hui", icon: <Calendar className="w-4 h-4" /> },
+  week: { label: "Semaine", icon: <CalendarDays className="w-4 h-4" /> },
+  month: { label: "Mois", icon: <CalendarRange className="w-4 h-4" /> },
+  all: { label: "Tout", icon: <List className="w-4 h-4" /> },
+};
+
 const Depenses = () => {
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [depenses, setDepenses] = useState<Depense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [totalMensuel, setTotalMensuel] = useState(0);
+  const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('month');
 
   const fetchDepenses = useCallback(async () => {
     if (!entrepriseId) return;
@@ -32,17 +42,6 @@ const Depenses = () => {
       .order("date", { ascending: false });
 
     setDepenses(data || []);
-
-    // Calculate monthly total
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const monthlyTotal = (data || [])
-      .filter((d) => new Date(d.date) >= startOfMonth)
-      .reduce((sum, d) => sum + Number(d.montant), 0);
-    setTotalMensuel(monthlyTotal);
-
     setIsLoading(false);
   }, [entrepriseId]);
 
@@ -51,6 +50,28 @@ const Depenses = () => {
       fetchDepenses();
     }
   }, [entrepriseId, fetchDepenses]);
+
+  const filterByPeriod = useCallback((date: string, period: FilterPeriod): boolean => {
+    const parsedDate = parseISO(date);
+    switch (period) {
+      case 'today':
+        return isToday(parsedDate);
+      case 'week':
+        return isThisWeek(parsedDate, { weekStartsOn: 1 });
+      case 'month':
+        return isThisMonth(parsedDate);
+      case 'all':
+        return true;
+    }
+  }, []);
+
+  const filteredDepenses = useMemo(() => {
+    return depenses.filter((d) => filterByPeriod(d.date, filterPeriod));
+  }, [depenses, filterPeriod, filterByPeriod]);
+
+  const totalFiltered = useMemo(() => {
+    return filteredDepenses.reduce((sum, d) => sum + Number(d.montant), 0);
+  }, [filteredDepenses]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
@@ -88,7 +109,27 @@ const Depenses = () => {
         </div>
       </motion.div>
 
-      {/* Monthly Widget */}
+        {/* Filter Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-2 mb-6"
+        >
+          {(Object.keys(filterLabels) as FilterPeriod[]).map((period) => (
+            <Button
+              key={period}
+              variant={filterPeriod === period ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterPeriod(period)}
+              className={`transition-all ${filterPeriod === period ? "premium-button shadow-lg" : "hover:bg-secondary/50"}`}
+            >
+              {filterLabels[period].icon}
+              <span className="ml-2">{filterLabels[period].label}</span>
+            </Button>
+          ))}
+        </motion.div>
+
+        {/* Total Widget */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -96,8 +137,10 @@ const Depenses = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Total du mois</p>
-              <p className="text-3xl font-bold text-destructive">{formatCurrency(totalMensuel)}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Total {filterLabels[filterPeriod].label.toLowerCase()}
+              </p>
+              <p className="text-3xl font-bold text-destructive">{formatCurrency(totalFiltered)}</p>
             </div>
             <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
               <TrendingDown className="w-7 h-7 text-destructive" />
@@ -122,9 +165,9 @@ const Depenses = () => {
           transition={{ delay: 0.1 }}
           className="rounded-xl border border-border/50 overflow-hidden premium-card"
         >
-          {depenses.length > 0 ? (
+          {filteredDepenses.length > 0 ? (
             <div className="divide-y divide-border/50">
-              {depenses.map((depense, index) => (
+              {filteredDepenses.map((depense, index) => (
                 <motion.div 
                   key={depense.id} 
                   initial={{ opacity: 0, x: -20 }}
@@ -140,7 +183,7 @@ const Depenses = () => {
                     <div className="text-sm text-muted-foreground">{formatDate(depense.date)}</div>
                   </div>
                   <div className="text-right">
-                  <div className="font-medium text-destructive">-{formatCurrency(depense.montant)}</div>
+                    <div className="font-medium text-destructive">-{formatCurrency(depense.montant)}</div>
                   </div>
                 </motion.div>
               ))}
@@ -148,7 +191,7 @@ const Depenses = () => {
           ) : (
             <div className="p-12 text-center">
               <TrendingDown className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Aucune dépense enregistrée</p>
+              <p className="text-muted-foreground">Aucune dépense pour cette période</p>
             </div>
           )}
         </motion.div>
