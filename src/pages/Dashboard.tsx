@@ -192,149 +192,282 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center mesh-gradient">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="w-12 h-12 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-muted-foreground text-sm">Chargement...</span>
+        </motion.div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex">
-      <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col fixed h-screen">
-        <div className="p-6">
+      <aside className="w-64 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="p-6"
+        >
           <Logo size="sm" animated={false} />
-        </div>
+        </motion.div>
 
         <nav className="flex-1 px-3 space-y-1">
-          {sidebarItems.map((item) => (
-            <Link
+          {sidebarItems.map((item, index) => (
+            <motion.div
               key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                item.active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent"
-              }`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
             >
-              <item.icon className="w-5 h-5" />
-              <span className="font-medium text-sm">{item.label}</span>
-            </Link>
+              <Link
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
+                  item.active
+                    ? "bg-primary/10 text-primary border border-primary/20 glow-primary-sm"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-1"
+                }`}
+              >
+                <item.icon className={`w-5 h-5 transition-transform duration-300 ${item.active ? "text-primary" : "group-hover:scale-110"}`} />
+                <span className="font-medium text-sm">{item.label}</span>
+                {item.active && (
+                  <motion.div
+                    layoutId="activeIndicator"
+                    className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
+                  />
+                )}
+              </Link>
+            </motion.div>
           ))}
         </nav>
 
-        <div className="p-3 space-y-1 border-t border-sidebar-border">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="p-3 space-y-1 border-t border-border/20"
+        >
           <Link
             to="/parametres"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
           >
             <Settings className="w-5 h-5" />
             <span className="font-medium text-sm">Paramètres</span>
           </Link>
           <button 
             onClick={handleSignOut}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium text-sm">Déconnexion</span>
           </button>
-        </div>
+        </motion.div>
       </aside>
 
-      <main className="flex-1 ml-64">
-        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <main className="flex-1 ml-64 mesh-gradient min-h-screen">
+        <header className="sticky top-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
           <div className="flex items-center justify-between px-8 py-4">
-            <div className="relative w-80">
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative w-80"
+            >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input placeholder="Rechercher..." className="pl-10 h-10 bg-secondary/50 border-border/50" />
-            </div>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
+              <Input 
+                placeholder="Rechercher..." 
+                className="pl-10 h-11 bg-secondary/30 border-border/30 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all duration-300" 
+              />
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-4"
+            >
+              <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors duration-300 rounded-xl">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
               </Button>
-              <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50">
                 <span className="text-sm font-bold text-primary">
                   {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </header>
 
         <div className="p-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Bonjour, {profile?.nom?.split(" ")[0] || "Utilisateur"} 👋</h1>
-            <p className="text-muted-foreground">Voici un aperçu de votre activité aujourd'hui</p>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-10"
+          >
+            <h1 className="text-4xl font-bold mb-3">
+              Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
+            </h1>
+            <p className="text-muted-foreground text-lg">Voici un aperçu de votre activité aujourd'hui</p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex flex-wrap gap-3 mb-8">
-            {quickActions.map((action) => (
-              <Button key={action.label} variant="outline" size="sm" onClick={action.onClick}>
-                <Plus className="w-4 h-4 mr-1" />
-                {action.label}
-              </Button>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.5, delay: 0.15 }} 
+            className="flex flex-wrap gap-3 mb-10"
+          >
+            {quickActions.map((action, index) => (
+              <motion.div
+                key={action.label}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.2 + index * 0.05 }}
+              >
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={action.onClick}
+                  className="action-button border-border/30 hover:border-primary/40 rounded-xl h-10 px-4"
+                >
+                  <Plus className="w-4 h-4 mr-2 text-primary" />
+                  {action.label}
+                </Button>
+              </motion.div>
             ))}
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {statsDisplay.map((stat) => (
-              <div key={stat.label} className="p-6 rounded-xl card-gradient border border-border/50 hover:border-primary/30 transition-all duration-300">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-muted-foreground">{stat.label}</span>
-                  <div className={`p-2 rounded-lg ${stat.positive ? "bg-success/10" : "bg-destructive/10"}`}>
-                    <stat.icon className={`w-4 h-4 ${stat.positive ? "text-success" : "text-destructive"}`} />
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ duration: 0.6, delay: 0.25 }} 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10"
+          >
+            {statsDisplay.map((stat, index) => (
+              <motion.div 
+                key={stat.label}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className="card-stat p-6 rounded-2xl border border-border/30 hover:border-primary/30"
+              >
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
+                  <div className={`p-2.5 rounded-xl ${stat.positive ? "card-stat-positive" : "card-stat-negative"}`}>
+                    <stat.icon className={`w-5 h-5 ${stat.positive ? "text-success" : "text-destructive"}`} />
                   </div>
                 </div>
-                <div className="text-2xl font-bold mb-1">{stat.value}</div>
-              </div>
+                <motion.div 
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+                  className="text-3xl font-bold mb-2"
+                >
+                  {stat.value}
+                </motion.div>
+                <div className="h-1 w-full bg-secondary/50 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "60%" }}
+                    transition={{ duration: 1, delay: 0.6 + index * 0.1, ease: "easeOut" }}
+                    className={`h-full rounded-full ${stat.positive ? "bg-gradient-to-r from-success/50 to-success" : "bg-gradient-to-r from-destructive/50 to-destructive"}`}
+                  />
+                </div>
+              </motion.div>
             ))}
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2 p-6 rounded-xl card-gradient border border-border/50">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              transition={{ duration: 0.6, delay: 0.5 }} 
+              className="lg:col-span-2 p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500"
+            >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Tâches du jour</h2>
-                <Button variant="ghost" size="sm" asChild>
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Tâches du jour
+                </h2>
+                <Button variant="ghost" size="sm" asChild className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
                   <Link to="/taches">Voir tout<ArrowUpRight className="w-4 h-4 ml-1" /></Link>
                 </Button>
               </div>
               <div className="space-y-3">
                 {taches.length > 0 ? (
-                  taches.map((task) => (
-                    <div key={task.id} className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-border/30 hover:border-primary/20 transition-colors">
-                      <div className="w-2 h-2 rounded-full bg-warning" />
-                      <span className="flex-1 text-sm">{task.titre}</span>
-                      <Button variant="ghost" size="sm" onClick={() => markTaskDone(task.id)}>Terminer</Button>
-                    </div>
+                  taches.map((task, index) => (
+                    <motion.div 
+                      key={task.id} 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-secondary/20 border border-border/20 hover:border-primary/20 hover:bg-secondary/30 transition-all duration-300 group"
+                    >
+                      <div className="w-3 h-3 rounded-full bg-warning animate-pulse" />
+                      <span className="flex-1 text-sm font-medium">{task.titre}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => markTaskDone(task.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-success/10 hover:text-success rounded-lg"
+                      >
+                        Terminer
+                      </Button>
+                    </motion.div>
                   ))
                 ) : (
-                  <p className="text-muted-foreground text-sm text-center py-8">Aucune tâche pour aujourd'hui</p>
+                  <div className="text-muted-foreground text-sm text-center py-12 flex flex-col items-center gap-3">
+                    <CheckSquare className="w-12 h-12 text-muted-foreground/30" />
+                    <span>Aucune tâche pour aujourd'hui</span>
+                  </div>
                 )}
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="p-6 rounded-xl card-gradient border border-border/50">
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              transition={{ duration: 0.6, delay: 0.6 }} 
+              className="p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500"
+            >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Clients récents</h2>
-                <Button variant="ghost" size="sm" onClick={() => setClientDialogOpen(true)}>
-                  <Plus className="w-4 h-4" />
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Clients récents
+                </h2>
+                <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
+                  <Plus className="w-5 h-5" />
                 </Button>
               </div>
               <div className="space-y-4">
                 {clients.length > 0 ? (
-                  clients.map((client) => (
-                    <div key={client.id} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                        <span className="text-sm font-medium">{client.nom.split(" ").map(n => n[0]).join("").slice(0, 2)}</span>
+                  clients.map((client, index) => (
+                    <motion.div 
+                      key={client.id} 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/30 transition-all duration-300 cursor-pointer group"
+                    >
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center transition-all duration-300 group-hover:border-primary/40 group-hover:scale-105">
+                        <span className="text-sm font-bold text-primary">{client.nom.split(" ").map(n => n[0]).join("").slice(0, 2)}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{client.nom}</div>
+                        <div className="text-sm font-semibold truncate group-hover:text-primary transition-colors duration-300">{client.nom}</div>
                         <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
                       </div>
-                    </div>
+                      <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:text-primary" />
+                    </motion.div>
                   ))
                 ) : (
-                  <p className="text-muted-foreground text-sm text-center py-4">Aucun client pour le moment</p>
+                  <div className="text-muted-foreground text-sm text-center py-8 flex flex-col items-center gap-3">
+                    <Users className="w-12 h-12 text-muted-foreground/30" />
+                    <span>Aucun client pour le moment</span>
+                  </div>
                 )}
               </div>
             </motion.div>
