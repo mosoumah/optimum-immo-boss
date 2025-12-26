@@ -28,6 +28,7 @@ import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
+import { FloatingParticles } from "@/components/FloatingParticles";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard", active: true },
@@ -206,7 +207,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      <FloatingParticles count={35} />
       <aside className="w-64 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen">
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
