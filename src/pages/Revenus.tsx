@@ -1,12 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TrendingUp, ArrowLeft, Plus } from "lucide-react";
+import { TrendingUp, ArrowLeft, Plus, Calendar, CalendarDays, CalendarRange, List } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
+import { isToday, isThisWeek, isThisMonth, parseISO } from "date-fns";
 
 interface Revenu {
   id: string;
@@ -15,12 +16,21 @@ interface Revenu {
   factures: { description: string | null; clients: { nom: string } | null } | null;
 }
 
+type FilterPeriod = 'today' | 'week' | 'month' | 'all';
+
+const filterLabels: Record<FilterPeriod, { label: string; icon: React.ReactNode }> = {
+  today: { label: "Aujourd'hui", icon: <Calendar className="w-4 h-4" /> },
+  week: { label: "Semaine", icon: <CalendarDays className="w-4 h-4" /> },
+  month: { label: "Mois", icon: <CalendarRange className="w-4 h-4" /> },
+  all: { label: "Tout", icon: <List className="w-4 h-4" /> },
+};
+
 const Revenus = () => {
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [revenus, setRevenus] = useState<Revenu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalMensuel, setTotalMensuel] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('month');
 
   const fetchRevenus = useCallback(async () => {
     if (!entrepriseId) return;
@@ -32,17 +42,6 @@ const Revenus = () => {
       .order("date", { ascending: false });
 
     setRevenus(data || []);
-
-    // Calculate monthly total
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const monthlyTotal = (data || [])
-      .filter((r) => new Date(r.date) >= startOfMonth)
-      .reduce((sum, r) => sum + Number(r.montant), 0);
-    setTotalMensuel(monthlyTotal);
-
     setIsLoading(false);
   }, [entrepriseId]);
 
@@ -51,6 +50,28 @@ const Revenus = () => {
       fetchRevenus();
     }
   }, [entrepriseId, fetchRevenus]);
+
+  const filterByPeriod = useCallback((date: string, period: FilterPeriod): boolean => {
+    const parsedDate = parseISO(date);
+    switch (period) {
+      case 'today':
+        return isToday(parsedDate);
+      case 'week':
+        return isThisWeek(parsedDate, { weekStartsOn: 1 });
+      case 'month':
+        return isThisMonth(parsedDate);
+      case 'all':
+        return true;
+    }
+  }, []);
+
+  const filteredRevenus = useMemo(() => {
+    return revenus.filter((r) => filterByPeriod(r.date, filterPeriod));
+  }, [revenus, filterPeriod, filterByPeriod]);
+
+  const totalFiltered = useMemo(() => {
+    return filteredRevenus.reduce((sum, r) => sum + Number(r.montant), 0);
+  }, [filteredRevenus]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
@@ -88,7 +109,27 @@ const Revenus = () => {
           </div>
         </motion.div>
 
-        {/* Monthly Widget */}
+        {/* Filter Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-2 mb-6"
+        >
+          {(Object.keys(filterLabels) as FilterPeriod[]).map((period) => (
+            <Button
+              key={period}
+              variant={filterPeriod === period ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterPeriod(period)}
+              className={`transition-all ${filterPeriod === period ? "premium-button shadow-lg" : "hover:bg-secondary/50"}`}
+            >
+              {filterLabels[period].icon}
+              <span className="ml-2">{filterLabels[period].label}</span>
+            </Button>
+          ))}
+        </motion.div>
+
+        {/* Total Widget */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -96,8 +137,10 @@ const Revenus = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Total du mois</p>
-              <p className="text-3xl font-bold text-success">{formatCurrency(totalMensuel)}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Total {filterLabels[filterPeriod].label.toLowerCase()}
+              </p>
+              <p className="text-3xl font-bold text-success">{formatCurrency(totalFiltered)}</p>
             </div>
             <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
               <TrendingUp className="w-7 h-7 text-success" />
@@ -122,9 +165,9 @@ const Revenus = () => {
           transition={{ delay: 0.1 }}
           className="rounded-xl border border-border/50 overflow-hidden premium-card"
         >
-          {revenus.length > 0 ? (
+          {filteredRevenus.length > 0 ? (
             <div className="divide-y divide-border/50">
-              {revenus.map((revenu, index) => (
+              {filteredRevenus.map((revenu, index) => (
                 <motion.div 
                   key={revenu.id} 
                   initial={{ opacity: 0, x: -20 }}
@@ -149,7 +192,7 @@ const Revenus = () => {
           ) : (
             <div className="p-12 text-center">
               <TrendingUp className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Aucun revenu enregistré</p>
+              <p className="text-muted-foreground">Aucun revenu pour cette période</p>
             </div>
           )}
         </motion.div>
