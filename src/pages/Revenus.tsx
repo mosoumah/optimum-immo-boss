@@ -136,6 +136,7 @@ const Revenus = () => {
 
         {/* Total Widget */}
         <motion.div
+          key={`total-${filterPeriod}-${totalFiltered}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-6 rounded-xl card-gradient border border-border/50 mb-6 premium-card"
