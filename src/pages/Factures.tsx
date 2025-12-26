@@ -1,13 +1,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Receipt, Plus, ArrowLeft, CheckCircle, Download } from "lucide-react";
+import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Facture {
   id: string;
@@ -15,7 +21,15 @@ interface Facture {
   montant: number;
   statut: string;
   date: string;
-  clients: { nom: string } | null;
+  clients: { nom: string; telephone: string | null; email: string | null } | null;
+}
+
+interface Entreprise {
+  nom: string;
+  logo: string | null;
+  adresse: string | null;
+  telephone: string | null;
+  email: string | null;
 }
 
 const Factures = () => {
@@ -23,13 +37,17 @@ const Factures = () => {
   const [factures, setFactures] = useState<Facture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState("");
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const fetchFactures = useCallback(async () => {
     if (!entrepriseId) return;
 
     const { data } = await supabase
       .from("factures")
-      .select("*, clients(nom)")
+      .select("*, clients(nom, telephone, email)")
       .eq("entreprise_id", entrepriseId)
       .order("date", { ascending: false });
 
@@ -37,11 +55,24 @@ const Factures = () => {
     setIsLoading(false);
   }, [entrepriseId]);
 
+  const fetchEntreprise = useCallback(async () => {
+    if (!entrepriseId) return;
+
+    const { data } = await supabase
+      .from("entreprises")
+      .select("nom, logo, adresse, telephone, email")
+      .eq("id", entrepriseId)
+      .single();
+
+    setEntreprise(data);
+  }, [entrepriseId]);
+
   useEffect(() => {
     if (entrepriseId) {
       fetchFactures();
+      fetchEntreprise();
     }
-  }, [entrepriseId, fetchFactures]);
+  }, [entrepriseId, fetchFactures, fetchEntreprise]);
 
   const marquerPayee = async (facture: Facture) => {
     const { error } = await supabase
@@ -54,8 +85,68 @@ const Factures = () => {
       return;
     }
 
+    // Insérer dans revenus
+    await supabase.from("revenus").insert({
+      facture_id: facture.id,
+      montant: facture.montant,
+      entreprise_id: entrepriseId,
+    });
+
     toast.success("Facture marquée comme payée");
     fetchFactures();
+  };
+
+  const generateFacture = async (facture: Facture) => {
+    if (!entreprise) {
+      toast.error("Informations entreprise non disponibles");
+      return;
+    }
+
+    setGeneratingId(facture.id);
+
+    try {
+      const response = await supabase.functions.invoke("generate-facture", {
+        body: {
+          entrepriseNom: entreprise.nom,
+          entrepriseLogo: entreprise.logo,
+          entrepriseAdresse: entreprise.adresse,
+          entrepriseTelephone: entreprise.telephone,
+          entrepriseEmail: entreprise.email,
+          clientNom: facture.clients?.nom || "Client inconnu",
+          clientTelephone: facture.clients?.telephone,
+          clientEmail: facture.clients?.email,
+          description: facture.description,
+          montant: facture.montant,
+          date: new Date(facture.date).toLocaleDateString("fr-FR"),
+          numeroFacture: `FAC-${facture.id.substring(0, 8).toUpperCase()}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      setPreviewContent(response.data.content);
+      setPreviewOpen(true);
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+      toast.error("Erreur lors de la génération de la facture");
+    } finally {
+      setGeneratingId(null);
+    }
+  };
+
+  const downloadAsTxt = () => {
+    const blob = new Blob([previewContent], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "facture.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Facture téléchargée");
   };
 
   const formatCurrency = (amount: number) => {
@@ -126,8 +217,17 @@ const Factures = () => {
                         Marquer payée
                       </Button>
                     )}
-                    <Button variant="ghost" size="sm">
-                      <Download className="w-4 h-4" />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => generateFacture(facture)}
+                      disabled={generatingId === facture.id}
+                    >
+                      {generatingId === facture.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <FileText className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -150,6 +250,29 @@ const Factures = () => {
           onSuccess={fetchFactures}
         />
       )}
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Aperçu de la facture
+            </DialogTitle>
+          </DialogHeader>
+          <div className="bg-secondary/30 rounded-lg p-6 whitespace-pre-wrap font-mono text-sm">
+            {previewContent}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+              Fermer
+            </Button>
+            <Button onClick={downloadAsTxt}>
+              <Download className="w-4 h-4 mr-2" />
+              Télécharger
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
