@@ -6,5 +6,8 @@ verify_jwt = false
 [functions.generate-facture]
 verify_jwt = false
 
+[functions.generate-devis]
+verify_jwt = false
+
 [functions.analyze-logo]
 verify_jwt = false
