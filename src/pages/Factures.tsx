@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2 } from "lucide-react";
@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +42,10 @@ const Factures = () => {
   const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState("");
+  const [previewFacture, setPreviewFacture] = useState<Facture | null>(null);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   const fetchFactures = useCallback(async () => {
     if (!entrepriseId) return;
@@ -127,6 +132,7 @@ const Factures = () => {
       }
 
       setPreviewContent(response.data.content);
+      setPreviewFacture(facture);
       setPreviewOpen(true);
     } catch (error) {
       console.error("Error generating invoice:", error);
@@ -136,17 +142,43 @@ const Factures = () => {
     }
   };
 
-  const downloadAsTxt = () => {
-    const blob = new Blob([previewContent], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "facture.txt";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success("Facture téléchargée");
+  const downloadAsPdf = async () => {
+    if (!invoiceRef.current || !previewFacture) return;
+
+    setIsDownloadingPdf(true);
+
+    try {
+      const canvas = await html2canvas(invoiceRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 10;
+
+      pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.save(`facture-${previewFacture.id.substring(0, 8).toUpperCase()}.pdf`);
+      toast.success("Facture PDF téléchargée");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -252,23 +284,119 @@ const Factures = () => {
       )}
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
               Aperçu de la facture
             </DialogTitle>
           </DialogHeader>
-          <div className="bg-secondary/30 rounded-lg p-6 whitespace-pre-wrap font-mono text-sm">
-            {previewContent}
+          
+          {/* Invoice Preview with Logo */}
+          <div 
+            ref={invoiceRef} 
+            className="bg-white text-black p-8 rounded-lg"
+            style={{ minHeight: "600px" }}
+          >
+            {/* Header with Logo */}
+            <div className="flex justify-between items-start mb-8 border-b pb-6">
+              <div className="flex items-center gap-4">
+                {entreprise?.logo && (
+                  <img 
+                    src={entreprise.logo} 
+                    alt="Logo entreprise" 
+                    className="w-20 h-20 object-contain"
+                    crossOrigin="anonymous"
+                  />
+                )}
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">{entreprise?.nom}</h1>
+                  {entreprise?.adresse && <p className="text-gray-600">{entreprise.adresse}</p>}
+                  {entreprise?.telephone && <p className="text-gray-600">Tél: {entreprise.telephone}</p>}
+                  {entreprise?.email && <p className="text-gray-600">{entreprise.email}</p>}
+                </div>
+              </div>
+              <div className="text-right">
+                <h2 className="text-3xl font-bold text-primary">FACTURE</h2>
+                <p className="text-gray-600 mt-2">
+                  N°: FAC-{previewFacture?.id.substring(0, 8).toUpperCase()}
+                </p>
+                <p className="text-gray-600">
+                  Date: {previewFacture ? new Date(previewFacture.date).toLocaleDateString("fr-FR") : ""}
+                </p>
+              </div>
+            </div>
+
+            {/* Client Info */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Facturé à:</h3>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="font-medium text-gray-900">{previewFacture?.clients?.nom}</p>
+                {previewFacture?.clients?.telephone && (
+                  <p className="text-gray-600">Tél: {previewFacture.clients.telephone}</p>
+                )}
+                {previewFacture?.clients?.email && (
+                  <p className="text-gray-600">{previewFacture.clients.email}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Description & Amount */}
+            <div className="mb-8">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="text-left p-3 text-gray-900">Description</th>
+                    <th className="text-right p-3 text-gray-900">Montant</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="p-3 text-gray-700">{previewFacture?.description || "Prestation de service"}</td>
+                    <td className="p-3 text-right font-medium text-gray-900">
+                      {previewFacture ? formatCurrency(previewFacture.montant) : ""}
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr className="bg-primary/10">
+                    <td className="p-3 font-bold text-gray-900">TOTAL</td>
+                    <td className="p-3 text-right font-bold text-primary text-lg">
+                      {previewFacture ? formatCurrency(previewFacture.montant) : ""}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* AI Generated Content */}
+            <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Détails:</h3>
+              <div className="whitespace-pre-wrap text-gray-700 text-sm">
+                {previewContent}
+              </div>
+            </div>
+
+            {/* Signature Area */}
+            <div className="flex justify-end mt-12">
+              <div className="text-center">
+                <p className="text-gray-600 mb-8">Signature et cachet</p>
+                <div className="w-48 h-24 border-b-2 border-gray-400"></div>
+              </div>
+            </div>
           </div>
+
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>
               Fermer
             </Button>
-            <Button onClick={downloadAsTxt}>
-              <Download className="w-4 h-4 mr-2" />
-              Télécharger
+            <Button onClick={downloadAsPdf} disabled={isDownloadingPdf}>
+              {isDownloadingPdf ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Télécharger PDF
             </Button>
           </div>
         </DialogContent>
