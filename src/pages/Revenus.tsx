@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TrendingUp, ArrowLeft } from "lucide-react";
+import { TrendingUp, ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
 
 interface Revenu {
   id: string;
@@ -18,6 +19,7 @@ const Revenus = () => {
   const [revenus, setRevenus] = useState<Revenu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalMensuel, setTotalMensuel] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchRevenus = useCallback(async () => {
     if (!entrepriseId) return;
@@ -100,6 +102,17 @@ const Revenus = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="flex justify-end mb-6"
+        >
+          <Button onClick={() => setDialogOpen(true)} className="premium-button">
+            <Plus className="w-4 h-4 mr-2" />
+            Ajouter un revenu
+          </Button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="rounded-xl border border-border/50 overflow-hidden premium-card"
         >
@@ -129,6 +142,15 @@ const Revenus = () => {
           )}
         </motion.div>
       </div>
+
+      {entrepriseId && (
+        <RevenuDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          entrepriseId={entrepriseId}
+          onSuccess={fetchRevenus}
+        />
+      )}
     </div>
   );
 };
