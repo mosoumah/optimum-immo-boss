@@ -13,7 +13,8 @@ interface Revenu {
   id: string;
   montant: number;
   date: string;
-  factures: { description: string | null; clients: { nom: string } | null } | null;
+  facture_id: string;
+  factures: { description: string | null; date: string; clients: { nom: string } | null } | null;
 }
 
 type FilterPeriod = 'today' | 'week' | 'month' | 'all';
@@ -37,7 +38,7 @@ const Revenus = () => {
 
     const { data } = await supabase
       .from("revenus")
-      .select("*, factures(description, clients(nom))")
+      .select("*, factures(description, date, clients(nom))")
       .eq("entreprise_id", entrepriseId)
       .order("date", { ascending: false });
 
@@ -71,7 +72,11 @@ const Revenus = () => {
   }, []);
 
   const filteredRevenus = useMemo(() => {
-    return revenus.filter((r) => filterByPeriod(r.date, filterPeriod));
+    // Utiliser la date de la facture pour le filtrage (plus fiable que la date du revenu)
+    return revenus.filter((r) => {
+      const effectiveDate = r.factures?.date || r.date;
+      return filterByPeriod(effectiveDate, filterPeriod);
+    });
   }, [revenus, filterPeriod, filterByPeriod]);
 
   const totalFiltered = useMemo(() => {
@@ -82,8 +87,10 @@ const Revenus = () => {
     return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("fr-FR");
+  const formatDate = (revenu: Revenu) => {
+    // Utiliser la date de la facture si disponible
+    const effectiveDate = revenu.factures?.date || revenu.date;
+    return new Date(effectiveDate).toLocaleDateString("fr-FR");
   };
 
   if (entrepriseLoading || isLoading) {
@@ -190,7 +197,7 @@ const Revenus = () => {
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-success">+{formatCurrency(revenu.montant)}</div>
-                    <div className="text-sm text-muted-foreground">{formatDate(revenu.date)}</div>
+                    <div className="text-sm text-muted-foreground">{formatDate(revenu)}</div>
                   </div>
                 </motion.div>
               ))}

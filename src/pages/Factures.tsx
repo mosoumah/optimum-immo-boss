@@ -113,12 +113,7 @@ const Factures = () => {
       return;
     }
 
-    await supabase.from("revenus").insert({
-      facture_id: facture.id,
-      montant: facture.montant,
-      entreprise_id: entrepriseId,
-    });
-
+    // Le revenu est créé automatiquement par le trigger handle_facture_paid
     toast.success("Facture marquée comme payée");
     fetchFactures();
   };
