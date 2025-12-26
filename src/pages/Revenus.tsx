@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TrendingUp, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useEntreprise } from "@/hooks/useEntreprise";
 
 interface Revenu {
   id: string;
@@ -14,34 +14,40 @@ interface Revenu {
 }
 
 const Revenus = () => {
-  const { user } = useAuth();
+  const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [revenus, setRevenus] = useState<Revenu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalMensuel, setTotalMensuel] = useState(0);
+
+  const fetchRevenus = useCallback(async () => {
+    if (!entrepriseId) return;
+
+    const { data } = await supabase
+      .from("revenus")
+      .select("*, factures(description, clients(nom))")
+      .eq("entreprise_id", entrepriseId)
+      .order("date", { ascending: false });
+
+    setRevenus(data || []);
+
+    // Calculate monthly total
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyTotal = (data || [])
+      .filter((r) => new Date(r.date) >= startOfMonth)
+      .reduce((sum, r) => sum + Number(r.montant), 0);
+    setTotalMensuel(monthlyTotal);
+
+    setIsLoading(false);
+  }, [entrepriseId]);
 
   useEffect(() => {
-    const fetchRevenus = async () => {
-      if (!user) return;
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profileData?.entreprise_id) {
-        const { data } = await supabase
-          .from("revenus")
-          .select("*, factures(description, clients(nom))")
-          .eq("entreprise_id", profileData.entreprise_id)
-          .order("date", { ascending: false });
-
-        setRevenus(data || []);
-      }
-      setIsLoading(false);
-    };
-
-    fetchRevenus();
-  }, [user]);
+    if (entrepriseId) {
+      fetchRevenus();
+    }
+  }, [entrepriseId, fetchRevenus]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
@@ -51,7 +57,7 @@ const Revenus = () => {
     return new Date(date).toLocaleDateString("fr-FR");
   };
 
-  if (isLoading) {
+  if (entrepriseLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -74,6 +80,23 @@ const Revenus = () => {
           </div>
         </div>
 
+        {/* Monthly Widget */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-6 rounded-xl card-gradient border border-border/50 mb-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Total du mois</p>
+              <p className="text-3xl font-bold text-success">{formatCurrency(totalMensuel)}</p>
+            </div>
+            <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
+              <TrendingUp className="w-7 h-7 text-success" />
+            </div>
+          </div>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -89,7 +112,7 @@ const Revenus = () => {
                   </div>
                   <div className="flex-1">
                     <div className="font-medium">{revenu.factures?.clients?.nom || "Revenu"}</div>
-                    <div className="text-sm text-muted-foreground">{revenu.factures?.description || formatDate(revenu.date)}</div>
+                    <div className="text-sm text-muted-foreground">{revenu.factures?.description || "Paiement facture"}</div>
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-success">+{formatCurrency(revenu.montant)}</div>

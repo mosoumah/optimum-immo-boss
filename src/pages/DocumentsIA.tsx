@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, Plus, ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useEntreprise } from "@/hooks/useEntreprise";
+import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
 
 interface Document {
   id: string;
@@ -15,40 +16,35 @@ interface Document {
 }
 
 const DocumentsIA = () => {
-  const { user } = useAuth();
+  const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fetchDocuments = useCallback(async () => {
+    if (!entrepriseId) return;
+
+    const { data } = await supabase
+      .from("documents")
+      .select("*, clients(nom)")
+      .eq("entreprise_id", entrepriseId)
+      .order("date", { ascending: false });
+
+    setDocuments(data || []);
+    setIsLoading(false);
+  }, [entrepriseId]);
 
   useEffect(() => {
-    const fetchDocuments = async () => {
-      if (!user) return;
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profileData?.entreprise_id) {
-        const { data } = await supabase
-          .from("documents")
-          .select("*, clients(nom)")
-          .eq("entreprise_id", profileData.entreprise_id)
-          .order("date", { ascending: false });
-
-        setDocuments(data || []);
-      }
-      setIsLoading(false);
-    };
-
-    fetchDocuments();
-  }, [user]);
+    if (entrepriseId) {
+      fetchDocuments();
+    }
+  }, [entrepriseId, fetchDocuments]);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("fr-FR");
   };
 
-  if (isLoading) {
+  if (entrepriseLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -76,7 +72,7 @@ const DocumentsIA = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-end mb-6"
         >
-          <Button>
+          <Button onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nouveau document
           </Button>
@@ -113,6 +109,15 @@ const DocumentsIA = () => {
           )}
         </motion.div>
       </div>
+
+      {entrepriseId && (
+        <DocumentDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          entrepriseId={entrepriseId}
+          onSuccess={fetchDocuments}
+        />
+      )}
     </div>
   );
 };

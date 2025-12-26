@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckSquare, Plus, ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useEntreprise } from "@/hooks/useEntreprise";
+import { TacheDialog } from "@/components/dialogs/TacheDialog";
 
 interface Tache {
   id: string;
@@ -17,34 +18,29 @@ interface Tache {
 }
 
 const Taches = () => {
-  const { user } = useAuth();
+  const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [taches, setTaches] = useState<Tache[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fetchTaches = useCallback(async () => {
+    if (!entrepriseId) return;
+
+    const { data } = await supabase
+      .from("taches")
+      .select("*")
+      .eq("entreprise_id", entrepriseId)
+      .order("date", { ascending: false });
+
+    setTaches(data || []);
+    setIsLoading(false);
+  }, [entrepriseId]);
 
   useEffect(() => {
-    const fetchTaches = async () => {
-      if (!user) return;
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profileData?.entreprise_id) {
-        const { data } = await supabase
-          .from("taches")
-          .select("*")
-          .eq("entreprise_id", profileData.entreprise_id)
-          .order("date", { ascending: false });
-
-        setTaches(data || []);
-      }
-      setIsLoading(false);
-    };
-
-    fetchTaches();
-  }, [user]);
+    if (entrepriseId) {
+      fetchTaches();
+    }
+  }, [entrepriseId, fetchTaches]);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("fr-FR");
@@ -60,7 +56,7 @@ const Taches = () => {
     setTaches(taches.map(t => t.id === tache.id ? { ...t, statut: newStatut } : t));
   };
 
-  if (isLoading) {
+  if (entrepriseLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -88,7 +84,7 @@ const Taches = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-end mb-6"
         >
-          <Button>
+          <Button onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nouvelle tâche
           </Button>
@@ -139,6 +135,15 @@ const Taches = () => {
           )}
         </motion.div>
       </div>
+
+      {entrepriseId && (
+        <TacheDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          entrepriseId={entrepriseId}
+          onSuccess={fetchTaches}
+        />
+      )}
     </div>
   );
 };

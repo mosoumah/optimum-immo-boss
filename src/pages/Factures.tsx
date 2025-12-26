@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Receipt, Plus, ArrowLeft } from "lucide-react";
+import { Receipt, Plus, ArrowLeft, CheckCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useEntreprise } from "@/hooks/useEntreprise";
+import { FactureDialog } from "@/components/dialogs/FactureDialog";
+import { toast } from "sonner";
 
 interface Facture {
   id: string;
@@ -17,40 +19,50 @@ interface Facture {
 }
 
 const Factures = () => {
-  const { user } = useAuth();
+  const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fetchFactures = useCallback(async () => {
+    if (!entrepriseId) return;
+
+    const { data } = await supabase
+      .from("factures")
+      .select("*, clients(nom)")
+      .eq("entreprise_id", entrepriseId)
+      .order("date", { ascending: false });
+
+    setFactures(data || []);
+    setIsLoading(false);
+  }, [entrepriseId]);
 
   useEffect(() => {
-    const fetchFactures = async () => {
-      if (!user) return;
+    if (entrepriseId) {
+      fetchFactures();
+    }
+  }, [entrepriseId, fetchFactures]);
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
+  const marquerPayee = async (facture: Facture) => {
+    const { error } = await supabase
+      .from("factures")
+      .update({ statut: "paye" })
+      .eq("id", facture.id);
 
-      if (profileData?.entreprise_id) {
-        const { data } = await supabase
-          .from("factures")
-          .select("*, clients(nom)")
-          .eq("entreprise_id", profileData.entreprise_id)
-          .order("date", { ascending: false });
+    if (error) {
+      toast.error("Erreur lors de la mise à jour");
+      return;
+    }
 
-        setFactures(data || []);
-      }
-      setIsLoading(false);
-    };
-
+    toast.success("Facture marquée comme payée");
     fetchFactures();
-  }, [user]);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
   };
 
-  if (isLoading) {
+  if (entrepriseLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -78,7 +90,7 @@ const Factures = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-end mb-6"
         >
-          <Button>
+          <Button onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nouvelle facture
           </Button>
@@ -101,11 +113,22 @@ const Factures = () => {
                     <div className="font-medium">{facture.clients?.nom || "Client inconnu"}</div>
                     <div className="text-sm text-muted-foreground">{facture.description || "Sans description"}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right mr-4">
                     <div className="font-medium">{formatCurrency(facture.montant)}</div>
                     <Badge className={facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
-                      {facture.statut === "paye" ? "Payé" : "Non payé"}
+                      {facture.statut === "paye" ? "Payée" : "Non payée"}
                     </Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    {facture.statut !== "paye" && (
+                      <Button variant="outline" size="sm" onClick={() => marquerPayee(facture)}>
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Marquer payée
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm">
+                      <Download className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -118,6 +141,15 @@ const Factures = () => {
           )}
         </motion.div>
       </div>
+
+      {entrepriseId && (
+        <FactureDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          entrepriseId={entrepriseId}
+          onSuccess={fetchFactures}
+        />
+      )}
     </div>
   );
 };
