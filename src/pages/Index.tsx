@@ -10,7 +10,11 @@ import {
   ArrowRight,
   Building2,
   Shield,
-  Zap
+  Zap,
+  Clock,
+  Wallet,
+  Database,
+  Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
@@ -52,11 +56,27 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: "500+", label: "Agences actives" },
-  { value: "50K+", label: "Documents générés" },
-  { value: "99%", label: "Satisfaction client" },
-  { value: "24/7", label: "Support disponible" },
+const benefits = [
+  { 
+    icon: Clock, 
+    title: "Gagnez du temps", 
+    description: "Automatisez vos tâches répétitives et concentrez-vous sur l'essentiel." 
+  },
+  { 
+    icon: Wallet, 
+    title: "Économisez de l'argent", 
+    description: "Réduisez vos coûts opérationnels et maximisez vos profits." 
+  },
+  { 
+    icon: Database, 
+    title: "Récoltez des données", 
+    description: "Centralisez et analysez toutes vos informations clients." 
+  },
+  { 
+    icon: Trophy, 
+    title: "Distinguez-vous", 
+    description: "Démarquez-vous de la concurrence avec des outils professionnels." 
+  },
 ];
 
 const Index = () => {
@@ -160,12 +180,41 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Benefits Section */}
       <section className="py-20 border-y border-border/30">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <StatCard key={stat.label} {...stat} index={index} />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Pourquoi choisir <span className="text-gradient">Optimum Immo</span> ?
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Des avantages concrets pour propulser votre agence immobilière.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {benefits.map((benefit, index) => (
+              <motion.div
+                key={benefit.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="card-glow rounded-2xl p-6 text-center group"
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-5 group-hover:bg-primary/20 transition-colors duration-300">
+                  <benefit.icon className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {benefit.description}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
