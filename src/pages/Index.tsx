@@ -131,7 +131,7 @@ const Index = () => {
                 </Link>
               </Button>
               <Button variant="hero-outline" size="xl" asChild>
-                <Link to="#features">Découvrir les fonctionnalités</Link>
+                <a href="#features">Découvrir les fonctionnalités</a>
               </Button>
             </motion.div>
           </motion.div>

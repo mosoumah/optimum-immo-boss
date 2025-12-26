@@ -8,9 +8,9 @@ export const Footer = () => {
           <Logo size="sm" animated={false} />
           
           <div className="flex items-center gap-8 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">Mentions légales</a>
-            <a href="#" className="hover:text-foreground transition-colors">Confidentialité</a>
-            <a href="#" className="hover:text-foreground transition-colors">CGU</a>
+            <span className="hover:text-foreground transition-colors cursor-pointer">Mentions légales</span>
+            <span className="hover:text-foreground transition-colors cursor-pointer">Confidentialité</span>
+            <span className="hover:text-foreground transition-colors cursor-pointer">CGU</span>
           </div>
           
           <p className="text-sm text-muted-foreground">
