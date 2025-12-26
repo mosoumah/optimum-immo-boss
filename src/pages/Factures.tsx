@@ -34,6 +34,9 @@ interface Entreprise {
   adresse: string | null;
   telephone: string | null;
   email: string | null;
+  couleur_primaire: string | null;
+  couleur_secondaire: string | null;
+  couleur_accent: string | null;
 }
 
 const Factures = () => {
@@ -68,7 +71,7 @@ const Factures = () => {
 
     const { data } = await supabase
       .from("entreprises")
-      .select("nom, logo, adresse, telephone, email")
+      .select("nom, logo, adresse, telephone, email, couleur_primaire, couleur_secondaire, couleur_accent")
       .eq("id", entrepriseId)
       .single();
 
@@ -211,6 +214,9 @@ const Factures = () => {
     if (!printWindow || !invoiceRef.current) return;
 
     const logoSrc = logoDataUrl || entreprise?.logo || "";
+    const primaryColor = entreprise?.couleur_primaire || "#E97451";
+    const secondaryColor = entreprise?.couleur_secondaire || "#FFF5F2";
+    const accentColor = entreprise?.couleur_accent || "#1a1a2e";
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -223,33 +229,33 @@ const Factures = () => {
             .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #e5e5e5; padding-bottom: 20px; }
             .logo-section { display: flex; align-items: center; gap: 16px; }
             .logo { width: 80px; height: 80px; object-fit: contain; }
-            .company-info h1 { font-size: 24px; font-weight: bold; }
+            .company-info h1 { font-size: 24px; font-weight: bold; color: ${accentColor}; }
             .company-info p { font-size: 12px; color: #666; }
             .invoice-title { text-align: right; }
-            .invoice-title h2 { font-size: 28px; font-weight: bold; color: #E97451; }
+            .invoice-title h2 { font-size: 28px; font-weight: bold; color: ${primaryColor}; }
             .invoice-title p { font-size: 12px; color: #666; margin-top: 8px; }
             .client-section { margin-bottom: 30px; }
-            .client-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+            .client-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: ${accentColor}; }
             .client-box { background: #f9f9f9; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; }
             .client-box p { font-size: 13px; }
             .client-box .name { font-weight: 500; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-            thead tr { background: #E97451; }
+            thead tr { background: ${primaryColor}; }
             th { padding: 12px; text-align: left; color: white; font-weight: 600; font-size: 13px; }
             th:last-child { text-align: right; }
             td { padding: 12px; font-size: 13px; border-bottom: 1px solid #e5e5e5; }
             td:last-child { text-align: right; }
-            tfoot tr { background: #FFF5F2; }
-            tfoot td { font-weight: bold; }
-            tfoot td:last-child { color: #E97451; font-size: 16px; }
+            tfoot tr { background: ${secondaryColor}; }
+            tfoot td { font-weight: bold; color: ${accentColor}; }
+            tfoot td:last-child { color: ${primaryColor}; font-size: 16px; }
             .details { background: #f9f9f9; padding: 16px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e5e5e5; }
-            .details h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+            .details h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: ${accentColor}; }
             .details-content { font-size: 12px; color: #555; white-space: pre-wrap; line-height: 1.6; }
             .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5e5; }
             .footer-text { font-size: 11px; color: #888; }
             .signature { text-align: center; }
             .signature p { font-size: 12px; color: #666; margin-bottom: 30px; }
-            .signature-line { width: 180px; border-bottom: 2px solid #999; }
+            .signature-line { width: 180px; border-bottom: 2px solid ${primaryColor}; }
             @media print { body { padding: 0; } }
           </style>
         </head>
@@ -323,6 +329,9 @@ const Factures = () => {
     if (!previewFacture || !entreprise) return;
 
     const logoSrc = logoDataUrl || "";
+    const primaryColor = entreprise.couleur_primaire || "#E97451";
+    const secondaryColor = entreprise.couleur_secondaire || "#FFF5F2";
+    const accentColor = entreprise.couleur_accent || "#1a1a2e";
     
     const htmlContent = `
 <!DOCTYPE html>
@@ -337,33 +346,33 @@ const Factures = () => {
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #e5e5e5; padding-bottom: 20px; }
     .logo-section { display: flex; align-items: center; gap: 16px; }
     .logo { width: 80px; height: 80px; object-fit: contain; }
-    .company-info h1 { font-size: 24px; font-weight: bold; margin-bottom: 4px; }
+    .company-info h1 { font-size: 24px; font-weight: bold; margin-bottom: 4px; color: ${accentColor}; }
     .company-info p { font-size: 13px; color: #666; line-height: 1.5; }
     .invoice-title { text-align: right; }
-    .invoice-title h2 { font-size: 32px; font-weight: bold; color: #E97451; }
+    .invoice-title h2 { font-size: 32px; font-weight: bold; color: ${primaryColor}; }
     .invoice-title p { font-size: 13px; color: #666; margin-top: 8px; }
     .client-section { margin-bottom: 30px; }
-    .client-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+    .client-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: ${accentColor}; }
     .client-box { background: #f9f9f9; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; }
     .client-box p { font-size: 14px; line-height: 1.6; }
     .client-box .name { font-weight: 600; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-    thead tr { background: #E97451; }
+    thead tr { background: ${primaryColor}; }
     th { padding: 14px; text-align: left; color: white; font-weight: 600; font-size: 14px; }
     th:last-child { text-align: right; }
     td { padding: 14px; font-size: 14px; border-bottom: 1px solid #e5e5e5; }
     td:last-child { text-align: right; font-weight: 500; }
-    tfoot tr { background: #FFF5F2; }
-    tfoot td { font-weight: bold; font-size: 15px; }
-    tfoot td:last-child { color: #E97451; font-size: 18px; }
+    tfoot tr { background: ${secondaryColor}; }
+    tfoot td { font-weight: bold; font-size: 15px; color: ${accentColor}; }
+    tfoot td:last-child { color: ${primaryColor}; font-size: 18px; }
     .details { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e5e5e5; }
-    .details h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .details h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: ${accentColor}; }
     .details-content { font-size: 13px; color: #555; white-space: pre-wrap; line-height: 1.7; }
     .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-top: 20px; border-top: 1px solid #e5e5e5; }
     .footer-text { font-size: 12px; color: #888; line-height: 1.6; }
     .signature { text-align: center; }
     .signature p { font-size: 13px; color: #666; margin-bottom: 40px; }
-    .signature-line { width: 200px; border-bottom: 2px solid #aaa; }
+    .signature-line { width: 200px; border-bottom: 2px solid ${primaryColor}; }
     @media print { body { padding: 20px; } @page { margin: 1cm; } }
   </style>
 </head>
@@ -444,8 +453,16 @@ const Factures = () => {
     toast.success("Facture HTML téléchargée");
   };
 
-  const handleLogoUpdated = (newLogoUrl: string) => {
-    setEntreprise((prev) => (prev ? { ...prev, logo: newLogoUrl } : null));
+  const handleLogoUpdated = (newLogoUrl: string, colors?: { couleur_primaire: string; couleur_secondaire: string; couleur_accent: string }) => {
+    setEntreprise((prev) => prev ? { 
+      ...prev, 
+      logo: newLogoUrl,
+      ...(colors && {
+        couleur_primaire: colors.couleur_primaire,
+        couleur_secondaire: colors.couleur_secondaire,
+        couleur_accent: colors.couleur_accent,
+      })
+    } : null);
   };
 
   const formatCurrency = (amount: number) => {
@@ -486,6 +503,11 @@ const Factures = () => {
               entrepriseId={entrepriseId}
               currentLogo={entreprise?.logo || null}
               onLogoUpdated={handleLogoUpdated}
+              currentColors={{
+                couleur_primaire: entreprise?.couleur_primaire || null,
+                couleur_secondaire: entreprise?.couleur_secondaire || null,
+                couleur_accent: entreprise?.couleur_accent || null,
+              }}
             />
           </motion.div>
         )}

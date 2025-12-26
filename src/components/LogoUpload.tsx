@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Image, Loader2 } from "lucide-react";
+import { Upload, Image, Loader2, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,12 +7,64 @@ import { toast } from "sonner";
 interface LogoUploadProps {
   entrepriseId: string;
   currentLogo: string | null;
-  onLogoUpdated: (newLogoUrl: string) => void;
+  onLogoUpdated: (newLogoUrl: string, colors?: { couleur_primaire: string; couleur_secondaire: string; couleur_accent: string }) => void;
+  currentColors?: {
+    couleur_primaire: string | null;
+    couleur_secondaire: string | null;
+    couleur_accent: string | null;
+  };
 }
 
-export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated }: LogoUploadProps) => {
+export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentColors }: LogoUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const analyzeLogoColors = async (logoUrl: string) => {
+    setIsAnalyzing(true);
+    try {
+      const response = await supabase.functions.invoke("analyze-logo", {
+        body: { logoUrl },
+      });
+
+      if (response.error) {
+        console.error("Error analyzing logo:", response.error);
+        toast.error("Erreur lors de l'analyse des couleurs");
+        return null;
+      }
+
+      const colors = response.data;
+      
+      if (colors.couleur_primaire && colors.couleur_secondaire && colors.couleur_accent) {
+        // Update entreprise with colors
+        const { error: updateError } = await supabase
+          .from("entreprises")
+          .update({
+            couleur_primaire: colors.couleur_primaire,
+            couleur_secondaire: colors.couleur_secondaire,
+            couleur_accent: colors.couleur_accent,
+          })
+          .eq("id", entrepriseId);
+
+        if (updateError) {
+          console.error("Error updating colors:", updateError);
+          toast.error("Erreur lors de la sauvegarde des couleurs");
+        } else {
+          toast.success("Charte graphique extraite avec succès!");
+        }
+        
+        return colors;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Logo analysis error:", error);
+      toast.error("Erreur lors de l'analyse du logo");
+      return null;
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -66,8 +118,12 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated }: LogoUpl
         return;
       }
 
-      onLogoUpdated(logoUrl);
       toast.success("Logo mis à jour avec succès");
+      
+      // Analyze logo colors with AI
+      const colors = await analyzeLogoColors(logoUrl);
+      onLogoUpdated(logoUrl, colors || undefined);
+      
     } catch (error) {
       console.error("Logo upload error:", error);
       toast.error("Erreur inattendue lors de l'upload");
@@ -80,8 +136,21 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated }: LogoUpl
     }
   };
 
+  const handleReanalyze = async () => {
+    if (!currentLogo) {
+      toast.error("Aucun logo à analyser");
+      return;
+    }
+    const colors = await analyzeLogoColors(currentLogo);
+    if (colors) {
+      onLogoUpdated(currentLogo, colors);
+    }
+  };
+
+  const isProcessing = isUploading || isAnalyzing;
+
   return (
-    <div className="p-4 rounded-xl border border-border/50 bg-secondary/20">
+    <div className="p-4 rounded-xl border border-border/50 bg-secondary/20 space-y-4">
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-background overflow-hidden">
           {currentLogo ? (
@@ -97,10 +166,16 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated }: LogoUpl
         <div className="flex-1">
           <p className="font-medium text-sm">Logo de l'entreprise</p>
           <p className="text-xs text-muted-foreground">
-            {currentLogo ? "Cliquez pour remplacer" : "Aucun logo configuré"}
+            {isAnalyzing 
+              ? "Analyse IA en cours..." 
+              : isUploading 
+                ? "Upload en cours..." 
+                : currentLogo 
+                  ? "Cliquez pour remplacer" 
+                  : "Aucun logo configuré"}
           </p>
         </div>
-        <div>
+        <div className="flex gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -113,11 +188,11 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated }: LogoUpl
             <Button
               variant="outline"
               size="sm"
-              disabled={isUploading}
+              disabled={isProcessing}
               asChild
             >
               <span className="cursor-pointer">
-                {isUploading ? (
+                {isProcessing ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
@@ -128,8 +203,48 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated }: LogoUpl
               </span>
             </Button>
           </label>
+          {currentLogo && !isProcessing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleReanalyze}
+              title="Réanalyser les couleurs"
+            >
+              <Palette className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Color palette preview */}
+      {currentColors && (currentColors.couleur_primaire || currentColors.couleur_secondaire || currentColors.couleur_accent) && (
+        <div className="flex items-center gap-3 pt-2 border-t border-border/30">
+          <span className="text-xs text-muted-foreground">Charte graphique:</span>
+          <div className="flex gap-2">
+            {currentColors.couleur_primaire && (
+              <div 
+                className="w-6 h-6 rounded-full border border-border shadow-sm" 
+                style={{ backgroundColor: currentColors.couleur_primaire }}
+                title={`Primaire: ${currentColors.couleur_primaire}`}
+              />
+            )}
+            {currentColors.couleur_secondaire && (
+              <div 
+                className="w-6 h-6 rounded-full border border-border shadow-sm" 
+                style={{ backgroundColor: currentColors.couleur_secondaire }}
+                title={`Secondaire: ${currentColors.couleur_secondaire}`}
+              />
+            )}
+            {currentColors.couleur_accent && (
+              <div 
+                className="w-6 h-6 rounded-full border border-border shadow-sm" 
+                style={{ backgroundColor: currentColors.couleur_accent }}
+                title={`Accent: ${currentColors.couleur_accent}`}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

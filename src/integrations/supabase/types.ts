@@ -198,6 +198,9 @@ export type Database = {
       entreprises: {
         Row: {
           adresse: string | null
+          couleur_accent: string | null
+          couleur_primaire: string | null
+          couleur_secondaire: string | null
           created_at: string
           email: string | null
           id: string
@@ -209,6 +212,9 @@ export type Database = {
         }
         Insert: {
           adresse?: string | null
+          couleur_accent?: string | null
+          couleur_primaire?: string | null
+          couleur_secondaire?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -220,6 +226,9 @@ export type Database = {
         }
         Update: {
           adresse?: string | null
+          couleur_accent?: string | null
+          couleur_primaire?: string | null
+          couleur_secondaire?: string | null
           created_at?: string
           email?: string | null
           id?: string
