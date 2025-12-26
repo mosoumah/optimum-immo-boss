@@ -7,6 +7,9 @@ interface InvoicePreviewProps {
     adresse: string | null;
     telephone: string | null;
     email: string | null;
+    couleur_primaire?: string | null;
+    couleur_secondaire?: string | null;
+    couleur_accent?: string | null;
   } | null;
   facture: {
     id: string;
@@ -28,6 +31,11 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     if (!facture || !entreprise) return null;
 
     const logoSrc = logoDataUrl || entreprise.logo;
+    
+    // Dynamic colors from brand or defaults
+    const primaryColor = entreprise.couleur_primaire || "#E97451";
+    const secondaryColor = entreprise.couleur_secondaire || "#FFF5F2";
+    const accentColor = entreprise.couleur_accent || "#1a1a2e";
 
     return (
       <div
@@ -47,7 +55,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               />
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{entreprise.nom}</h1>
+              <h1 className="text-2xl font-bold" style={{ color: accentColor }}>{entreprise.nom}</h1>
               {entreprise.adresse && (
                 <p className="text-gray-600 text-sm">{entreprise.adresse}</p>
               )}
@@ -60,7 +68,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-bold" style={{ color: "#E97451" }}>
+            <h2 className="text-3xl font-bold" style={{ color: primaryColor }}>
               FACTURE
             </h2>
             <p className="text-gray-600 mt-2 text-sm">
@@ -74,7 +82,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
 
         {/* Client Info */}
         <div className="mb-8">
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Facturé à:</h3>
+          <h3 className="text-base font-semibold mb-2" style={{ color: accentColor }}>Facturé à:</h3>
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <p className="font-medium text-gray-900">{facture.clients?.nom || "Client"}</p>
             {facture.clients?.telephone && (
@@ -90,7 +98,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         <div className="mb-8">
           <table className="w-full border-collapse">
             <thead>
-              <tr style={{ backgroundColor: "#E97451" }}>
+              <tr style={{ backgroundColor: primaryColor }}>
                 <th className="text-left p-3 text-white font-semibold">Description</th>
                 <th className="text-right p-3 text-white font-semibold">Montant</th>
               </tr>
@@ -106,11 +114,11 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               </tr>
             </tbody>
             <tfoot>
-              <tr style={{ backgroundColor: "#FFF5F2" }}>
-                <td className="p-3 font-bold text-gray-900">TOTAL</td>
+              <tr style={{ backgroundColor: secondaryColor }}>
+                <td className="p-3 font-bold" style={{ color: accentColor }}>TOTAL</td>
                 <td
                   className="p-3 text-right font-bold text-lg"
-                  style={{ color: "#E97451" }}
+                  style={{ color: primaryColor }}
                 >
                   {formatCurrency(facture.montant)}
                 </td>
@@ -122,7 +130,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         {/* AI Generated Content */}
         {aiContent && (
           <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Détails:</h3>
+            <h3 className="text-base font-semibold mb-2" style={{ color: accentColor }}>Détails:</h3>
             <div className="whitespace-pre-wrap text-gray-700 text-sm leading-relaxed">
               {aiContent}
             </div>
@@ -137,7 +145,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
           <div className="text-center">
             <p className="text-gray-600 mb-8 text-sm">Signature et cachet</p>
-            <div className="w-48 h-20 border-b-2 border-gray-400"></div>
+            <div className="w-48 h-20 border-b-2" style={{ borderColor: primaryColor }}></div>
           </div>
         </div>
       </div>
