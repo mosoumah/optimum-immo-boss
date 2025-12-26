@@ -12,6 +12,13 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DepenseDialogProps {
   open: boolean;
@@ -20,7 +27,22 @@ interface DepenseDialogProps {
   onSuccess: () => void;
 }
 
+const typesDepense = [
+  "Loyer bureau",
+  "Électricité",
+  "Internet / Téléphone",
+  "Fournitures bureau",
+  "Transport / Carburant",
+  "Marketing / Publicité",
+  "Salaires / Personnel",
+  "Maintenance",
+  "Frais bancaires",
+  "Taxes / Impôts",
+  "Autre",
+];
+
 export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: DepenseDialogProps) => {
+  const [typeDepense, setTypeDepense] = useState("");
   const [description, setDescription] = useState("");
   const [montant, setMontant] = useState("");
   const [date, setDate] = useState<Date>(new Date());
@@ -28,14 +50,18 @@ export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: D
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!montant || !description.trim()) {
-      toast.error("Description et montant sont requis");
+    if (!montant || !typeDepense) {
+      toast.error("Type et montant sont requis");
       return;
     }
 
+    const fullDescription = description.trim() 
+      ? `${typeDepense} - ${description.trim()}`
+      : typeDepense;
+
     setIsLoading(true);
     const { error } = await supabase.from("depenses").insert({
-      description: description.trim(),
+      description: fullDescription,
       montant: parseFloat(montant),
       date: format(date, "yyyy-MM-dd"),
       entreprise_id: entrepriseId,
@@ -49,6 +75,7 @@ export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: D
     }
 
     toast.success("Dépense ajoutée avec succès");
+    setTypeDepense("");
     setDescription("");
     setMontant("");
     setDate(new Date());
@@ -65,13 +92,27 @@ export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: D
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="type">Type de dépense *</Label>
+            <Select value={typeDepense} onValueChange={setTypeDepense}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un type" />
+              </SelectTrigger>
+              <SelectContent>
+                {typesDepense.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Commentaire</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description de la dépense"
-              required
+              placeholder="Détails supplémentaires (optionnel)"
             />
           </div>
           <div className="space-y-2">

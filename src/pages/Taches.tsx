@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckSquare, Plus, ArrowLeft, Check } from "lucide-react";
+import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
+import { toast } from "sonner";
 
 interface Tache {
   id: string;
@@ -17,11 +18,19 @@ interface Tache {
   is_ai_generated: boolean | null;
 }
 
+interface Suggestion {
+  titre: string;
+  description: string;
+  priorite: string;
+}
+
 const Taches = () => {
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [taches, setTaches] = useState<Tache[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   const fetchTaches = useCallback(async () => {
     if (!entrepriseId) return;
@@ -56,6 +65,69 @@ const Taches = () => {
     setTaches(taches.map(t => t.id === tache.id ? { ...t, statut: newStatut } : t));
   };
 
+  const generateSuggestions = async () => {
+    setIsGeneratingSuggestions(true);
+    setSuggestions([]);
+
+    try {
+      const response = await supabase.functions.invoke("suggest-tasks", {
+        body: {
+          existingTasks: taches.map(t => ({ titre: t.titre, statut: t.statut })),
+          context: "Agence immobilière en Guinée - gestion quotidienne",
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      setSuggestions(response.data.suggestions || []);
+      
+      if (response.data.suggestions?.length > 0) {
+        toast.success(`${response.data.suggestions.length} suggestions générées`);
+      } else {
+        toast.info("Aucune suggestion disponible pour le moment");
+      }
+    } catch (error) {
+      console.error("Error generating suggestions:", error);
+      toast.error("Erreur lors de la génération des suggestions");
+    } finally {
+      setIsGeneratingSuggestions(false);
+    }
+  };
+
+  const addSuggestionAsTask = async (suggestion: Suggestion) => {
+    if (!entrepriseId) return;
+
+    const { error } = await supabase.from("taches").insert({
+      titre: suggestion.titre,
+      description: suggestion.description,
+      entreprise_id: entrepriseId,
+      statut: "a_faire",
+      is_ai_generated: true,
+    });
+
+    if (error) {
+      toast.error("Erreur lors de l'ajout de la tâche");
+      return;
+    }
+
+    toast.success("Tâche ajoutée");
+    setSuggestions(suggestions.filter(s => s.titre !== suggestion.titre));
+    fetchTaches();
+  };
+
+  const getPriorityColor = (priorite: string) => {
+    switch (priorite?.toLowerCase()) {
+      case "haute":
+        return "bg-destructive/10 text-destructive";
+      case "moyenne":
+        return "bg-warning/10 text-warning";
+      default:
+        return "bg-muted text-muted-foreground";
+    }
+  };
+
   if (entrepriseLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -82,13 +154,59 @@ const Taches = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-end mb-6"
+          className="flex justify-end gap-2 mb-6"
         >
+          <Button 
+            variant="outline" 
+            onClick={generateSuggestions}
+            disabled={isGeneratingSuggestions}
+            className="gap-2"
+          >
+            {isGeneratingSuggestions ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            Suggestions IA
+          </Button>
           <Button onClick={() => setDialogOpen(true)} className="premium-button">
             <Plus className="w-4 h-4 mr-2" />
             Nouvelle tâche
           </Button>
         </motion.div>
+
+        {/* AI Suggestions */}
+        {suggestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl border border-primary/30 bg-primary/5"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold">Suggestions IA</h3>
+            </div>
+            <div className="space-y-3">
+              {suggestions.map((suggestion, index) => (
+                <div key={index} className="p-3 rounded-lg bg-background/50 flex items-start gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">{suggestion.titre}</span>
+                      <Badge className={getPriorityColor(suggestion.priorite)}>
+                        {suggestion.priorite}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+                  </div>
+                  <Button size="sm" onClick={() => addSuggestionAsTask(suggestion)}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Ajouter
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

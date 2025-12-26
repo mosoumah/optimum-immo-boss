@@ -1,11 +1,23 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Plus, ArrowLeft, Eye } from "lucide-react";
+import { Users, Plus, ArrowLeft, Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
+import { EditClientDialog } from "@/components/dialogs/EditClientDialog";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Client {
   id: string;
@@ -20,6 +32,9 @@ const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const fetchClients = useCallback(async () => {
     if (!entrepriseId) return;
@@ -39,6 +54,35 @@ const Clients = () => {
       fetchClients();
     }
   }, [entrepriseId, fetchClients]);
+
+  const handleEdit = (client: Client) => {
+    setSelectedClient(client);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (client: Client) => {
+    setSelectedClient(client);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedClient) return;
+
+    const { error } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", selectedClient.id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression du client");
+      return;
+    }
+
+    toast.success("Client supprimé avec succès");
+    setDeleteDialogOpen(false);
+    setSelectedClient(null);
+    fetchClients();
+  };
 
   if (entrepriseLoading || isLoading) {
     return (
@@ -92,12 +136,20 @@ const Clients = () => {
                     <div className="text-sm text-muted-foreground">{client.email || "Pas d'email"}</div>
                   </div>
                   <div className="text-sm text-muted-foreground">{client.telephone || "-"}</div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to={`/clients/${client.id}`}>
-                      <Eye className="w-4 h-4 mr-1" />
-                      Voir fiche
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(client)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(client)}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to={`/clients/${client.id}`}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        Voir fiche
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -118,6 +170,30 @@ const Clients = () => {
           onSuccess={fetchClients}
         />
       )}
+
+      <EditClientDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        client={selectedClient}
+        onSuccess={fetchClients}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le client ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le client "{selectedClient?.nom}" sera supprimé définitivement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
