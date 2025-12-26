@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
-import { isToday, isThisWeek, isThisMonth, parseISO } from "date-fns";
+import { isToday, isThisWeek, isThisMonth } from "date-fns";
 
 interface Revenu {
   id: string;
@@ -51,8 +51,11 @@ const Revenus = () => {
     }
   }, [entrepriseId, fetchRevenus]);
 
-  const filterByPeriod = useCallback((date: string, period: FilterPeriod): boolean => {
-    const parsedDate = parseISO(date);
+  const filterByPeriod = useCallback((dateStr: string, period: FilterPeriod): boolean => {
+    if (!dateStr) return false;
+    const parsedDate = new Date(dateStr);
+    if (isNaN(parsedDate.getTime())) return false;
+    
     switch (period) {
       case 'today':
         return isToday(parsedDate);
@@ -61,6 +64,8 @@ const Revenus = () => {
       case 'month':
         return isThisMonth(parsedDate);
       case 'all':
+        return true;
+      default:
         return true;
     }
   }, []);
