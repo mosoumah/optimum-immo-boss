@@ -200,7 +200,7 @@ const Index = () => {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Tout ce dont vous avez besoin
+              Tout ce dont vous avez <span className="text-gradient">besoin</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Une suite d'outils puissants conçus spécialement pour les agences immobilières guinéennes.
@@ -241,7 +241,7 @@ const Index = () => {
               </div>
               
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Prêt à transformer votre agence?
+                Prêt à transformer <span className="text-gradient">votre agence</span> ?
               </h2>
               <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
                 Rejoignez des centaines d'agences qui font confiance à Optimum Immo 
