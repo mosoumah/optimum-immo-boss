@@ -118,7 +118,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               )}
               <div>
                 <p 
-                  className="text-[9px] font-semibold uppercase tracking-[0.2em] mb-1"
+                  className="text-[11px] font-semibold uppercase tracking-[0.2em] mb-1"
                   style={{ color: primaryColor }}
                 >
                   Agence Immobilière
@@ -129,7 +129,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 >
                   {entreprise.nom}
                 </h1>
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-sm text-gray-500">
                   <p className="flex items-center gap-2 flex-wrap">
                     {entreprise.adresse && (
                       <span>{entreprise.adresse}</span>
@@ -190,8 +190,8 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 borderLeft: `3px solid ${primaryColor}`
               }}
             >
-              <h3 
-                className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2"
+                <h3 
+                  className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2"
                 style={{ color: primaryColor }}
               >
                 Destinataire
@@ -204,7 +204,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 className="w-12 h-px my-2"
                 style={{ background: primaryColor }}
               />
-              <div className="text-xs text-gray-500">
+              <div className="text-sm text-gray-500">
                 {facture.clients?.telephone && (
                   <span>{facture.clients.telephone}</span>
                 )}
@@ -240,13 +240,13 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     }}
                   >
                     <th 
-                      className="text-left p-3 font-semibold text-[10px] uppercase tracking-[0.15em]"
+                      className="text-left p-3 font-semibold text-xs uppercase tracking-[0.15em]"
                       style={{ color: primaryTextColor }}
                     >
                       Désignation
                     </th>
                     <th 
-                      className="text-right p-3 font-semibold text-[10px] uppercase tracking-[0.15em] w-36"
+                      className="text-right p-3 font-semibold text-xs uppercase tracking-[0.15em] w-36"
                       style={{ color: primaryTextColor }}
                     >
                       Montant
@@ -255,10 +255,10 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 </thead>
                 <tbody>
                   <tr style={{ background: `${secondaryColor}20` }}>
-                    <td className="p-3 text-sm text-gray-700">
+                    <td className="p-3 text-base text-gray-700">
                       {facture.description || "Prestation de service immobilier"}
                     </td>
-                    <td className="p-3 text-right font-medium text-sm" style={{ color: accentColor }}>
+                    <td className="p-3 text-right font-medium text-base" style={{ color: accentColor }}>
                       {formatCurrency(facture.montant)}
                     </td>
                   </tr>
@@ -275,13 +275,13 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <div className="flex justify-between items-center">
                   <div>
                     <span 
-                      className="font-bold text-[10px] uppercase tracking-[0.15em] block"
+                      className="font-bold text-[11px] uppercase tracking-[0.15em] block"
                       style={{ color: accentTextColor }}
                     >
                       Montant Total Dû
                     </span>
                     <span 
-                      className="text-[9px] mt-1 block opacity-70"
+                      className="text-[10px] mt-1 block opacity-70"
                       style={{ color: accentTextColor }}
                     >
                       Arrêté à la somme indiquée ci-contre
@@ -326,7 +326,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   }}
                 >
                   <h3 
-                    className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2"
+                    className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2"
                     style={{ color: primaryColor }}
                   >
                     Nature de la Prestation
@@ -337,7 +337,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }}
                   />
                   <div 
-                    className="text-xs leading-relaxed"
+                    className="text-sm leading-relaxed"
                     style={{ color: "#4a5568" }}
                   >
                     {aiContent.split('\n').map((line, idx) => {
@@ -365,9 +365,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           <div>
             {/* Signature Area */}
             <div className="flex justify-between items-end">
-              <div className="text-xs text-gray-500 max-w-xs">
+              <div className="text-sm text-gray-500 max-w-xs">
                 <p 
-                  className="font-semibold uppercase text-[9px] tracking-[0.15em]"
+                  className="font-semibold uppercase text-[11px] tracking-[0.15em]"
                   style={{ color: accentColor }}
                 >
                   Conditions de Règlement
@@ -380,7 +380,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <p className="text-gray-600 leading-relaxed">
                   Le règlement est attendu sous trente jours à compter de la date d'émission de la présente facture.
                 </p>
-                <p className="mt-2 text-[10px] italic" style={{ color: primaryColor }}>
+                <p className="mt-2 text-xs italic" style={{ color: primaryColor }}>
                   Nous vous remercions de votre confiance et restons à votre entière disposition.
                 </p>
                 <div className="mt-4 pt-3 border-t border-gray-100">
