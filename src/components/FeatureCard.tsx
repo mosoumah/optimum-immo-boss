@@ -15,13 +15,23 @@ export const FeatureCard = ({ icon: Icon, title, description, index }: FeatureCa
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="group p-6 rounded-2xl card-gradient border border-border/50 hover:border-primary/30 transition-all duration-300"
+      className="group card-glow rounded-2xl p-6 text-center"
     >
-      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-        <Icon className="w-6 h-6 text-primary" />
-      </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+      <motion.div 
+        initial={{ scale: 0, rotate: -180 }}
+        whileInView={{ scale: 1, rotate: 0 }}
+        viewport={{ once: true }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 200, 
+          damping: 15, 
+          delay: index * 0.1 + 0.2 
+        }}
+        className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-5 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300"
+      >
+        <Icon className="w-8 h-8 text-primary" />
+      </motion.div>
+      <h3 className="text-xl font-semibold mb-3">{title}</h3>
       <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
     </motion.div>
   );

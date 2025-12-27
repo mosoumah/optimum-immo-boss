@@ -227,11 +227,17 @@ const Index = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent" />
             <div className="absolute inset-0 pattern-dots opacity-20" />
             
-            <div className="relative glass-strong rounded-3xl p-12 md:p-16 text-center">
+            <div className="relative card-glow rounded-3xl p-12 md:p-16 text-center">
               <div className="flex justify-center mb-6">
-                <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
-                  <Building2 className="w-10 h-10 text-primary" />
-                </div>
+                <motion.div 
+                  initial={{ scale: 0, rotate: -180 }}
+                  whileInView={{ scale: 1, rotate: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20"
+                >
+                  <Building2 className="w-8 h-8 text-primary" />
+                </motion.div>
               </div>
               
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
