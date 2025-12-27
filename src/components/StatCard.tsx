@@ -13,7 +13,7 @@ export const StatCard = ({ value, label, index }: StatCardProps) => {
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
-      className="text-center"
+      className="card-glow rounded-2xl p-6 text-center group"
     >
       <div className="text-4xl md:text-5xl font-bold text-gradient mb-2">{value}</div>
       <div className="text-muted-foreground text-sm">{label}</div>
