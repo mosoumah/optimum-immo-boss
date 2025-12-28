@@ -16,6 +16,7 @@ import {
   ArrowUpRight,
   Bell,
   Search,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
+import { FinancialChart } from "@/components/FinancialChart";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard", active: true },
@@ -390,50 +392,16 @@ const Dashboard = () => {
               transition={{ duration: 0.6, delay: 0.5 }} 
               className="lg:col-span-2 p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500"
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  Tâches du jour
+                  Analyse financière
                 </h2>
-                <Button variant="ghost" size="sm" asChild className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
-                  <Link to="/taches">Voir tout<ArrowUpRight className="w-4 h-4 ml-1" /></Link>
-                </Button>
+                <BarChart3 className="w-5 h-5 text-muted-foreground" />
               </div>
-              <div className="space-y-3">
-                {taches.length > 0 ? (
-                  taches.map((task, index) => (
-                    <motion.div 
-                      key={task.id} 
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-warning/10 to-transparent border-l-4 border-warning hover:from-warning/20 transition-all duration-300 group"
-                    >
-                      <div className="p-2 rounded-lg bg-warning/20">
-                        <Bell className="w-5 h-5 text-warning" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-medium text-sm">{task.titre}</span>
-                        <p className="text-xs text-muted-foreground mt-0.5">À faire aujourd'hui</p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => markTaskDone(task.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-success/10 hover:text-success rounded-lg"
-                      >
-                        <CheckSquare className="w-4 h-4 mr-1" />
-                        Terminer
-                      </Button>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-muted-foreground text-sm text-center py-12 flex flex-col items-center gap-3">
-                    <CheckSquare className="w-12 h-12 text-muted-foreground/30" />
-                    <span>Aucune tâche pour aujourd'hui</span>
-                  </div>
-                )}
-              </div>
+              {profile?.entreprise_id && (
+                <FinancialChart entrepriseId={profile.entreprise_id} />
+              )}
             </motion.div>
 
             <motion.div 
