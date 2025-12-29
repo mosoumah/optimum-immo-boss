@@ -102,7 +102,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             <div className="flex items-center gap-5">
               {logoSrc && (
                 <div 
-                  className="p-2 rounded-xl shadow-lg"
+                  className="w-20 h-20 rounded-xl shadow-lg overflow-hidden"
                   style={{ 
                     background: `linear-gradient(135deg, ${secondaryColor}, white)`,
                     border: `2px solid ${lightenColor(primaryColor, 0.3)}`
@@ -111,7 +111,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   <img
                     src={logoSrc}
                     alt="Logo entreprise"
-                    className="w-20 h-20 object-contain"
+                    className="w-full h-full object-cover"
                     crossOrigin="anonymous"
                   />
                 </div>
