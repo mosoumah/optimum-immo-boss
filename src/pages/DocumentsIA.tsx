@@ -1,37 +1,68 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Plus, ArrowLeft, FileText } from "lucide-react";
+import { Sparkles, Plus, ArrowLeft, FileText, Eye } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
+import { ViewDocumentDialog } from "@/components/dialogs/ViewDocumentDialog";
+
+interface Client {
+  nom: string;
+  email: string | null;
+  telephone: string | null;
+}
 
 interface Document {
   id: string;
   type: string;
   contenu: string | null;
   date: string;
-  clients: { nom: string } | null;
+  clients: Client | null;
+}
+
+interface Entreprise {
+  id: string;
+  nom: string;
+  logo: string | null;
+  adresse: string | null;
+  telephone: string | null;
+  email: string | null;
+  signature: string | null;
+  couleur_primaire: string | null;
+  couleur_secondaire: string | null;
+  couleur_accent: string | null;
 }
 
 const DocumentsIA = () => {
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   const fetchDocuments = useCallback(async () => {
     if (!entrepriseId) return;
 
-    const { data } = await supabase
-      .from("documents")
-      .select("*, clients(nom)")
-      .eq("entreprise_id", entrepriseId)
-      .order("date", { ascending: false });
+    const [documentsResult, entrepriseResult] = await Promise.all([
+      supabase
+        .from("documents")
+        .select("*, clients(nom, email, telephone)")
+        .eq("entreprise_id", entrepriseId)
+        .order("date", { ascending: false }),
+      supabase
+        .from("entreprises")
+        .select("*")
+        .eq("id", entrepriseId)
+        .single(),
+    ]);
 
-    setDocuments(data || []);
+    setDocuments(documentsResult.data || []);
+    setEntreprise(entrepriseResult.data);
     setIsLoading(false);
   }, [entrepriseId]);
 
@@ -43,6 +74,11 @@ const DocumentsIA = () => {
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("fr-FR");
+  };
+
+  const handleViewDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setViewDialogOpen(true);
   };
 
   if (entrepriseLoading || isLoading) {
@@ -70,10 +106,10 @@ const DocumentsIA = () => {
           <div>
             <h1 className="text-3xl font-bold">Documents IA</h1>
             <p className="text-muted-foreground">Documents générés par l'IA</p>
-        </div>
-      </motion.div>
+          </div>
+        </motion.div>
 
-      <motion.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-end mb-6"
@@ -98,7 +134,8 @@ const DocumentsIA = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
+                  className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item cursor-pointer"
+                  onClick={() => handleViewDocument(doc)}
                 >
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <FileText className="w-6 h-6 text-primary" />
@@ -109,6 +146,16 @@ const DocumentsIA = () => {
                       {doc.clients?.nom || "Sans client"} • {formatDate(doc.date)}
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewDocument(doc);
+                    }}
+                  >
+                    <Eye className="w-5 h-5 text-primary" />
+                  </Button>
                   <Sparkles className="w-5 h-5 text-primary" />
                 </motion.div>
               ))}
@@ -130,6 +177,14 @@ const DocumentsIA = () => {
           onSuccess={fetchDocuments}
         />
       )}
+
+      <ViewDocumentDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        document={selectedDocument}
+        client={selectedDocument?.clients || null}
+        entreprise={entreprise}
+      />
     </div>
   );
 };
