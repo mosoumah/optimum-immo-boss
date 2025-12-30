@@ -25,13 +25,6 @@ interface DocumentPreviewProps {
   logoDataUrl?: string | null;
 }
 
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("fr-GN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount) + " GNF";
-};
-
 const getContrastColor = (hexColor: string): string => {
   const hex = hexColor.replace("#", "");
   const r = parseInt(hex.substr(0, 2), 16);
@@ -46,7 +39,7 @@ const lightenColor = (hexColor: string, percent: number): string => {
   const r = Math.min(255, parseInt(hex.substr(0, 2), 16) + Math.round(255 * percent));
   const g = Math.min(255, parseInt(hex.substr(2, 2), 16) + Math.round(255 * percent));
   const b = Math.min(255, parseInt(hex.substr(4, 2), 16) + Math.round(255 * percent));
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  return `rgb(${r}, ${g}, ${b})`;
 };
 
 const darkenColor = (hexColor: string, percent: number): string => {
@@ -54,7 +47,121 @@ const darkenColor = (hexColor: string, percent: number): string => {
   const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - Math.round(255 * percent));
   const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - Math.round(255 * percent));
   const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - Math.round(255 * percent));
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  return `rgb(${r}, ${g}, ${b})`;
+};
+
+// Parse and render markdown-like content into structured elements
+const renderFormattedContent = (content: string, primaryColor: string, accentColor: string) => {
+  const lines = content.split('\n');
+  const elements: JSX.Element[] = [];
+  let currentListItems: string[] = [];
+  let listKey = 0;
+
+  const flushList = () => {
+    if (currentListItems.length > 0) {
+      elements.push(
+        <ul key={`list-${listKey++}`} className="space-y-2 mb-4 ml-4">
+          {currentListItems.map((item, idx) => (
+            <li key={idx} className="flex items-start gap-2">
+              <span 
+                className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                style={{ background: primaryColor }}
+              />
+              <span className="text-gray-700">{item}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      currentListItems = [];
+    }
+  };
+
+  lines.forEach((line, index) => {
+    const trimmedLine = line.trim();
+    
+    // Skip empty lines
+    if (!trimmedLine) {
+      flushList();
+      return;
+    }
+
+    // Headers with ## or **Title**
+    if (trimmedLine.startsWith('## ')) {
+      flushList();
+      const headerText = trimmedLine.replace(/^##\s*/, '').replace(/\*\*/g, '');
+      elements.push(
+        <h2 
+          key={index} 
+          className="text-lg font-bold mt-6 mb-3 pb-2 border-b-2"
+          style={{ color: accentColor, borderColor: lightenColor(primaryColor, 0.4) }}
+        >
+          {headerText}
+        </h2>
+      );
+      return;
+    }
+
+    // Section titles with ** at start and end
+    if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**') && !trimmedLine.includes(':')) {
+      flushList();
+      const titleText = trimmedLine.replace(/\*\*/g, '');
+      elements.push(
+        <h3 
+          key={index} 
+          className="text-base font-semibold mt-5 mb-2 uppercase tracking-wide"
+          style={{ color: primaryColor }}
+        >
+          {titleText}
+        </h3>
+      );
+      return;
+    }
+
+    // List items (starting with *, -, or •)
+    if (/^[\*\-•]\s/.test(trimmedLine)) {
+      let itemText = trimmedLine.replace(/^[\*\-•]\s*/, '');
+      // Parse inline bold
+      itemText = itemText.replace(/\*\*([^*]+)\*\*/g, '$1');
+      currentListItems.push(itemText);
+      return;
+    }
+
+    // Regular paragraphs with inline formatting
+    flushList();
+    let processedText = trimmedLine;
+    
+    // Handle field patterns like **Label:** Value
+    if (/\*\*[^*]+:\*\*/.test(processedText)) {
+      const parts = processedText.split(/(\*\*[^*]+:\*\*)/);
+      elements.push(
+        <p key={index} className="text-gray-700 mb-2 leading-relaxed">
+          {parts.map((part, i) => {
+            if (/^\*\*[^*]+:\*\*$/.test(part)) {
+              const labelText = part.replace(/\*\*/g, '');
+              return (
+                <span key={i} className="font-semibold" style={{ color: accentColor }}>
+                  {labelText}{' '}
+                </span>
+              );
+            }
+            return <span key={i}>{part}</span>;
+          })}
+        </p>
+      );
+      return;
+    }
+
+    // Simple paragraph
+    processedText = processedText.replace(/\*\*([^*]+)\*\*/g, '$1');
+    elements.push(
+      <p key={index} className="text-gray-700 mb-3 leading-relaxed">
+        {processedText}
+      </p>
+    );
+  });
+
+  flushList();
+  return elements;
 };
 
 export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
@@ -62,7 +169,8 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
     const primaryColor = entreprise.couleur_primaire || "#E97451";
     const secondaryColor = entreprise.couleur_secondaire || "#FFF5F2";
     const accentColor = entreprise.couleur_accent || "#1a1a2e";
-    const textOnPrimary = getContrastColor(primaryColor);
+    const primaryTextColor = getContrastColor(primaryColor);
+    const accentTextColor = getContrastColor(accentColor);
     const logoSrc = logoDataUrl || entreprise.logo;
 
     const formatDate = (dateStr: string) => {
@@ -76,29 +184,43 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
     return (
       <div
         ref={ref}
-        className="bg-white text-gray-900 shadow-2xl"
+        className="bg-white text-gray-900 relative overflow-hidden"
         style={{
           width: "210mm",
           minHeight: "297mm",
-          padding: "15mm",
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         }}
       >
-        {/* Header */}
-        <div
-          className="rounded-2xl p-6 mb-8"
-          style={{
-            background: `linear-gradient(135deg, ${primaryColor}, ${darkenColor(primaryColor, 0.15)})`,
+        {/* Left Lateral Accent Line */}
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-1"
+          style={{ 
+            background: `linear-gradient(180deg, ${primaryColor}, ${darkenColor(primaryColor, 0.2)}, ${primaryColor})` 
           }}
-        >
-          <div className="flex justify-between items-start">
+        />
+        
+        {/* Right Subtle Lateral Line */}
+        <div 
+          className="absolute right-0 top-0 bottom-0 w-px opacity-30"
+          style={{ background: primaryColor }}
+        />
+
+        {/* Top Banner */}
+        <div 
+          className="h-2 w-full"
+          style={{ background: `linear-gradient(90deg, ${primaryColor}, ${darkenColor(primaryColor, 0.1)})` }}
+        />
+
+        <div className="p-8 pl-10 relative z-10">
+          {/* Header with Logo */}
+          <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-5">
               {logoSrc && (
-                <div
+                <div 
                   className="w-20 h-20 rounded-xl shadow-lg overflow-hidden"
-                  style={{
+                  style={{ 
                     background: `linear-gradient(135deg, ${secondaryColor}, white)`,
-                    border: `2px solid ${lightenColor(primaryColor, 0.3)}`,
+                    border: `2px solid ${lightenColor(primaryColor, 0.3)}`
                   }}
                 >
                   <img
@@ -110,157 +232,230 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
                 </div>
               )}
               <div>
-                <h1
-                  className="text-2xl font-bold tracking-tight"
-                  style={{ color: textOnPrimary }}
+                <p 
+                  className="text-[11px] font-semibold uppercase tracking-[0.2em] mb-1"
+                  style={{ color: primaryColor }}
+                >
+                  Agence Immobilière
+                </p>
+                <h1 
+                  className="text-xl font-bold tracking-tight"
+                  style={{ color: accentColor }}
                 >
                   {entreprise.nom}
                 </h1>
-                {entreprise.adresse && (
-                  <p
-                    className="text-base opacity-90 mt-1"
-                    style={{ color: textOnPrimary }}
-                  >
-                    {entreprise.adresse}
+                <div className="mt-2 text-sm text-gray-500">
+                  <p className="flex items-center gap-2 flex-wrap">
+                    {entreprise.adresse && (
+                      <span>{entreprise.adresse}</span>
+                    )}
+                    {entreprise.adresse && (entreprise.telephone || entreprise.email) && (
+                      <span style={{ color: primaryColor }}>•</span>
+                    )}
+                    {entreprise.telephone && (
+                      <span>{entreprise.telephone}</span>
+                    )}
+                    {entreprise.telephone && entreprise.email && (
+                      <span style={{ color: primaryColor }}>•</span>
+                    )}
+                    {entreprise.email && (
+                      <span className="lowercase">{entreprise.email}</span>
+                    )}
                   </p>
-                )}
+                </div>
               </div>
             </div>
-            <div
-              className="text-right text-base"
-              style={{ color: textOnPrimary }}
-            >
-              {entreprise.telephone && <p className="opacity-90">{entreprise.telephone}</p>}
-              {entreprise.email && <p className="opacity-90">{entreprise.email}</p>}
+            
+            {/* Document Badge */}
+            <div className="text-right">
+              <div 
+                className="inline-block px-5 py-2 rounded-lg shadow-md"
+                style={{ 
+                  background: `linear-gradient(135deg, ${primaryColor}, ${darkenColor(primaryColor, 0.15)})`,
+                  color: primaryTextColor
+                }}
+              >
+                <h2 className="text-base font-bold tracking-[0.1em] uppercase">{document.type}</h2>
+              </div>
+              <div className="mt-2 text-xs text-gray-500">
+                <p className="mt-1">
+                  Émis le {formatDate(document.date)}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Document Type Badge */}
-        <div className="flex justify-center mb-8">
-          <div
-            className="px-8 py-3 rounded-full text-xl font-bold uppercase tracking-wider shadow-lg"
-            style={{
-              background: `linear-gradient(135deg, ${accentColor}, ${darkenColor(accentColor, 0.2)})`,
-              color: getContrastColor(accentColor),
+          {/* Decorative Gradient Line */}
+          <div 
+            className="h-px mb-6"
+            style={{ 
+              background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}40, transparent)` 
             }}
-          >
-            {document.type}
-          </div>
-        </div>
+          />
 
-        {/* Date */}
-        <div className="text-right mb-6">
-          <p className="text-base text-gray-600">
-            Date : <span className="font-semibold text-gray-900">{formatDate(document.date)}</span>
-          </p>
-        </div>
-
-        {/* Client Info */}
-        {client && (
-          <div
-            className="rounded-xl p-5 mb-8"
-            style={{
-              background: `linear-gradient(135deg, ${secondaryColor}, ${lightenColor(secondaryColor, 0.05)})`,
-              border: `2px solid ${lightenColor(primaryColor, 0.4)}`,
-            }}
-          >
-            <h3
-              className="text-base font-bold mb-3 uppercase tracking-wide"
-              style={{ color: primaryColor }}
-            >
-              Destinataire
-            </h3>
-            <div className="text-base">
-              <p className="font-semibold text-gray-900 text-lg">{client.nom}</p>
-              {client.email && <p className="text-gray-600 mt-1">{client.email}</p>}
-              {client.telephone && <p className="text-gray-600">{client.telephone}</p>}
-            </div>
-          </div>
-        )}
-
-        {/* Document Content */}
-        <div
-          className="rounded-xl p-6 mb-8"
-          style={{
-            background: `linear-gradient(180deg, ${lightenColor(secondaryColor, 0.02)}, white)`,
-            border: `1px solid ${lightenColor(primaryColor, 0.5)}`,
-            minHeight: "200px",
-          }}
-        >
-          <h3
-            className="text-base font-bold mb-4 uppercase tracking-wide"
-            style={{ color: primaryColor }}
-          >
-            Contenu du Document
-          </h3>
-          <div
-            className="text-base leading-relaxed text-gray-800 whitespace-pre-wrap"
-            style={{ fontSize: "14px", lineHeight: "1.8" }}
-          >
-            {document.contenu || "Aucun contenu disponible."}
-          </div>
-        </div>
-
-        {/* Signature Area */}
-        <div className="mt-12">
-          <div
-            className="rounded-xl p-6"
-            style={{
-              background: `linear-gradient(135deg, ${secondaryColor}, ${lightenColor(secondaryColor, 0.03)})`,
-              border: `2px solid ${lightenColor(primaryColor, 0.4)}`,
-            }}
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <p
-                  className="text-base font-bold uppercase tracking-wide mb-2"
+          {/* Client Info Card */}
+          {client && (
+            <div className="mb-6">
+              <div 
+                className="rounded-lg p-4 shadow-sm"
+                style={{ 
+                  background: `linear-gradient(135deg, ${secondaryColor}30, white)`,
+                  borderLeft: `3px solid ${primaryColor}`
+                }}
+              >
+                <h3 
+                  className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2"
                   style={{ color: primaryColor }}
                 >
-                  Signature et Cachet
+                  Destinataire
+                </h3>
+                <p className="font-semibold text-base" style={{ color: accentColor }}>
+                  {client.nom}
                 </p>
-                <p className="text-gray-600 text-sm">
-                  Pour {entreprise.nom}
-                </p>
-              </div>
-              {entreprise.signature && (
-                <div className="text-center">
-                  <img
-                    src={entreprise.signature}
-                    alt="Signature"
-                    className="h-16 object-contain"
-                    crossOrigin="anonymous"
-                  />
+                {/* Elegant separator line */}
+                <div 
+                  className="w-12 h-px my-2"
+                  style={{ background: primaryColor }}
+                />
+                <div className="text-sm text-gray-500">
+                  {client.telephone && (
+                    <span>{client.telephone}</span>
+                  )}
+                  {client.telephone && client.email && (
+                    <span style={{ color: primaryColor }}> • </span>
+                  )}
+                  {client.email && (
+                    <span className="lowercase">{client.email}</span>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-            <div
-              className="mt-6 pt-4 border-t-2 border-dashed"
-              style={{ borderColor: lightenColor(primaryColor, 0.4) }}
+          )}
+
+          {/* Decorative Separator */}
+          <div className="flex items-center gap-3 mb-5">
+            <div 
+              className="h-px flex-1"
+              style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }}
+            />
+          </div>
+
+          {/* Document Content */}
+          <div className="mb-6">
+            <div 
+              className="rounded-lg p-5"
+              style={{ 
+                background: `linear-gradient(135deg, ${secondaryColor}40, white)`,
+                borderLeft: `3px solid ${primaryColor}`,
+                minHeight: "200px"
+              }}
             >
-              <p className="text-gray-500 text-sm italic">
-                Document généré par intelligence artificielle
-              </p>
+              <h3 
+                className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2"
+                style={{ color: primaryColor }}
+              >
+                Contenu du Document
+              </h3>
+              {/* Thin separator under title */}
+              <div 
+                className="w-16 h-px mb-4"
+                style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }}
+              />
+              <div className="text-sm leading-relaxed">
+                {document.contenu 
+                  ? renderFormattedContent(document.contenu, primaryColor, accentColor)
+                  : <p className="text-gray-500 italic">Aucun contenu disponible.</p>
+                }
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Separator */}
+          <div 
+            className="h-px mt-8 mb-5"
+            style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}30, transparent)` }}
+          />
+
+          {/* Footer */}
+          <div>
+            {/* Signature Area */}
+            <div className="flex justify-between items-end">
+              <div className="text-sm text-gray-500 max-w-xs">
+                <p 
+                  className="font-semibold uppercase text-[11px] tracking-[0.15em]"
+                  style={{ color: accentColor }}
+                >
+                  Mentions Légales
+                </p>
+                {/* Thin accent line */}
+                <div 
+                  className="w-10 h-px my-2"
+                  style={{ background: primaryColor }}
+                />
+                <p className="text-gray-600 leading-relaxed text-xs">
+                  Ce document a été généré électroniquement et fait foi pour les parties concernées.
+                </p>
+                <p className="mt-2 text-xs italic" style={{ color: primaryColor }}>
+                  Nous vous remercions de votre confiance.
+                </p>
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+                    Document généré par intelligence artificielle
+                  </p>
+                  <p className="text-[9px] text-gray-300 mt-1">
+                    Page 1/1
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <p 
+                  className="text-[9px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-medium"
+                  style={{ color: accentColor }}
+                >
+                  Signature & Cachet
+                </p>
+                <div 
+                  className="w-44 h-16 rounded-lg relative overflow-hidden"
+                  style={{ 
+                    border: `1px dashed ${lightenColor(primaryColor, 0.2)}`,
+                    background: `${secondaryColor}15`
+                  }}
+                >
+                  {/* Decorative corner accents */}
+                  <div 
+                    className="absolute top-0 left-0 w-2.5 h-2.5"
+                    style={{ 
+                      borderTop: `2px solid ${primaryColor}`,
+                      borderLeft: `2px solid ${primaryColor}`
+                    }}
+                  />
+                  <div 
+                    className="absolute bottom-0 right-0 w-2.5 h-2.5"
+                    style={{ 
+                      borderBottom: `2px solid ${primaryColor}`,
+                      borderRight: `2px solid ${primaryColor}`
+                    }}
+                  />
+                  {entreprise.signature && (
+                    <img
+                      src={entreprise.signature}
+                      alt="Signature"
+                      className="w-full h-full object-contain p-1"
+                      crossOrigin="anonymous"
+                    />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div
-          className="mt-8 pt-6 text-center text-sm"
-          style={{
-            borderTop: `2px solid ${lightenColor(primaryColor, 0.4)}`,
-            color: accentColor,
-          }}
-        >
-          <p className="font-medium">{entreprise.nom}</p>
-          {entreprise.adresse && <p className="opacity-70 mt-1">{entreprise.adresse}</p>}
-          {(entreprise.telephone || entreprise.email) && (
-            <p className="opacity-70 mt-1">
-              {[entreprise.telephone, entreprise.email].filter(Boolean).join(" • ")}
-            </p>
-          )}
-        </div>
+        {/* Bottom Banner */}
+        <div 
+          className="h-2 w-full absolute bottom-0 left-0"
+          style={{ background: `linear-gradient(90deg, ${primaryColor}, ${darkenColor(primaryColor, 0.1)})` }}
+        />
       </div>
     );
   }
