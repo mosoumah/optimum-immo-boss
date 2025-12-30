@@ -60,14 +60,14 @@ const renderFormattedContent = (content: string, primaryColor: string, accentCol
   const flushList = () => {
     if (currentListItems.length > 0) {
       elements.push(
-        <ul key={`list-${listKey++}`} className="space-y-2 mb-4 ml-4">
+        <ul key={`list-${listKey++}`} className="space-y-3 mb-6 ml-5">
           {currentListItems.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-2">
+            <li key={idx} className="flex items-start gap-3">
               <span 
-                className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                className="w-2 h-2 rounded-full mt-2.5 flex-shrink-0"
                 style={{ background: primaryColor }}
               />
-              <span className="text-gray-700">{item}</span>
+              <span className="text-gray-700 text-base leading-relaxed">{item}</span>
             </li>
           ))}
         </ul>
@@ -79,7 +79,7 @@ const renderFormattedContent = (content: string, primaryColor: string, accentCol
   lines.forEach((line, index) => {
     const trimmedLine = line.trim();
     
-    // Skip empty lines
+    // Skip empty lines but add spacing
     if (!trimmedLine) {
       flushList();
       return;
@@ -92,7 +92,7 @@ const renderFormattedContent = (content: string, primaryColor: string, accentCol
       elements.push(
         <h2 
           key={index} 
-          className="text-lg font-bold mt-6 mb-3 pb-2 border-b-2"
+          className="text-xl font-bold mt-8 mb-4 pb-3 border-b-2"
           style={{ color: accentColor, borderColor: lightenColor(primaryColor, 0.4) }}
         >
           {headerText}
@@ -108,7 +108,7 @@ const renderFormattedContent = (content: string, primaryColor: string, accentCol
       elements.push(
         <h3 
           key={index} 
-          className="text-base font-semibold mt-5 mb-2 uppercase tracking-wide"
+          className="text-lg font-semibold mt-7 mb-3 uppercase tracking-wide"
           style={{ color: primaryColor }}
         >
           {titleText}
@@ -134,7 +134,7 @@ const renderFormattedContent = (content: string, primaryColor: string, accentCol
     if (/\*\*[^*]+:\*\*/.test(processedText)) {
       const parts = processedText.split(/(\*\*[^*]+:\*\*)/);
       elements.push(
-        <p key={index} className="text-gray-700 mb-2 leading-relaxed">
+        <p key={index} className="text-gray-700 text-base mb-4 leading-loose">
           {parts.map((part, i) => {
             if (/^\*\*[^*]+:\*\*$/.test(part)) {
               const labelText = part.replace(/\*\*/g, '');
@@ -154,7 +154,7 @@ const renderFormattedContent = (content: string, primaryColor: string, accentCol
     // Simple paragraph
     processedText = processedText.replace(/\*\*([^*]+)\*\*/g, '$1');
     elements.push(
-      <p key={index} className="text-gray-700 mb-3 leading-relaxed">
+      <p key={index} className="text-gray-700 text-base mb-5 leading-loose">
         {processedText}
       </p>
     );
@@ -361,7 +361,7 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
                 className="w-16 h-px mb-4"
                 style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }}
               />
-              <div className="text-sm leading-relaxed">
+              <div className="text-base leading-loose">
                 {document.contenu 
                   ? renderFormattedContent(document.contenu, primaryColor, accentColor)
                   : <p className="text-gray-500 italic">Aucun contenu disponible.</p>
