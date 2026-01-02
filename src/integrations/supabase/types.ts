@@ -14,8 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_accounts: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
+          assigned_to: string | null
           created_at: string
           email: string | null
           entreprise_id: string
@@ -25,6 +55,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           email?: string | null
           entreprise_id: string
@@ -34,6 +65,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           email?: string | null
           entreprise_id?: string
@@ -43,6 +75,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "clients_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "clients_entreprise_id_fkey"
             columns: ["entreprise_id"]
@@ -94,6 +133,7 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          created_by: string | null
           date: string
           description: string | null
           entreprise_id: string
@@ -107,6 +147,7 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string
+          created_by?: string | null
           date?: string
           description?: string | null
           entreprise_id: string
@@ -120,6 +161,7 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
+          created_by?: string | null
           date?: string
           description?: string | null
           entreprise_id?: string
@@ -136,6 +178,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -244,6 +293,7 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          created_by: string | null
           date: string
           description: string | null
           devis_id: string | null
@@ -256,6 +306,7 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string
+          created_by?: string | null
           date?: string
           description?: string | null
           devis_id?: string | null
@@ -268,6 +319,7 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
+          created_by?: string | null
           date?: string
           description?: string | null
           devis_id?: string | null
@@ -283,6 +335,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -380,6 +439,7 @@ export type Database = {
       }
       taches: {
         Row: {
+          assigned_to: string | null
           created_at: string
           date: string
           description: string | null
@@ -391,6 +451,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           date?: string
           description?: string | null
@@ -402,6 +463,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           date?: string
           description?: string | null
@@ -413,6 +475,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "taches_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "taches_entreprise_id_fkey"
             columns: ["entreprise_id"]
@@ -445,7 +514,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_client_id: { Args: { _user_id: string }; Returns: string }
       get_user_entreprise_id: { Args: { _user_id: string }; Returns: string }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
