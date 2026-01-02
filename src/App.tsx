@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 import Index from "./pages/Index";
 import Inscription from "./pages/Inscription";
 import Connexion from "./pages/Connexion";
@@ -19,6 +20,8 @@ import Depenses from "./pages/Depenses";
 import Taches from "./pages/Taches";
 import DocumentsIA from "./pages/DocumentsIA";
 import Parametres from "./pages/Parametres";
+import Utilisateurs from "./pages/Utilisateurs";
+import PortailClient from "./pages/PortailClient";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -117,8 +120,24 @@ const App = () => (
             <Route
               path="/parametres"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin"]}>
                   <Parametres />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/utilisateurs"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin"]}>
+                  <Utilisateurs />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/portail-client"
+              element={
+                <ProtectedRoute>
+                  <PortailClient />
                 </ProtectedRoute>
               }
             />
