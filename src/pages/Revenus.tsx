@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TrendingUp, ArrowLeft, Plus, Calendar, CalendarDays, CalendarRange, List } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { useAuth } from "@/hooks/useAuth";
 import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
+import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { isToday, isThisWeek, isThisMonth } from "date-fns";
 
 interface Revenu {
@@ -27,11 +29,18 @@ const filterLabels: Record<FilterPeriod, { label: string; icon: React.ReactNode 
 };
 
 const Revenus = () => {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [revenus, setRevenus] = useState<Revenu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('month');
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const fetchRevenus = useCallback(async () => {
     if (!entrepriseId) return;
@@ -102,9 +111,12 @@ const Revenus = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8 relative mesh-gradient">
+    <div className="min-h-screen flex relative">
       <FloatingParticles count={25} />
-      <div className="max-w-6xl mx-auto relative z-10">
+      <DynamicSidebar onSignOut={handleSignOut} />
+      
+      <main className="flex-1 ml-64 mesh-gradient min-h-screen p-8">
+        <div className="max-w-6xl mx-auto relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -219,6 +231,7 @@ const Revenus = () => {
           onSuccess={fetchRevenus}
         />
       )}
+      </main>
     </div>
   );
 };
