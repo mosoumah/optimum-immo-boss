@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { useAuth } from "@/hooks/useAuth";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { LogoUpload } from "@/components/LogoUpload";
 import { InvoicePreview } from "@/components/InvoicePreview";
+import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -41,6 +43,8 @@ interface Entreprise {
 }
 
 const Factures = () => {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +57,11 @@ const Factures = () => {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const fetchFactures = useCallback(async () => {
     if (!entrepriseId) return;
@@ -474,9 +483,12 @@ const Factures = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8 relative mesh-gradient">
+    <div className="min-h-screen flex relative">
       <FloatingParticles count={25} />
-      <div className="max-w-6xl mx-auto relative z-10">
+      <DynamicSidebar onSignOut={handleSignOut} />
+      
+      <main className="flex-1 ml-64 mesh-gradient min-h-screen p-8">
+        <div className="max-w-6xl mx-auto relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -635,6 +647,7 @@ const Factures = () => {
           </div>
         </DialogContent>
       </Dialog>
+      </main>
     </div>
   );
 };

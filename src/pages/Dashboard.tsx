@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
   Users,
   FileText,
   Receipt,
@@ -10,18 +9,15 @@ import {
   TrendingDown,
   CheckSquare,
   Sparkles,
-  Settings,
-  LogOut,
   Plus,
-  ArrowUpRight,
   Bell,
   Search,
   BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
 import { DevisDialog } from "@/components/dialogs/DevisDialog";
@@ -31,17 +27,7 @@ import { TacheDialog } from "@/components/dialogs/TacheDialog";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { FinancialChart } from "@/components/FinancialChart";
-
-const sidebarItems = [
-  { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard", active: true },
-  { icon: Users, label: "Clients", path: "/clients" },
-  { icon: FileText, label: "Devis", path: "/devis" },
-  { icon: Receipt, label: "Factures", path: "/factures" },
-  { icon: TrendingUp, label: "Revenus", path: "/revenus" },
-  { icon: TrendingDown, label: "Dépenses", path: "/depenses" },
-  { icon: CheckSquare, label: "Tâches", path: "/taches" },
-  { icon: Sparkles, label: "Documents IA", path: "/documents-ia" },
-];
+import { DynamicSidebar } from "@/components/DynamicSidebar";
 
 interface DashboardStats {
   revenus: number;
@@ -68,6 +54,7 @@ interface Client {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin, isAgent } = useUserRole();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<DashboardStats>({ revenus: 0, depenses: 0, facturesNonPayees: 0 });
@@ -102,34 +89,38 @@ const Dashboard = () => {
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
 
-        const { data: revenusData } = await supabase
-          .from("revenus")
-          .select("montant")
-          .eq("entreprise_id", entrepriseId)
-          .gte("date", startOfMonth.toISOString().split("T")[0]);
+        // Only fetch revenus/depenses for admin
+        if (isAdmin) {
+          const { data: revenusData } = await supabase
+            .from("revenus")
+            .select("montant")
+            .eq("entreprise_id", entrepriseId)
+            .gte("date", startOfMonth.toISOString().split("T")[0]);
 
-        const totalRevenus = revenusData?.reduce((sum, r) => sum + Number(r.montant), 0) || 0;
+          const totalRevenus = revenusData?.reduce((sum, r) => sum + Number(r.montant), 0) || 0;
 
-        const { data: depensesData } = await supabase
-          .from("depenses")
-          .select("montant")
-          .eq("entreprise_id", entrepriseId)
-          .gte("date", startOfMonth.toISOString().split("T")[0]);
+          const { data: depensesData } = await supabase
+            .from("depenses")
+            .select("montant")
+            .eq("entreprise_id", entrepriseId)
+            .gte("date", startOfMonth.toISOString().split("T")[0]);
 
-        const totalDepenses = depensesData?.reduce((sum, d) => sum + Number(d.montant), 0) || 0;
+          const totalDepenses = depensesData?.reduce((sum, d) => sum + Number(d.montant), 0) || 0;
 
-        const { count: unpaidCount } = await supabase
-          .from("factures")
-          .select("*", { count: "exact", head: true })
-          .eq("entreprise_id", entrepriseId)
-          .eq("statut", "non_paye");
+          const { count: unpaidCount } = await supabase
+            .from("factures")
+            .select("*", { count: "exact", head: true })
+            .eq("entreprise_id", entrepriseId)
+            .eq("statut", "non_paye");
 
-        setStats({
-          revenus: totalRevenus,
-          depenses: totalDepenses,
-          facturesNonPayees: unpaidCount || 0,
-        });
+          setStats({
+            revenus: totalRevenus,
+            depenses: totalDepenses,
+            facturesNonPayees: unpaidCount || 0,
+          });
+        }
 
+        // Fetch taches - RLS will filter based on role
         const today = new Date().toISOString().split("T")[0];
         const { data: tachesData } = await supabase
           .from("taches")
@@ -141,6 +132,7 @@ const Dashboard = () => {
 
         setTaches(tachesData || []);
 
+        // Fetch clients - RLS will filter based on role
         const { data: clientsData } = await supabase
           .from("clients")
           .select("id, nom, email")
@@ -157,7 +149,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [user]);
+  }, [user, isAdmin]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -177,21 +169,42 @@ const Dashboard = () => {
     }).format(amount) + " GNF";
   };
 
-  const statsDisplay = [
-    { label: "Revenus du mois", value: formatCurrency(stats.revenus), positive: true, icon: TrendingUp },
-    { label: "Dépenses du mois", value: formatCurrency(stats.depenses), positive: false, icon: TrendingDown },
-    { label: "Bénéfice estimé", value: formatCurrency(stats.revenus - stats.depenses), positive: stats.revenus > stats.depenses, icon: TrendingUp },
-    { label: "Factures non payées", value: String(stats.facturesNonPayees), positive: stats.facturesNonPayees === 0, icon: Receipt },
-  ];
+  // Build stats display based on role
+  const getStatsDisplay = () => {
+    if (isAdmin) {
+      return [
+        { label: "Revenus du mois", value: formatCurrency(stats.revenus), positive: true, icon: TrendingUp },
+        { label: "Dépenses du mois", value: formatCurrency(stats.depenses), positive: false, icon: TrendingDown },
+        { label: "Bénéfice estimé", value: formatCurrency(stats.revenus - stats.depenses), positive: stats.revenus > stats.depenses, icon: TrendingUp },
+        { label: "Factures non payées", value: String(stats.facturesNonPayees), positive: stats.facturesNonPayees === 0, icon: Receipt },
+      ];
+    }
+    // Agent sees limited stats
+    return [
+      { label: "Tâches du jour", value: String(taches.length), positive: true, icon: CheckSquare },
+      { label: "Clients assignés", value: String(clients.length), positive: true, icon: Users },
+    ];
+  };
 
-  const quickActions = [
-    { label: "Nouveau client", icon: Users, onClick: () => setClientDialogOpen(true) },
-    { label: "Nouveau devis", icon: FileText, onClick: () => setDevisDialogOpen(true) },
-    { label: "Nouvelle facture", icon: Receipt, onClick: () => setFactureDialogOpen(true) },
-    { label: "Nouvelle dépense", icon: TrendingDown, onClick: () => setDepenseDialogOpen(true) },
-    { label: "Nouvelle tâche", icon: CheckSquare, onClick: () => setTacheDialogOpen(true) },
-    { label: "Document IA", icon: Sparkles, onClick: () => setDocumentDialogOpen(true) },
-  ];
+  // Build quick actions based on role
+  const getQuickActions = () => {
+    const actions = [
+      { label: "Nouveau devis", icon: FileText, onClick: () => setDevisDialogOpen(true) },
+      { label: "Nouvelle facture", icon: Receipt, onClick: () => setFactureDialogOpen(true) },
+      { label: "Document IA", icon: Sparkles, onClick: () => setDocumentDialogOpen(true) },
+    ];
+
+    if (isAdmin) {
+      return [
+        { label: "Nouveau client", icon: Users, onClick: () => setClientDialogOpen(true) },
+        ...actions,
+        { label: "Nouvelle dépense", icon: TrendingDown, onClick: () => setDepenseDialogOpen(true) },
+        { label: "Nouvelle tâche", icon: CheckSquare, onClick: () => setTacheDialogOpen(true) },
+      ];
+    }
+
+    return actions;
+  };
 
   if (isLoading) {
     return (
@@ -208,70 +221,13 @@ const Dashboard = () => {
     );
   }
 
+  const statsDisplay = getStatsDisplay();
+  const quickActions = getQuickActions();
+
   return (
     <div className="min-h-screen flex relative">
       <FloatingParticles count={35} />
-      <aside className="w-64 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="p-6"
-        >
-          <Logo size="sm" animated={false} />
-        </motion.div>
-
-        <nav className="flex-1 px-3 space-y-1">
-          {sidebarItems.map((item, index) => (
-            <motion.div
-              key={item.path}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <Link
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
-                  item.active
-                    ? "bg-primary/10 text-primary border border-primary/20 glow-primary-sm"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-1"
-                }`}
-              >
-                <item.icon className={`w-5 h-5 transition-transform duration-300 ${item.active ? "text-primary" : "group-hover:scale-110"}`} />
-                <span className="font-medium text-sm">{item.label}</span>
-                {item.active && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
-                  />
-                )}
-              </Link>
-            </motion.div>
-          ))}
-        </nav>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="p-3 space-y-1 border-t border-border/20"
-        >
-          <Link
-            to="/parametres"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
-          >
-            <Settings className="w-5 h-5" />
-            <span className="font-medium text-sm">Paramètres</span>
-          </Link>
-          <button 
-            onClick={handleSignOut}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium text-sm">Déconnexion</span>
-          </button>
-        </motion.div>
-      </aside>
+      <DynamicSidebar onSignOut={handleSignOut} />
 
       <main className="flex-1 ml-64 mesh-gradient min-h-screen">
         <header className="sticky top-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
@@ -349,7 +305,7 @@ const Dashboard = () => {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ duration: 0.6, delay: 0.25 }} 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10"
+            className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-5 mb-10`}
           >
             {statsDisplay.map((stat, index) => (
               <motion.div 
@@ -386,38 +342,42 @@ const Dashboard = () => {
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            <motion.div 
-              initial={{ opacity: 0, x: -30 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              transition={{ duration: 0.6, delay: 0.5 }} 
-              className="lg:col-span-2 p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  Analyse financière
-                </h2>
-                <BarChart3 className="w-5 h-5 text-muted-foreground" />
-              </div>
-              {profile?.entreprise_id && (
-                <FinancialChart entrepriseId={profile.entreprise_id} />
-              )}
-            </motion.div>
+            {isAdmin && (
+              <motion.div 
+                initial={{ opacity: 0, x: -30 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                transition={{ duration: 0.6, delay: 0.5 }} 
+                className="lg:col-span-2 p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    Analyse financière
+                  </h2>
+                  <BarChart3 className="w-5 h-5 text-muted-foreground" />
+                </div>
+                {profile?.entreprise_id && (
+                  <FinancialChart entrepriseId={profile.entreprise_id} />
+                )}
+              </motion.div>
+            )}
 
             <motion.div 
               initial={{ opacity: 0, x: 30 }} 
               animate={{ opacity: 1, x: 0 }} 
               transition={{ duration: 0.6, delay: 0.6 }} 
-              className="p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500"
+              className={`p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500 ${!isAdmin ? 'lg:col-span-2' : ''}`}
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  Clients récents
+                  {isAdmin ? "Clients récents" : "Mes clients"}
                 </h2>
-                <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
-                  <Plus className="w-5 h-5" />
-                </Button>
+                {isAdmin && (
+                  <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                )}
               </div>
               <div className="space-y-4">
                 {clients.length > 0 ? (
@@ -429,20 +389,73 @@ const Dashboard = () => {
                       transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
                       className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/30 transition-all duration-300 cursor-pointer group"
                     >
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center transition-all duration-300 group-hover:border-primary/40 group-hover:scale-105">
-                        <span className="text-sm font-bold text-primary">{client.nom.split(" ").map(n => n[0]).join("").slice(0, 2)}</span>
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <Users className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold truncate group-hover:text-primary transition-colors duration-300">{client.nom}</div>
+                        <div className="font-medium truncate">{client.nom}</div>
                         <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
                       </div>
-                      <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:text-primary" />
+                      <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="sm" className="h-8 px-3 text-xs hover:bg-primary/10 hover:text-primary">
+                          Voir
+                        </Button>
+                      </Link>
                     </motion.div>
                   ))
                 ) : (
-                  <div className="text-muted-foreground text-sm text-center py-8 flex flex-col items-center gap-3">
-                    <Users className="w-12 h-12 text-muted-foreground/30" />
-                    <span>Aucun client pour le moment</span>
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Aucun client</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.6, delay: 0.7 }} 
+              className={`p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500 ${isAdmin ? 'lg:col-span-3' : 'lg:col-span-1'}`}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+                  {isAdmin ? "Tâches du jour" : "Mes tâches"}
+                </h2>
+                {isAdmin && (
+                  <Button variant="ghost" size="icon" onClick={() => setTacheDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                )}
+              </div>
+              <div className="space-y-3">
+                {taches.length > 0 ? (
+                  taches.map((tache, index) => (
+                    <motion.div 
+                      key={tache.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.8 + index * 0.05 }}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/30 transition-all duration-300 group"
+                    >
+                      <div className="w-5 h-5 rounded-full border-2 border-warning flex items-center justify-center group-hover:bg-warning/20 transition-colors cursor-pointer" onClick={() => markTaskDone(tache.id)}>
+                      </div>
+                      <span className="flex-1 text-sm">{tache.titre}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => markTaskDone(tache.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-7 px-2 text-xs hover:bg-success/10 hover:text-success"
+                      >
+                        Terminer
+                      </Button>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <CheckSquare className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Aucune tâche pour aujourd'hui</p>
                   </div>
                 )}
               </div>
@@ -451,14 +464,45 @@ const Dashboard = () => {
         </div>
       </main>
 
+      {/* Dialogs */}
       {profile?.entreprise_id && (
         <>
-          <ClientDialog open={clientDialogOpen} onOpenChange={setClientDialogOpen} entrepriseId={profile.entreprise_id} onSuccess={fetchDashboardData} />
-          <DevisDialog open={devisDialogOpen} onOpenChange={setDevisDialogOpen} entrepriseId={profile.entreprise_id} onSuccess={fetchDashboardData} />
-          <FactureDialog open={factureDialogOpen} onOpenChange={setFactureDialogOpen} entrepriseId={profile.entreprise_id} onSuccess={fetchDashboardData} />
-          <DepenseDialog open={depenseDialogOpen} onOpenChange={setDepenseDialogOpen} entrepriseId={profile.entreprise_id} onSuccess={fetchDashboardData} />
-          <TacheDialog open={tacheDialogOpen} onOpenChange={setTacheDialogOpen} entrepriseId={profile.entreprise_id} onSuccess={fetchDashboardData} />
-          <DocumentDialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen} entrepriseId={profile.entreprise_id} onSuccess={fetchDashboardData} />
+          <ClientDialog
+            open={clientDialogOpen}
+            onOpenChange={setClientDialogOpen}
+            entrepriseId={profile.entreprise_id}
+            onSuccess={fetchDashboardData}
+          />
+          <DevisDialog
+            open={devisDialogOpen}
+            onOpenChange={setDevisDialogOpen}
+            entrepriseId={profile.entreprise_id}
+            onSuccess={fetchDashboardData}
+          />
+          <FactureDialog
+            open={factureDialogOpen}
+            onOpenChange={setFactureDialogOpen}
+            entrepriseId={profile.entreprise_id}
+            onSuccess={fetchDashboardData}
+          />
+          <DepenseDialog
+            open={depenseDialogOpen}
+            onOpenChange={setDepenseDialogOpen}
+            entrepriseId={profile.entreprise_id}
+            onSuccess={fetchDashboardData}
+          />
+          <TacheDialog
+            open={tacheDialogOpen}
+            onOpenChange={setTacheDialogOpen}
+            entrepriseId={profile.entreprise_id}
+            onSuccess={fetchDashboardData}
+          />
+          <DocumentDialog
+            open={documentDialogOpen}
+            onOpenChange={setDocumentDialogOpen}
+            entrepriseId={profile.entreprise_id}
+            onSuccess={fetchDashboardData}
+          />
         </>
       )}
     </div>

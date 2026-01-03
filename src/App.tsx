@@ -45,76 +45,78 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Admin & Agent routes */}
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Dashboard />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               }
             />
             <Route
               path="/clients"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Clients />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               }
             />
             <Route
               path="/clients/:id"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <ClientDetail />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               }
             />
             <Route
               path="/devis"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Devis />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               }
             />
             <Route
               path="/factures"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Factures />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/revenus"
-              element={
-                <ProtectedRoute>
-                  <Revenus />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/depenses"
-              element={
-                <ProtectedRoute>
-                  <Depenses />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               }
             />
             <Route
               path="/taches"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Taches />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               }
             />
             <Route
               path="/documents-ia"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <DocumentsIA />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
+              }
+            />
+            {/* Admin only routes */}
+            <Route
+              path="/revenus"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin"]}>
+                  <Revenus />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/depenses"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin"]}>
+                  <Depenses />
+                </RoleProtectedRoute>
               }
             />
             <Route
@@ -133,12 +135,13 @@ const App = () => (
                 </RoleProtectedRoute>
               }
             />
+            {/* Client portal */}
             <Route
               path="/portail-client"
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={["client"]}>
                   <PortailClient />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
