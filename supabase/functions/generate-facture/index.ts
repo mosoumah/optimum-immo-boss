@@ -106,55 +106,74 @@ serve(async (req) => {
     const montantNumerique = parseInt(String(montant).replace(/\s/g, ''), 10) || 0;
     const montantEnLettres = nombreEnLettres(montantNumerique);
 
-    const systemPrompt = `Tu es un expert en rédaction de documents commerciaux haut de gamme pour les agences immobilières en Guinée.
+    const systemPrompt = `Tu es un rédacteur d'élite spécialisé dans les documents commerciaux de prestige pour l'immobilier haut de gamme en Guinée.
 
-STYLE D'ÉCRITURE :
-- Langage professionnel, formel et élégant
-- Phrases claires et concises
-- Vocabulaire juridique approprié mais accessible
-- Ton respectueux et courtois
+PHILOSOPHIE D'ÉCRITURE :
+Tu rédiges comme un notaire expérimenté : chaque mot est pesé, chaque phrase respire l'autorité et le professionnalisme.
 
-FORMAT OBLIGATOIRE :
-- Génère UNIQUEMENT le détail de la prestation (pas de titre FACTURE, pas d'en-tête, pas d'informations entreprise)
-- Structure en paragraphes fluides, SANS puces ni tirets ni astérisques
-- Espacement logique entre les idées
-- Pas de markdown, pas de caractères spéciaux
+RÈGLES DE STYLE ABSOLUES :
+- Langage soutenu, élégant et juridiquement précis
+- Phrases fluides et équilibrées (ni trop courtes, ni trop longues)
+- Vocabulaire riche mais accessible
+- Ton formel, respectueux et rassurant
+- Rythme de lecture agréable avec des transitions naturelles
 
-INTERDICTIONS STRICTES :
-- Pas de points de liste (•, -, *, →)
-- Pas de markdown (**, ##, etc.)
-- Pas de répétition des informations déjà présentes (nom client, montant chiffré, date)
-- Pas de formules génériques ("Cher client", "Cordialement", "Merci")
-- Pas d'en-tête de facture (le design s'en charge)`;
+FORMAT STRICT :
+- Trois paragraphes distincts, bien espacés
+- Prose fluide uniquement (JAMAIS de listes, puces ou tirets)
+- Aucun markdown, aucun caractère spécial
+- Aucune répétition des données brutes (nom, montant chiffré)
 
-    const userPrompt = `Rédige le détail de la prestation pour une facture immobilière professionnelle.
+INTERDICTIONS FORMELLES :
+- Points de liste (•, -, *, →, numéros)
+- Formatage markdown (**, ##, __)
+- Formules banales ("Cher client", "Cordialement")
+- Répétition des informations d'en-tête`;
 
-DONNÉES DE LA PRESTATION :
-Client : ${clientNom}
-Description : ${description || 'Service de conseil et accompagnement immobilier'}
-Montant : ${montant} GNF
-Montant en lettres : ${montantEnLettres} francs guinéens
-Date : ${date}
+    const userPrompt = `Rédige le corps textuel d'une facture immobilière de standing supérieur.
 
-STRUCTURE ATTENDUE (en 3 paragraphes séparés) :
+═══════════════════════════════════════
+INFORMATIONS DE LA TRANSACTION
+═══════════════════════════════════════
+• Client : ${clientNom}
+• Nature du service : ${description || 'Accompagnement et conseil immobilier professionnel'}
+• Montant facturé : ${montant} GNF
+• Montant en toutes lettres : ${montantEnLettres} francs guinéens
+• Date d'émission : ${date}
 
-PARAGRAPHE 1 - Description élégante de la prestation :
-Décris le service rendu de manière professionnelle en 2-3 phrases. Mentionne le type de service immobilier, l'accompagnement fourni, et la valeur ajoutée apportée au client.
+═══════════════════════════════════════
+STRUCTURE ATTENDUE (3 PARAGRAPHES)
+═══════════════════════════════════════
 
-PARAGRAPHE 2 - Montant arrêté :
-"La présente facture est arrêtée à la somme de ${montantEnLettres} francs guinéens (${montant} GNF), correspondant aux honoraires convenus pour cette prestation."
+【PARAGRAPHE 1 — Exposé de la prestation】
+Décris avec élégance le service immobilier rendu. Évoque :
+- La nature de l'accompagnement (conseil, intermédiation, expertise)
+- La valeur ajoutée apportée au client
+- Le professionnalisme de l'intervention
+Rédige en 3-4 phrases fluides et connectées. Évite les tournures génériques.
 
-PARAGRAPHE 3 - Clause de validité :
-"Ce document constitue une facture originale et fait foi pour toutes fins légales et comptables."
+【PARAGRAPHE 2 — Arrêté du montant】
+Formule juridique consacrée :
+"La présente facture est arrêtée à la somme de ${montantEnLettres} francs guinéens (${montant} GNF), représentant les honoraires convenus au titre de cette prestation."
 
-EXEMPLE DE RENDU PARFAIT :
-"Dans le cadre de notre collaboration, nous avons assuré l'accompagnement complet pour votre projet immobilier. Notre intervention a couvert l'ensemble des démarches nécessaires, incluant l'évaluation du bien, les négociations avec les parties concernées, ainsi que la coordination administrative jusqu'à la finalisation du dossier.
+【PARAGRAPHE 3 — Clause de validité】
+Mention légale :
+"Le présent document vaut facture originale et fait foi pour toutes fins légales, fiscales et comptables."
 
-La présente facture est arrêtée à la somme de cinq cent mille francs guinéens (500 000 GNF), correspondant aux honoraires convenus pour cette prestation.
+═══════════════════════════════════════
+EXEMPLE DE QUALITÉ ATTENDUE
+═══════════════════════════════════════
 
-Ce document constitue une facture originale et fait foi pour toutes fins légales et comptables."
+"Conformément au mandat qui nous a été confié, notre cabinet a assuré l'accompagnement intégral de votre projet immobilier. Cette mission a englobé l'évaluation technique du bien concerné, la conduite des négociations avec les parties prenantes, ainsi que le suivi rigoureux des formalités administratives jusqu'à leur parfait aboutissement. Notre expertise s'est exercée dans le respect des standards de qualité qui caractérisent notre engagement envers chaque client.
 
-Maintenant, génère le texte pour cette prestation spécifique. Adapte le premier paragraphe selon la description fournie : "${description || 'Service immobilier'}". Ne répète PAS le mot "Description" ou les informations brutes.`;
+La présente facture est arrêtée à la somme de cinq cent mille francs guinéens (500 000 GNF), représentant les honoraires convenus au titre de cette prestation.
+
+Le présent document vaut facture originale et fait foi pour toutes fins légales, fiscales et comptables."
+
+═══════════════════════════════════════
+
+Génère maintenant le texte adapté à cette prestation spécifique : "${description || 'Service de conseil et accompagnement immobilier'}".
+Personnalise le premier paragraphe selon le contexte tout en conservant un ton premium.`;
 
     console.log('Generating premium invoice for:', clientNom, 'Amount:', montant, 'Amount in words:', montantEnLettres);
 

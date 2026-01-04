@@ -61,51 +61,65 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     const logoSrc = logoDataUrl || entreprise.logo;
     
     // Dynamic colors from brand or defaults
-    const primaryColor = entreprise.couleur_primaire || "#E97451";
-    const secondaryColor = entreprise.couleur_secondaire || "#FFF5F2";
-    const accentColor = entreprise.couleur_accent || "#1a1a2e";
+    const primaryColor = entreprise.couleur_primaire || "#1B5E3C";
+    const secondaryColor = entreprise.couleur_secondaire || "#F8F6F2";
+    const accentColor = entreprise.couleur_accent || "#C9A962";
     
     // Calculated contrast colors
     const primaryTextColor = getContrastColor(primaryColor);
-    const secondaryTextColor = getContrastColor(secondaryColor);
     const accentTextColor = getContrastColor(accentColor);
+
+    const formatDate = (dateStr: string) => {
+      return new Date(dateStr).toLocaleDateString("fr-FR", { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    };
 
     return (
       <div
         ref={ref}
         className="bg-white text-black relative overflow-hidden"
-        style={{ minHeight: "700px", fontFamily: "'Segoe UI', Arial, sans-serif" }}
+        style={{ 
+          width: "210mm",
+          minHeight: "297mm",
+          fontFamily: "'Georgia', 'Times New Roman', serif"
+        }}
       >
-        {/* Left Lateral Accent Line */}
+        {/* Left Premium Lateral Accent */}
         <div 
-          className="absolute left-0 top-0 bottom-0 w-1"
+          className="absolute left-0 top-0 bottom-0 w-2"
           style={{ 
-            background: `linear-gradient(180deg, ${primaryColor}, ${darkenColor(primaryColor, 0.2)}, ${primaryColor})` 
+            background: `linear-gradient(180deg, ${primaryColor}, ${darkenColor(primaryColor, 0.15)}, ${primaryColor})` 
           }}
         />
         
-        {/* Right Subtle Lateral Line */}
+        {/* Right Subtle Accent */}
         <div 
-          className="absolute right-0 top-0 bottom-0 w-px opacity-30"
-          style={{ background: primaryColor }}
+          className="absolute right-0 top-0 bottom-0 w-1"
+          style={{ 
+            background: `linear-gradient(180deg, ${accentColor}40, ${accentColor}, ${accentColor}40)` 
+          }}
         />
 
-        {/* Top Banner */}
+        {/* Top Premium Banner */}
         <div 
-          className="h-2 w-full"
-          style={{ background: `linear-gradient(90deg, ${primaryColor}, ${darkenColor(primaryColor, 0.1)})` }}
+          className="h-3 w-full"
+          style={{ background: `linear-gradient(90deg, ${primaryColor}, ${accentColor}, ${primaryColor})` }}
         />
 
-        <div className="p-8 pl-10 relative z-10">
-          {/* Header with Logo and Invoice Badge */}
-          <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-5">
+        <div className="p-10 pl-12 pr-10 relative z-10">
+          {/* Premium Header */}
+          <div className="flex justify-between items-start mb-10">
+            <div className="flex items-center gap-6">
               {logoSrc && (
                 <div 
-                  className="w-20 h-20 rounded-xl shadow-lg overflow-hidden"
+                  className="w-24 h-24 rounded-2xl shadow-xl overflow-hidden"
                   style={{ 
-                    background: `linear-gradient(135deg, ${secondaryColor}, white)`,
-                    border: `2px solid ${lightenColor(primaryColor, 0.3)}`
+                    background: `linear-gradient(145deg, white, ${secondaryColor})`,
+                    border: `3px solid ${accentColor}`,
+                    boxShadow: `0 8px 32px ${primaryColor}20`
                   }}
                 >
                   <img
@@ -118,178 +132,237 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               )}
               <div>
                 <p 
-                  className="text-[11px] font-semibold uppercase tracking-[0.2em] mb-1"
-                  style={{ color: primaryColor }}
+                  className="text-xs font-medium uppercase tracking-[0.3em] mb-2"
+                  style={{ color: accentColor }}
                 >
                   Agence Immobilière
                 </p>
                 <h1 
-                  className="text-xl font-bold tracking-tight"
-                  style={{ color: accentColor }}
+                  className="text-2xl font-bold tracking-wide"
+                  style={{ 
+                    color: primaryColor,
+                    fontFamily: "'Georgia', serif"
+                  }}
                 >
                   {entreprise.nom}
                 </h1>
-                <div className="mt-2 text-sm text-gray-500">
-                  <p className="flex items-center gap-2 flex-wrap">
-                    {entreprise.adresse && (
-                      <span>{entreprise.adresse}</span>
-                    )}
-                    {entreprise.adresse && (entreprise.telephone || entreprise.email) && (
-                      <span style={{ color: primaryColor }}>•</span>
-                    )}
+                <div 
+                  className="w-20 h-0.5 my-3"
+                  style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}
+                />
+                <div className="text-sm" style={{ color: "#5a5a5a" }}>
+                  {entreprise.adresse && (
+                    <p className="mb-1">{entreprise.adresse}</p>
+                  )}
+                  <p className="flex items-center gap-3 flex-wrap text-xs">
                     {entreprise.telephone && (
-                      <span>{entreprise.telephone}</span>
-                    )}
-                    {entreprise.telephone && entreprise.email && (
-                      <span style={{ color: primaryColor }}>•</span>
+                      <span className="flex items-center gap-1">
+                        <span style={{ color: primaryColor }}>✆</span> {entreprise.telephone}
+                      </span>
                     )}
                     {entreprise.email && (
-                      <span className="lowercase">{entreprise.email}</span>
+                      <span className="flex items-center gap-1">
+                        <span style={{ color: primaryColor }}>✉</span> {entreprise.email}
+                      </span>
                     )}
                   </p>
                 </div>
               </div>
             </div>
             
-            {/* Invoice Badge */}
+            {/* Premium Invoice Badge */}
             <div className="text-right">
               <div 
-                className="inline-block px-5 py-2 rounded-lg shadow-md"
+                className="inline-block px-8 py-4 rounded-xl shadow-lg relative overflow-hidden"
                 style={{ 
-                  background: `linear-gradient(135deg, ${primaryColor}, ${darkenColor(primaryColor, 0.15)})`,
-                  color: primaryTextColor
+                  background: `linear-gradient(135deg, ${primaryColor}, ${darkenColor(primaryColor, 0.2)})`,
+                  boxShadow: `0 10px 40px ${primaryColor}40`
                 }}
               >
-                <h2 className="text-lg font-bold tracking-[0.15em]">FACTURE</h2>
+                {/* Decorative corner accent */}
+                <div 
+                  className="absolute top-0 right-0 w-12 h-12"
+                  style={{ 
+                    background: `linear-gradient(225deg, ${accentColor}30, transparent)`,
+                    borderRadius: "0 0 0 100%"
+                  }}
+                />
+                <h2 
+                  className="text-2xl font-bold tracking-[0.25em] relative z-10"
+                  style={{ color: primaryTextColor }}
+                >
+                  FACTURE
+                </h2>
               </div>
-              <div className="mt-2 text-xs text-gray-500">
-                <p className="font-semibold" style={{ color: accentColor }}>
-                  Réf. FAC-{facture.id.substring(0, 8).toUpperCase()}
+              <div className="mt-4 text-right">
+                <p 
+                  className="font-bold text-sm tracking-wide"
+                  style={{ color: primaryColor }}
+                >
+                  N° FAC-{facture.id.substring(0, 8).toUpperCase()}
                 </p>
-                <p className="mt-1">
-                  Émise le {new Date(facture.date).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' })}
+                <p className="text-xs mt-2" style={{ color: "#666" }}>
+                  Émise le {formatDate(facture.date)}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Decorative Gradient Line */}
-          <div 
-            className="h-px mb-6"
-            style={{ 
-              background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}40, transparent)` 
-            }}
-          />
-
-          {/* Client Info Card */}
-          <div className="mb-6">
+          {/* Elegant Separator */}
+          <div className="flex items-center gap-4 mb-8">
             <div 
-              className="rounded-lg p-4 shadow-sm"
+              className="h-px flex-1"
+              style={{ background: `linear-gradient(90deg, ${primaryColor}, ${accentColor}50, transparent)` }}
+            />
+            <div 
+              className="w-3 h-3 rotate-45"
+              style={{ background: accentColor }}
+            />
+            <div 
+              className="h-px flex-1"
+              style={{ background: `linear-gradient(270deg, ${primaryColor}, ${accentColor}50, transparent)` }}
+            />
+          </div>
+
+          {/* Client Info - Premium Card */}
+          <div className="mb-8">
+            <div 
+              className="rounded-xl p-6 relative overflow-hidden"
               style={{ 
-                background: `linear-gradient(135deg, ${secondaryColor}30, white)`,
-                borderLeft: `3px solid ${primaryColor}`
+                background: `linear-gradient(135deg, ${secondaryColor}, white)`,
+                borderLeft: `4px solid ${primaryColor}`,
+                boxShadow: `0 4px 20px ${primaryColor}10`
               }}
             >
-                <h3 
-                  className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2"
+              {/* Decorative accent */}
+              <div 
+                className="absolute top-0 right-0 w-24 h-24 opacity-10"
+                style={{ 
+                  background: `radial-gradient(circle, ${accentColor}, transparent)`,
+                }}
+              />
+              <h3 
+                className="text-xs font-bold uppercase tracking-[0.25em] mb-3"
                 style={{ color: primaryColor }}
               >
                 Destinataire
               </h3>
-              <p className="font-semibold text-base" style={{ color: accentColor }}>
+              <p 
+                className="font-bold text-xl mb-2"
+                style={{ 
+                  color: primaryColor,
+                  fontFamily: "'Georgia', serif"
+                }}
+              >
                 {facture.clients?.nom || "Client"}
               </p>
-              {/* Elegant separator line */}
               <div 
-                className="w-12 h-px my-2"
-                style={{ background: primaryColor }}
+                className="w-16 h-0.5 mb-3"
+                style={{ background: accentColor }}
               />
-              <div className="text-sm text-gray-500">
+              <div className="text-sm" style={{ color: "#666" }}>
                 {facture.clients?.telephone && (
-                  <span>{facture.clients.telephone}</span>
-                )}
-                {facture.clients?.telephone && facture.clients?.email && (
-                  <span style={{ color: primaryColor }}> • </span>
+                  <p className="mb-1">
+                    <span style={{ color: primaryColor }}>✆</span> {facture.clients.telephone}
+                  </p>
                 )}
                 {facture.clients?.email && (
-                  <span className="lowercase">{facture.clients.email}</span>
+                  <p>
+                    <span style={{ color: primaryColor }}>✉</span> {facture.clients.email}
+                  </p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Decorative Separator */}
-          <div className="flex items-center gap-3 mb-6">
+          {/* Premium Services Table */}
+          <div className="mb-8">
             <div 
-              className="h-px flex-1"
-              style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }}
-            />
-          </div>
-
-          {/* Premium Table */}
-          <div className="mb-6">
-            <div 
-              className="rounded-lg overflow-hidden shadow-sm"
-              style={{ border: `1px solid ${lightenColor(primaryColor, 0.4)}` }}
+              className="rounded-xl overflow-hidden shadow-lg"
+              style={{ 
+                border: `1px solid ${primaryColor}20`,
+                boxShadow: `0 8px 32px ${primaryColor}10`
+              }}
             >
               <table className="w-full">
                 <thead>
                   <tr 
                     style={{ 
-                      background: `linear-gradient(135deg, ${primaryColor}, ${darkenColor(primaryColor, 0.1)})` 
+                      background: `linear-gradient(135deg, ${primaryColor}, ${darkenColor(primaryColor, 0.15)})` 
                     }}
                   >
                     <th 
-                      className="text-left p-3 font-semibold text-xs uppercase tracking-[0.15em]"
+                      className="text-left p-5 font-bold text-sm uppercase tracking-[0.2em]"
                       style={{ color: primaryTextColor }}
                     >
-                      Désignation
+                      Désignation du Service
                     </th>
                     <th 
-                      className="text-right p-3 font-semibold text-xs uppercase tracking-[0.15em] w-36"
+                      className="text-right p-5 font-bold text-sm uppercase tracking-[0.2em] w-44"
                       style={{ color: primaryTextColor }}
                     >
-                      Montant
+                      Montant HT
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ background: `${secondaryColor}20` }}>
-                    <td className="p-3 text-base text-gray-700">
-                      {facture.description || "Prestation de service immobilier"}
+                  <tr style={{ background: `${secondaryColor}50` }}>
+                    <td className="p-5">
+                      <p 
+                        className="text-base font-medium mb-1"
+                        style={{ color: "#333" }}
+                      >
+                        {facture.description || "Prestation de conseil immobilier"}
+                      </p>
+                      <p className="text-xs" style={{ color: "#888" }}>
+                        Prestation réalisée conformément aux termes convenus
+                      </p>
                     </td>
-                    <td className="p-3 text-right font-medium text-base" style={{ color: accentColor }}>
+                    <td 
+                      className="p-5 text-right font-bold text-lg"
+                      style={{ color: primaryColor }}
+                    >
                       {formatCurrency(facture.montant)}
                     </td>
                   </tr>
                 </tbody>
               </table>
               
-              {/* Totals Section */}
+              {/* Premium Total Section */}
               <div 
-                className="p-4"
+                className="p-6 relative overflow-hidden"
                 style={{ 
                   background: `linear-gradient(135deg, ${accentColor}, ${darkenColor(accentColor, 0.1)})` 
                 }}
               >
-                <div className="flex justify-between items-center">
+                {/* Decorative pattern */}
+                <div 
+                  className="absolute inset-0 opacity-10"
+                  style={{
+                    backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${primaryColor} 10px, ${primaryColor} 11px)`
+                  }}
+                />
+                <div className="flex justify-between items-center relative z-10">
                   <div>
                     <span 
-                      className="font-bold text-[11px] uppercase tracking-[0.15em] block"
+                      className="font-bold text-sm uppercase tracking-[0.2em] block"
                       style={{ color: accentTextColor }}
                     >
-                      Montant Total Dû
+                      Montant Total à Régler
                     </span>
                     <span 
-                      className="text-[10px] mt-1 block opacity-70"
+                      className="text-xs mt-2 block opacity-80"
                       style={{ color: accentTextColor }}
                     >
-                      Arrêté à la somme indiquée ci-contre
+                      Net à payer — Arrêté à la somme indiquée ci-contre
                     </span>
                   </div>
                   <span 
-                    className="text-xl font-bold"
-                    style={{ color: primaryTextColor === "#ffffff" ? primaryColor : lightenColor(primaryColor, 0.3) }}
+                    className="text-3xl font-bold"
+                    style={{ 
+                      color: accentTextColor,
+                      textShadow: `0 2px 4px ${darkenColor(accentColor, 0.3)}40`
+                    }}
                   >
                     {formatCurrency(facture.montant)}
                   </span>
@@ -298,53 +371,77 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             </div>
           </div>
 
-          {/* AI Generated Content */}
+          {/* AI Generated Content - Premium Section */}
           {aiContent && (
             <>
-              {/* Elegant Separator */}
-              <div className="flex items-center gap-3 mb-5">
+              {/* Decorative Separator */}
+              <div className="flex items-center gap-4 my-8">
                 <div 
                   className="flex-1 h-px"
-                  style={{ background: `linear-gradient(90deg, transparent, ${primaryColor}50, transparent)` }}
+                  style={{ background: `linear-gradient(90deg, transparent, ${primaryColor}40, transparent)` }}
                 />
-                <div 
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: primaryColor }}
-                />
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: primaryColor }}
+                  />
+                  <div 
+                    className="w-3 h-3 rounded-full"
+                    style={{ background: accentColor }}
+                  />
+                  <div 
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: primaryColor }}
+                  />
+                </div>
                 <div 
                   className="flex-1 h-px"
-                  style={{ background: `linear-gradient(90deg, transparent, ${primaryColor}50, transparent)` }}
+                  style={{ background: `linear-gradient(270deg, transparent, ${primaryColor}40, transparent)` }}
                 />
               </div>
               
-              <div className="mb-6">
+              <div className="mb-8">
                 <div 
-                  className="rounded-lg p-4"
+                  className="rounded-xl p-8 relative overflow-hidden"
                   style={{ 
-                    background: `linear-gradient(135deg, ${secondaryColor}40, white)`,
-                    borderLeft: `3px solid ${primaryColor}`
+                    background: `linear-gradient(180deg, ${secondaryColor}80, white)`,
+                    borderLeft: `4px solid ${primaryColor}`,
+                    boxShadow: `inset 0 0 60px ${secondaryColor}`
                   }}
                 >
+                  {/* Decorative corner */}
+                  <div 
+                    className="absolute top-0 right-0 w-32 h-32"
+                    style={{ 
+                      background: `radial-gradient(circle at top right, ${accentColor}15, transparent)`,
+                    }}
+                  />
                   <h3 
-                    className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2"
+                    className="text-sm font-bold uppercase tracking-[0.3em] mb-4"
                     style={{ color: primaryColor }}
                   >
-                    Nature de la Prestation
+                    Détail de la Prestation
                   </h3>
-                  {/* Thin separator under title */}
                   <div 
-                    className="w-16 h-px mb-3"
-                    style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }}
+                    className="w-24 h-0.5 mb-6"
+                    style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}
                   />
                   <div 
-                    className="text-sm leading-relaxed"
-                    style={{ color: "#4a5568" }}
+                    className="text-base leading-loose relative z-10"
+                    style={{ 
+                      color: "#444",
+                      fontFamily: "'Georgia', serif"
+                    }}
                   >
                     {aiContent.split('\n').map((line, idx) => {
                       const cleanLine = line.replace(/^[\s•\-\*]+/, '').trim();
-                      if (!cleanLine) return null;
+                      if (!cleanLine) return <div key={idx} className="h-4" />;
                       return (
-                        <p key={idx} className="mb-1.5 last:mb-0">
+                        <p 
+                          key={idx} 
+                          className="mb-4 last:mb-0"
+                          style={{ textAlign: "justify" }}
+                        >
                           {cleanLine}
                         </p>
                       );
@@ -355,83 +452,112 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             </>
           )}
 
-          {/* Footer Separator */}
+          {/* Premium Footer */}
           <div 
-            className="h-px mt-8 mb-5"
-            style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}30, transparent)` }}
-          />
-
-          {/* Footer */}
-          <div>
-            {/* Signature Area */}
-            <div className="flex justify-between items-end">
-              <div className="text-sm text-gray-500 max-w-xs">
-                <p 
-                  className="font-semibold uppercase text-[11px] tracking-[0.15em]"
-                  style={{ color: accentColor }}
+            className="mt-10 pt-8"
+            style={{ borderTop: `2px solid ${secondaryColor}` }}
+          >
+            <div className="flex justify-between items-start gap-8">
+              {/* Payment Terms */}
+              <div className="flex-1">
+                <h4 
+                  className="font-bold uppercase text-sm tracking-[0.2em] mb-4"
+                  style={{ color: primaryColor }}
                 >
-                  Conditions de Règlement
-                </p>
-                {/* Thin accent line */}
+                  Modalités de Règlement
+                </h4>
                 <div 
-                  className="w-10 h-px my-2"
-                  style={{ background: primaryColor }}
+                  className="w-16 h-0.5 mb-4"
+                  style={{ background: accentColor }}
                 />
-                <p className="text-gray-600 leading-relaxed">
-                  Le règlement est attendu sous trente jours à compter de la date d'émission de la présente facture.
-                </p>
-                <p className="mt-2 text-xs italic" style={{ color: primaryColor }}>
-                  Nous vous remercions de votre confiance et restons à votre entière disposition.
-                </p>
-                <div className="mt-4 pt-3 border-t border-gray-100">
-                  <p className="text-[9px] text-gray-400 uppercase tracking-wider">
-                    Ce document fait foi de facture originale
+                <div 
+                  className="text-sm leading-relaxed"
+                  style={{ color: "#555" }}
+                >
+                  <p className="mb-3">
+                    Le règlement est attendu sous <strong style={{ color: primaryColor }}>trente (30) jours</strong> à 
+                    compter de la date d'émission de la présente facture.
                   </p>
-                  <p className="text-[9px] text-gray-300 mt-1">
-                    Page 1/1
+                  <p 
+                    className="italic text-sm"
+                    style={{ color: accentColor }}
+                  >
+                    Nous vous remercions pour votre confiance et restons à votre entière disposition 
+                    pour tout renseignement complémentaire.
+                  </p>
+                </div>
+                
+                {/* Legal Mention */}
+                <div 
+                  className="mt-6 pt-4"
+                  style={{ borderTop: `1px dashed ${primaryColor}30` }}
+                >
+                  <p 
+                    className="text-[10px] uppercase tracking-wider"
+                    style={{ color: "#999" }}
+                  >
+                    Document original faisant foi pour toutes fins légales et comptables
                   </p>
                 </div>
               </div>
               
+              {/* Signature Area */}
               <div className="text-center">
                 <p 
-                  className="text-[9px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-medium"
-                  style={{ color: accentColor }}
+                  className="text-xs uppercase tracking-[0.2em] font-bold mb-3"
+                  style={{ color: primaryColor }}
                 >
                   Signature & Cachet
                 </p>
                 <div 
-                  className="w-44 h-16 rounded-lg relative overflow-hidden"
+                  className="w-52 h-24 rounded-xl relative overflow-hidden"
                   style={{ 
-                    border: `1px dashed ${lightenColor(primaryColor, 0.2)}`,
-                    background: `${secondaryColor}15`
+                    border: `2px dashed ${primaryColor}40`,
+                    background: `linear-gradient(135deg, ${secondaryColor}30, white)`
                   }}
                 >
                   {/* Decorative corner accents */}
                   <div 
-                    className="absolute top-0 left-0 w-2.5 h-2.5"
+                    className="absolute top-1 left-1 w-4 h-4"
                     style={{ 
-                      borderTop: `2px solid ${primaryColor}`,
-                      borderLeft: `2px solid ${primaryColor}`
+                      borderTop: `3px solid ${primaryColor}`,
+                      borderLeft: `3px solid ${primaryColor}`
                     }}
                   />
                   <div 
-                    className="absolute bottom-0 right-0 w-2.5 h-2.5"
+                    className="absolute bottom-1 right-1 w-4 h-4"
                     style={{ 
-                      borderBottom: `2px solid ${primaryColor}`,
-                      borderRight: `2px solid ${primaryColor}`
+                      borderBottom: `3px solid ${primaryColor}`,
+                      borderRight: `3px solid ${primaryColor}`
                     }}
                   />
+                  {/* Center decoration */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div 
+                      className="w-8 h-8 rounded-full opacity-20"
+                      style={{ 
+                        background: `radial-gradient(circle, ${accentColor}, transparent)`
+                      }}
+                    />
+                  </div>
                 </div>
+                <p 
+                  className="mt-2 text-[10px]"
+                  style={{ color: "#999" }}
+                >
+                  {entreprise.nom}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Banner */}
+        {/* Bottom Premium Banner */}
         <div 
-          className="h-2 w-full absolute bottom-0 left-0"
-          style={{ background: `linear-gradient(90deg, ${primaryColor}, ${darkenColor(primaryColor, 0.1)})` }}
+          className="h-4 w-full absolute bottom-0 left-0"
+          style={{ 
+            background: `linear-gradient(90deg, ${primaryColor}, ${accentColor}, ${primaryColor})` 
+          }}
         />
       </div>
     );
