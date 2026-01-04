@@ -5,6 +5,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Fonction de nettoyage du contenu généré
+function nettoyerContenu(texte: string): string {
+  return texte
+    .replace(/^[\s]*[-•*]\s*/gm, '') // Supprimer les puces en début de ligne
+    .replace(/\*\*/g, '') // Supprimer le markdown bold
+    .replace(/\*/g, '') // Supprimer les astérisques
+    .replace(/#{1,6}\s*/g, '') // Supprimer les titres markdown
+    .replace(/\n{3,}/g, '\n\n') // Limiter les sauts de ligne
+    .replace(/^\s+|\s+$/g, '') // Trim
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -18,27 +30,68 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `Tu es un assistant professionnel spécialisé dans l'immobilier en Guinée.
+    const systemPrompt = `Tu es un expert en rédaction de documents professionnels haut de gamme pour les agences immobilières en Guinée.
 
-Génère un document professionnel pour une agence immobilière.
+STYLE D'ÉCRITURE :
+- Langage professionnel, formel et élégant
+- Phrases claires, fluides et structurées
+- Vocabulaire juridique et commercial approprié
+- Ton respectueux, courtois et officiel
 
-Nom de l'entreprise : ${entrepriseNom || "Non spécifié"}
+FORMAT OBLIGATOIRE :
+- Génère UNIQUEMENT le contenu du document (pas d'en-tête, pas d'informations entreprise)
+- Structure en paragraphes fluides et élégants
+- SANS puces, tirets, astérisques ou markdown
+- Espacement logique entre les sections
+
+INTERDICTIONS STRICTES :
+- Pas de points de liste (•, -, *, →)
+- Pas de markdown (**, ##, etc.)
+- Pas de formules génériques ("Cher client", "Cordialement")
+- Pas d'en-tête de document (le design s'en charge)
+
+CONTEXTE :
+Entreprise : ${entrepriseNom || "Agence immobilière"}
 Type de document : ${typeDocument}
-Description du besoin : ${description || "Non spécifiée"}
-Détails complémentaires : ${details || "Non spécifiés"}
+Client concerné : ${clientNom || "Non spécifié"}
+Localisation : ${localisation || "Guinée"}
+Description : ${description || "Document professionnel"}
+Détails : ${details || "Standard"}`;
 
-Contraintes :
-- Français clair et professionnel
-- Adapté au contexte immobilier en Guinée
-- Document structuré :
-  - Titre
-  - Introduction
-  - Corps du document
-  - Conclusion
-- Aucun jargon juridique inventé
-- Prêt à être envoyé ou imprimé
+    const userPrompt = `Rédige un document professionnel de type "${typeDocument}" pour une agence immobilière.
 
-Génère maintenant le document complet.`;
+DONNÉES DU DOCUMENT :
+Client : ${clientNom || "Non spécifié"}
+Description : ${description || "Document standard"}
+Localisation : ${localisation || "Guinée"}
+Détails complémentaires : ${details || "Aucun"}
+
+STRUCTURE ATTENDUE (en paragraphes élégants) :
+
+PARAGRAPHE 1 - Introduction formelle :
+Présente l'objet du document de manière professionnelle et solennelle. Mentionne le contexte et les parties concernées.
+
+PARAGRAPHE 2 - Corps du document :
+Développe le contenu principal avec précision et clarté. Inclus les éléments essentiels en fonction du type de document (${typeDocument}).
+
+PARAGRAPHE 3 - Dispositions ou engagement :
+Précise les conditions, engagements ou modalités applicables selon la nature du document.
+
+PARAGRAPHE 4 - Conclusion formelle :
+Termine par une formule officielle appropriée au type de document, sans être générique.
+
+EXEMPLE DE STYLE ATTENDU :
+"La présente attestation est établie en faveur de Monsieur/Madame [Nom] afin de certifier sa qualité de locataire au sein de notre agence immobilière.
+
+L'intéressé(e) occupe régulièrement le bien situé à [Adresse] depuis le [Date], conformément aux termes du contrat de bail en vigueur. À ce titre, il/elle s'acquitte de manière ponctuelle de l'ensemble de ses obligations locatives.
+
+Cette attestation est délivrée pour servir et valoir ce que de droit, sans réserve de notre part.
+
+Fait à Conakry, le [Date], pour valoir ce que de droit."
+
+Génère maintenant le document adapté au type "${typeDocument}" et à la description "${description || 'Document standard'}".`;
+
+    console.log('Generating premium document:', typeDocument, 'for client:', clientNom);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -50,8 +103,10 @@ Génère maintenant le document complet.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Génère un document de type "${typeDocument}" avec la description suivante : ${description || "Document standard"}` }
+          { role: "user", content: userPrompt }
         ],
+        temperature: 0.5,
+        max_tokens: 1000,
       }),
     });
 
@@ -77,7 +132,12 @@ Génère maintenant le document complet.`;
     }
 
     const data = await response.json();
-    const generatedContent = data.choices?.[0]?.message?.content || "";
+    let generatedContent = data.choices?.[0]?.message?.content || "";
+
+    // Nettoyer le contenu généré
+    generatedContent = nettoyerContenu(generatedContent);
+
+    console.log('Premium document generated successfully');
 
     return new Response(JSON.stringify({ content: generatedContent }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
