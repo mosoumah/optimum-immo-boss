@@ -412,54 +412,6 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.6, delay: 0.7 }} 
-              className={`p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500 ${isAdmin ? 'lg:col-span-3' : 'lg:col-span-1'}`}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
-                  {isAdmin ? "Tâches du jour" : "Mes tâches"}
-                </h2>
-                {isAdmin && (
-                  <Button variant="ghost" size="icon" onClick={() => setTacheDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
-                    <Plus className="w-5 h-5" />
-                  </Button>
-                )}
-              </div>
-              <div className="space-y-3">
-                {taches.length > 0 ? (
-                  taches.map((tache, index) => (
-                    <motion.div 
-                      key={tache.id} 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 0.8 + index * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/30 transition-all duration-300 group"
-                    >
-                      <div className="w-5 h-5 rounded-full border-2 border-warning flex items-center justify-center group-hover:bg-warning/20 transition-colors cursor-pointer" onClick={() => markTaskDone(tache.id)}>
-                      </div>
-                      <span className="flex-1 text-sm">{tache.titre}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => markTaskDone(tache.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-7 px-2 text-xs hover:bg-success/10 hover:text-success"
-                      >
-                        Terminer
-                      </Button>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <CheckSquare className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Aucune tâche pour aujourd'hui</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
           </div>
         </div>
       </main>
