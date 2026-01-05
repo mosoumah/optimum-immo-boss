@@ -185,20 +185,38 @@ const Utilisateurs = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Wait a bit for the trigger to create profile
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Wait a bit for the trigger to create profile and role
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Update the profile to link to the same entreprise
-        await supabase
+        const { error: profileError } = await supabase
           .from("profiles")
           .update({ entreprise_id: profileData.entreprise_id })
           .eq("id", authData.user.id);
 
-        // Update the role
-        await supabase
+        if (profileError) {
+          console.error("Error updating profile:", profileError);
+        }
+
+        // Check if user_role exists, if so update, otherwise insert
+        const { data: existingRole } = await supabase
           .from("user_roles")
-          .update({ role: newUserRole })
-          .eq("user_id", authData.user.id);
+          .select("id")
+          .eq("user_id", authData.user.id)
+          .maybeSingle();
+
+        if (existingRole) {
+          // Update the existing role
+          await supabase
+            .from("user_roles")
+            .update({ role: newUserRole })
+            .eq("user_id", authData.user.id);
+        } else {
+          // Insert a new role
+          await supabase
+            .from("user_roles")
+            .insert({ user_id: authData.user.id, role: newUserRole });
+        }
 
         // If client role, create client_account link
         if (newUserRole === "client" && selectedClientId) {
