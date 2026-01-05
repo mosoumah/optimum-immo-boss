@@ -225,22 +225,22 @@ const Dashboard = () => {
   const quickActions = getQuickActions();
 
   return (
-    <div className="min-h-screen flex relative">
+    <div className="h-screen flex relative overflow-hidden">
       <FloatingParticles count={35} />
       <DynamicSidebar onSignOut={handleSignOut} />
 
-      <main className="flex-1 ml-64 mesh-gradient min-h-screen">
-        <header className="sticky top-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
-          <div className="flex items-center justify-between px-8 py-4">
+      <main className="flex-1 ml-64 mesh-gradient h-screen flex flex-col overflow-hidden">
+        <header className="flex-shrink-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
+          <div className="flex items-center justify-between px-6 py-3">
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative w-80"
+              className="relative w-64"
             >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
                 placeholder="Rechercher..." 
-                className="pl-10 h-11 bg-secondary/30 border-border/30 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all duration-300" 
+                className="pl-9 h-9 bg-secondary/30 border-border/30 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all duration-300 text-sm" 
               />
             </motion.div>
             <motion.div 
@@ -249,12 +249,12 @@ const Dashboard = () => {
               transition={{ delay: 0.1 }}
               className="flex items-center gap-4"
             >
-              <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors duration-300 rounded-xl">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
+              <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors duration-300 rounded-lg h-9 w-9">
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
               </Button>
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50">
-                <span className="text-sm font-bold text-primary">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50">
+                <span className="text-xs font-bold text-primary">
                   {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
                 </span>
               </div>
@@ -262,39 +262,39 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-10"
-          >
-            <h1 className="text-4xl font-bold mb-3">
-              Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
-            </h1>
-            <p className="text-muted-foreground text-lg">Voici un aperçu de votre activité aujourd'hui</p>
-          </motion.div>
-
+        <div className="flex-1 overflow-hidden p-4 lg:p-6 flex flex-col">
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5, delay: 0.15 }} 
-            className="flex flex-wrap gap-3 mb-10"
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-4 flex-shrink-0"
+          >
+            <h1 className="text-2xl lg:text-3xl font-bold mb-1">
+              Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
+            </h1>
+            <p className="text-muted-foreground text-sm">Voici un aperçu de votre activité aujourd'hui</p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.4, delay: 0.1 }} 
+            className="flex flex-wrap gap-2 mb-4 flex-shrink-0"
           >
             {quickActions.map((action, index) => (
               <motion.div
                 key={action.label}
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.2 + index * 0.05 }}
+                transition={{ duration: 0.25, delay: 0.15 + index * 0.03 }}
               >
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={action.onClick}
-                  className="action-button border-border/30 hover:border-primary/40 rounded-xl h-10 px-4"
+                  className="action-button border-border/30 hover:border-primary/40 rounded-lg h-8 px-3 text-xs"
                 >
-                  <Plus className="w-4 h-4 mr-2 text-primary" />
+                  <Plus className="w-3.5 h-3.5 mr-1.5 text-primary" />
                   {action.label}
                 </Button>
               </motion.div>
@@ -304,36 +304,36 @@ const Dashboard = () => {
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            transition={{ duration: 0.6, delay: 0.25 }} 
-            className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-5 mb-10`}
+            transition={{ duration: 0.5, delay: 0.2 }} 
+            className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-3 mb-4 flex-shrink-0`}
           >
             {statsDisplay.map((stat, index) => (
               <motion.div 
                 key={stat.label}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="card-stat p-6 rounded-2xl border border-border/30 hover:border-primary/30"
+                transition={{ duration: 0.4, delay: 0.25 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                className="card-stat p-4 rounded-xl border border-border/30 hover:border-primary/30"
               >
-                <div className="flex items-center justify-between mb-5">
-                  <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
-                  <div className={`p-2.5 rounded-xl ${stat.positive ? "card-stat-positive" : "card-stat-negative"}`}>
-                    <stat.icon className={`w-5 h-5 ${stat.positive ? "text-success" : "text-destructive"}`} />
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted-foreground">{stat.label}</span>
+                  <div className={`p-2 rounded-lg ${stat.positive ? "card-stat-positive" : "card-stat-negative"}`}>
+                    <stat.icon className={`w-4 h-4 ${stat.positive ? "text-success" : "text-destructive"}`} />
                   </div>
                 </div>
                 <motion.div 
-                  initial={{ scale: 0.5, opacity: 0 }}
+                  initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-                  className="text-3xl font-bold mb-2"
+                  transition={{ duration: 0.4, delay: 0.4 + index * 0.05 }}
+                  className="text-xl lg:text-2xl font-bold mb-1"
                 >
                   {stat.value}
                 </motion.div>
-                <div className="h-1 w-full bg-secondary/50 rounded-full overflow-hidden">
+                <div className="h-0.5 w-full bg-secondary/50 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: "60%" }}
-                    transition={{ duration: 1, delay: 0.6 + index * 0.1, ease: "easeOut" }}
+                    transition={{ duration: 0.8, delay: 0.5 + index * 0.05, ease: "easeOut" }}
                     className={`h-full rounded-full ${stat.positive ? "bg-gradient-to-r from-success/50 to-success" : "bg-gradient-to-r from-destructive/50 to-destructive"}`}
                   />
                 </div>
@@ -341,72 +341,74 @@ const Dashboard = () => {
             ))}
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="flex-1 grid lg:grid-cols-3 gap-4 min-h-0 overflow-hidden">
             {isAdmin && (
               <motion.div 
-                initial={{ opacity: 0, x: -30 }} 
+                initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
-                transition={{ duration: 0.6, delay: 0.5 }} 
-                className="lg:col-span-2 p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500"
+                transition={{ duration: 0.5, delay: 0.35 }} 
+                className="lg:col-span-2 p-4 rounded-xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500 flex flex-col min-h-0"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                  <h2 className="text-base font-semibold flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     Analyse financière
                   </h2>
-                  <BarChart3 className="w-5 h-5 text-muted-foreground" />
+                  <BarChart3 className="w-4 h-4 text-muted-foreground" />
                 </div>
-                {profile?.entreprise_id && (
-                  <FinancialChart entrepriseId={profile.entreprise_id} />
-                )}
+                <div className="flex-1 min-h-0">
+                  {profile?.entreprise_id && (
+                    <FinancialChart entrepriseId={profile.entreprise_id} />
+                  )}
+                </div>
               </motion.div>
             )}
 
             <motion.div 
-              initial={{ opacity: 0, x: 30 }} 
+              initial={{ opacity: 0, x: 20 }} 
               animate={{ opacity: 1, x: 0 }} 
-              transition={{ duration: 0.6, delay: 0.6 }} 
-              className={`p-6 rounded-2xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500 ${!isAdmin ? 'lg:col-span-2' : ''}`}
+              transition={{ duration: 0.5, delay: 0.4 }} 
+              className={`p-4 rounded-xl card-gradient border border-border/30 hover:border-primary/20 transition-all duration-500 flex flex-col min-h-0 ${!isAdmin ? 'lg:col-span-2' : ''}`}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                <h2 className="text-base font-semibold flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   {isAdmin ? "Clients récents" : "Mes clients"}
                 </h2>
                 {isAdmin && (
-                  <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg">
-                    <Plus className="w-5 h-5" />
+                  <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-lg h-8 w-8">
+                    <Plus className="w-4 h-4" />
                   </Button>
                 )}
               </div>
-              <div className="space-y-4">
+              <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
                 {clients.length > 0 ? (
                   clients.map((client, index) => (
                     <motion.div 
                       key={client.id} 
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/30 transition-all duration-300 cursor-pointer group"
+                      transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary/30 transition-all duration-300 cursor-pointer group"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                        <Users className="w-5 h-5 text-primary" />
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                        <Users className="w-4 h-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{client.nom}</div>
+                        <div className="font-medium text-sm truncate">{client.nom}</div>
                         <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
                       </div>
-                      <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" className="h-8 px-3 text-xs hover:bg-primary/10 hover:text-primary">
+                      <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <Button variant="ghost" size="sm" className="h-7 px-2.5 text-xs hover:bg-primary/10 hover:text-primary">
                           Voir
                         </Button>
                       </Link>
                     </motion.div>
                   ))
                 ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Aucun client</p>
+                  <div className="text-center py-4 text-muted-foreground">
+                    <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-xs">Aucun client</p>
                   </div>
                 )}
               </div>
