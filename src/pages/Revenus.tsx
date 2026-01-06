@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/PermissionGate";
 import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { isToday, isThisWeek, isThisMonth } from "date-fns";
@@ -36,6 +38,7 @@ const Revenus = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('month');
+  const { loading: permissionsLoading } = usePermissions();
 
   const handleSignOut = async () => {
     await signOut();
@@ -102,7 +105,7 @@ const Revenus = () => {
     return new Date(effectiveDate).toLocaleDateString("fr-FR");
   };
 
-  if (entrepriseLoading || isLoading) {
+  if (entrepriseLoading || isLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -173,16 +176,18 @@ const Revenus = () => {
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-end mb-6"
-        >
-          <Button onClick={() => setDialogOpen(true)} className="premium-button">
-            <Plus className="w-4 h-4 mr-2" />
-            Ajouter un revenu
-          </Button>
-        </motion.div>
+        <PermissionGate permission="ajouter_revenu">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-end mb-6"
+          >
+            <Button onClick={() => setDialogOpen(true)} className="premium-button">
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter un revenu
+            </Button>
+          </motion.div>
+        </PermissionGate>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/PermissionGate";
 import { DevisDialog } from "@/components/dialogs/DevisDialog";
 import { LogoUpload } from "@/components/LogoUpload";
 import { QuotePreview } from "@/components/QuotePreview";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
+import { checkPermission } from "@/lib/checkPermission";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
@@ -73,6 +76,7 @@ const Devis = () => {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const quoteRef = useRef<HTMLDivElement>(null);
+  const { loading: permissionsLoading } = usePermissions();
 
   const handleSignOut = async () => {
     await signOut();
@@ -129,6 +133,13 @@ const Devis = () => {
 
   const transformerEnFacture = async (devis: Devis) => {
     if (!entrepriseId) return;
+
+    // Check permission before action
+    const canCreate = await checkPermission("creer_facture");
+    if (!canCreate) {
+      toast.error("Vous n'avez pas la permission de créer des factures");
+      return;
+    }
 
     const { error } = await supabase.from("factures").insert({
       client_id: devis.client_id,
@@ -500,7 +511,7 @@ const Devis = () => {
     return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
   };
 
-  if (entrepriseLoading || isLoading) {
+  if (entrepriseLoading || isLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -551,17 +562,19 @@ const Devis = () => {
           </motion.div>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex justify-end mb-6"
-        >
-          <Button onClick={() => setDialogOpen(true)} className="premium-button">
-            <Plus className="w-4 h-4 mr-2" />
-            Nouveau devis
-          </Button>
-        </motion.div>
+        <PermissionGate permission="creer_devis">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex justify-end mb-6"
+          >
+            <Button onClick={() => setDialogOpen(true)} className="premium-button">
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau devis
+            </Button>
+          </motion.div>
+        </PermissionGate>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -591,24 +604,28 @@ const Devis = () => {
                     <Badge className={statutColors[devis.statut]}>{statutLabels[devis.statut]}</Badge>
                   </div>
                   <div className="flex gap-2">
-                    {devis.statut !== "accepte" && devis.statut !== "refuse" && (
-                      <Button variant="outline" size="sm" onClick={() => transformerEnFacture(devis)}>
-                        <Receipt className="w-4 h-4 mr-1" />
-                        Transformer
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => generateDevis(devis)}
-                      disabled={generatingId === devis.id}
-                    >
-                      {generatingId === devis.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <FileText className="w-4 h-4" />
+                    <PermissionGate permission="creer_facture">
+                      {devis.statut !== "accepte" && devis.statut !== "refuse" && (
+                        <Button variant="outline" size="sm" onClick={() => transformerEnFacture(devis)}>
+                          <Receipt className="w-4 h-4 mr-1" />
+                          Transformer
+                        </Button>
                       )}
-                    </Button>
+                    </PermissionGate>
+                    <PermissionGate permission="voir_devis">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => generateDevis(devis)}
+                        disabled={generatingId === devis.id}
+                      >
+                        {generatingId === devis.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FileText className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </PermissionGate>
                   </div>
                 </motion.div>
               ))}

@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   UserCog,
+  Shield,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -33,6 +34,7 @@ const sidebarItems: SidebarItem[] = [
   { icon: CheckSquare, label: "Tâches", path: "/taches", roles: ["admin", "agent"] },
   { icon: Sparkles, label: "Documents IA", path: "/documents-ia", roles: ["admin", "agent"] },
   { icon: UserCog, label: "Utilisateurs", path: "/utilisateurs", roles: ["admin"] },
+  { icon: Shield, label: "Permissions", path: "/gestion-permissions", roles: ["admin"] },
 ];
 
 interface DynamicSidebarProps {
