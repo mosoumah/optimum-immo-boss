@@ -195,12 +195,12 @@ export const TacheDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Tac
               {clients.length > 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="client">Client lié (optionnel)</Label>
-                  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                  <Select value={selectedClientId || "none"} onValueChange={(val) => setSelectedClientId(val === "none" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un client" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun</SelectItem>
+                      <SelectItem value="none">Aucun</SelectItem>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
                           {client.nom}

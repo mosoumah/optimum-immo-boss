@@ -135,12 +135,12 @@ export const ClientDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Cl
           {isAdmin && agents.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="assigned_to">Assigner à un agent</Label>
-              <Select value={assignedTo} onValueChange={setAssignedTo}>
+              <Select value={assignedTo || "none"} onValueChange={(val) => setAssignedTo(val === "none" ? "" : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un agent (optionnel)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucun</SelectItem>
+                  <SelectItem value="none">Aucun</SelectItem>
                   {agents.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.nom} ({agent.email})
