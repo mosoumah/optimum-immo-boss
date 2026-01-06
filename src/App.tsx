@@ -21,6 +21,7 @@ import Taches from "./pages/Taches";
 import DocumentsIA from "./pages/DocumentsIA";
 import Parametres from "./pages/Parametres";
 import Utilisateurs from "./pages/Utilisateurs";
+import GestionPermissions from "./pages/GestionPermissions";
 import PortailClient from "./pages/PortailClient";
 import NotFound from "./pages/NotFound";
 
@@ -132,6 +133,14 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin"]}>
                   <Utilisateurs />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestion-permissions"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin"]}>
+                  <GestionPermissions />
                 </RoleProtectedRoute>
               }
             />

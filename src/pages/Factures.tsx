@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/PermissionGate";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { LogoUpload } from "@/components/LogoUpload";
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
+import { checkPermission } from "@/lib/checkPermission";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
@@ -57,6 +60,7 @@ const Factures = () => {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const { loading: permissionsLoading } = usePermissions();
 
   const handleSignOut = async () => {
     await signOut();
@@ -112,6 +116,13 @@ const Factures = () => {
   };
 
   const marquerPayee = async (facture: Facture) => {
+    // Check permission before action
+    const canModify = await checkPermission("modifier_facture");
+    if (!canModify) {
+      toast.error("Vous n'avez pas la permission de modifier les factures");
+      return;
+    }
+
     const { error } = await supabase
       .from("factures")
       .update({ statut: "paye" })
@@ -474,7 +485,7 @@ const Factures = () => {
     return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
   };
 
-  if (entrepriseLoading || isLoading) {
+  if (entrepriseLoading || isLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -525,17 +536,19 @@ const Factures = () => {
           </motion.div>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex justify-end mb-6"
-        >
-          <Button onClick={() => setDialogOpen(true)} className="premium-button">
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle facture
-          </Button>
-        </motion.div>
+        <PermissionGate permission="creer_facture">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex justify-end mb-6"
+          >
+            <Button onClick={() => setDialogOpen(true)} className="premium-button">
+              <Plus className="w-4 h-4 mr-2" />
+              Nouvelle facture
+            </Button>
+          </motion.div>
+        </PermissionGate>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -567,24 +580,28 @@ const Factures = () => {
                     </Badge>
                   </div>
                   <div className="flex gap-2">
-                    {facture.statut !== "paye" && (
-                      <Button variant="outline" size="sm" onClick={() => marquerPayee(facture)}>
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Marquer payée
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => generateFacture(facture)}
-                      disabled={generatingId === facture.id}
-                    >
-                      {generatingId === facture.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <FileText className="w-4 h-4" />
+                    <PermissionGate permission="modifier_facture">
+                      {facture.statut !== "paye" && (
+                        <Button variant="outline" size="sm" onClick={() => marquerPayee(facture)}>
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Marquer payée
+                        </Button>
                       )}
-                    </Button>
+                    </PermissionGate>
+                    <PermissionGate permission="generer_pdf_facture">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => generateFacture(facture)}
+                        disabled={generatingId === facture.id}
+                      >
+                        {generatingId === facture.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FileText className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </PermissionGate>
                   </div>
                 </motion.div>
               ))}

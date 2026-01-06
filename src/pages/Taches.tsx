@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
-import { useUserRole } from "@/hooks/useUserRole";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/PermissionGate";
 import { useAuth } from "@/hooks/useAuth";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
+import { checkPermission } from "@/lib/checkPermission";
 
 interface Tache {
   id: string;
@@ -32,7 +34,7 @@ const Taches = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
-  const { isAdmin } = useUserRole();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [taches, setTaches] = useState<Tache[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,6 +71,13 @@ const Taches = () => {
   };
 
   const toggleStatut = async (tache: Tache) => {
+    // Check permission before modifying
+    const canModify = await checkPermission("modifier_tache");
+    if (!canModify) {
+      toast.error("Vous n'avez pas la permission de modifier les tâches");
+      return;
+    }
+    
     const newStatut = tache.statut === "a_faire" ? "fait" : "a_faire";
     await supabase
       .from("taches")
@@ -141,7 +150,7 @@ const Taches = () => {
     }
   };
 
-  if (entrepriseLoading || isLoading) {
+  if (entrepriseLoading || isLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -169,7 +178,7 @@ const Taches = () => {
             <div>
               <h1 className="text-3xl font-bold">Tâches</h1>
               <p className="text-muted-foreground">
-                {isAdmin ? "Gérez les tâches de l'équipe" : "Vos tâches assignées"}
+                {hasPermission("creer_tache") ? "Gérez les tâches de l'équipe" : "Vos tâches assignées"}
               </p>
             </div>
           </motion.div>
@@ -179,61 +188,61 @@ const Taches = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-end gap-2 mb-6"
           >
-            {isAdmin && (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={generateSuggestions}
-                  disabled={isGeneratingSuggestions}
-                  className="gap-2"
-                >
-                  {isGeneratingSuggestions ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-4 h-4" />
-                  )}
-                  Suggestions IA
-                </Button>
-                <Button onClick={() => setDialogOpen(true)} className="premium-button">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nouvelle tâche
-                </Button>
-              </>
-            )}
+            <PermissionGate permission="creer_tache">
+              <Button 
+                variant="outline" 
+                onClick={generateSuggestions}
+                disabled={isGeneratingSuggestions}
+                className="gap-2"
+              >
+                {isGeneratingSuggestions ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                Suggestions IA
+              </Button>
+              <Button onClick={() => setDialogOpen(true)} className="premium-button">
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle tâche
+              </Button>
+            </PermissionGate>
           </motion.div>
 
-          {/* AI Suggestions - Admin only */}
-          {isAdmin && suggestions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 rounded-xl border border-primary/30 bg-primary/5"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold">Suggestions IA</h3>
-              </div>
-              <div className="space-y-3">
-                {suggestions.map((suggestion, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-background/50 flex items-start gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{suggestion.titre}</span>
-                        <Badge className={getPriorityColor(suggestion.priorite)}>
-                          {suggestion.priorite}
-                        </Badge>
+          {/* AI Suggestions */}
+          <PermissionGate permission="creer_tache">
+            {suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 rounded-xl border border-primary/30 bg-primary/5"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <h3 className="font-semibold">Suggestions IA</h3>
+                </div>
+                <div className="space-y-3">
+                  {suggestions.map((suggestion, index) => (
+                    <div key={index} className="p-3 rounded-lg bg-background/50 flex items-start gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">{suggestion.titre}</span>
+                          <Badge className={getPriorityColor(suggestion.priorite)}>
+                            {suggestion.priorite}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{suggestion.description}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+                      <Button size="sm" onClick={() => addSuggestionAsTask(suggestion)}>
+                        <Plus className="w-4 h-4 mr-1" />
+                        Ajouter
+                      </Button>
                     </div>
-                    <Button size="sm" onClick={() => addSuggestionAsTask(suggestion)}>
-                      <Plus className="w-4 h-4 mr-1" />
-                      Ajouter
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </PermissionGate>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -282,21 +291,23 @@ const Taches = () => {
               <div className="p-12 text-center">
                 <CheckSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground">
-                  {isAdmin ? "Aucune tâche pour le moment" : "Aucune tâche assignée"}
+                  {hasPermission("creer_tache") ? "Aucune tâche pour le moment" : "Aucune tâche assignée"}
                 </p>
               </div>
             )}
           </motion.div>
         </div>
 
-        {entrepriseId && isAdmin && (
-          <TacheDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            entrepriseId={entrepriseId}
-            onSuccess={fetchTaches}
-          />
-        )}
+        <PermissionGate permission="creer_tache">
+          {entrepriseId && (
+            <TacheDialog
+              open={dialogOpen}
+              onOpenChange={setDialogOpen}
+              entrepriseId={entrepriseId}
+              onSuccess={fetchTaches}
+            />
+          )}
+        </PermissionGate>
       </main>
     </div>
   );

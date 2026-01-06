@@ -437,6 +437,27 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: Database["public"]["Enums"]["app_permission"]
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       taches: {
         Row: {
           assigned_to: string | null
@@ -491,6 +512,33 @@ export type Database = {
           },
         ]
       }
+      user_permissions: {
+        Row: {
+          created_at: string
+          granted: boolean
+          id: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted?: boolean
+          id?: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted?: boolean
+          id?: string
+          permission?: Database["public"]["Enums"]["app_permission"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -516,9 +564,20 @@ export type Database = {
     Functions: {
       get_user_client_id: { Args: { _user_id: string }; Returns: string }
       get_user_entreprise_id: { Args: { _user_id: string }; Returns: string }
+      get_user_permissions: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_permission"][]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_permission: {
+        Args: {
+          _permission: Database["public"]["Enums"]["app_permission"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -529,6 +588,37 @@ export type Database = {
       }
     }
     Enums: {
+      app_permission:
+        | "creer_client"
+        | "voir_client"
+        | "modifier_client"
+        | "supprimer_client"
+        | "creer_devis"
+        | "voir_devis"
+        | "modifier_devis"
+        | "supprimer_devis"
+        | "envoyer_devis"
+        | "creer_facture"
+        | "voir_facture"
+        | "modifier_facture"
+        | "supprimer_facture"
+        | "generer_pdf_facture"
+        | "voir_revenus"
+        | "ajouter_revenu"
+        | "voir_depenses"
+        | "ajouter_depense"
+        | "creer_document_ia"
+        | "voir_document_ia"
+        | "telecharger_document_ia"
+        | "creer_tache"
+        | "assigner_tache"
+        | "voir_tache"
+        | "modifier_tache"
+        | "cloturer_tache"
+        | "voir_statistiques_globales"
+        | "voir_statistiques_personnelles"
+        | "gerer_utilisateurs"
+        | "gerer_parametres"
       app_role: "admin" | "agent" | "client"
       devis_statut: "brouillon" | "envoye" | "accepte" | "refuse"
       facture_statut: "paye" | "non_paye"
@@ -660,6 +750,38 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_permission: [
+        "creer_client",
+        "voir_client",
+        "modifier_client",
+        "supprimer_client",
+        "creer_devis",
+        "voir_devis",
+        "modifier_devis",
+        "supprimer_devis",
+        "envoyer_devis",
+        "creer_facture",
+        "voir_facture",
+        "modifier_facture",
+        "supprimer_facture",
+        "generer_pdf_facture",
+        "voir_revenus",
+        "ajouter_revenu",
+        "voir_depenses",
+        "ajouter_depense",
+        "creer_document_ia",
+        "voir_document_ia",
+        "telecharger_document_ia",
+        "creer_tache",
+        "assigner_tache",
+        "voir_tache",
+        "modifier_tache",
+        "cloturer_tache",
+        "voir_statistiques_globales",
+        "voir_statistiques_personnelles",
+        "gerer_utilisateurs",
+        "gerer_parametres",
+      ],
       app_role: ["admin", "agent", "client"],
       devis_statut: ["brouillon", "envoye", "accepte", "refuse"],
       facture_statut: ["paye", "non_paye"],

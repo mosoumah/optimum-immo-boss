@@ -6,12 +6,14 @@ import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGate } from "@/components/PermissionGate";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
 import { EditClientDialog } from "@/components/dialogs/EditClientDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
+import { checkPermission } from "@/lib/checkPermission";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +37,8 @@ const Clients = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
-  const { isAdmin } = useUserRole();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
+  
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -81,6 +84,13 @@ const Clients = () => {
   const handleDelete = async () => {
     if (!selectedClient) return;
 
+    // Server-side permission check
+    const canDelete = await checkPermission("supprimer_client");
+    if (!canDelete) {
+      toast.error("Vous n'avez pas la permission de supprimer des clients");
+      return;
+    }
+
     const { error } = await supabase
       .from("clients")
       .delete()
@@ -97,7 +107,7 @@ const Clients = () => {
     fetchClients();
   };
 
-  if (entrepriseLoading || isLoading) {
+  if (entrepriseLoading || isLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -125,12 +135,12 @@ const Clients = () => {
             <div>
               <h1 className="text-3xl font-bold">Clients</h1>
               <p className="text-muted-foreground">
-                {isAdmin ? "Gérez vos clients" : "Vos clients assignés"}
+                {hasPermission("creer_client") ? "Gérez vos clients" : "Vos clients assignés"}
               </p>
             </div>
           </motion.div>
 
-          {isAdmin && (
+          <PermissionGate permission="creer_client">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -142,7 +152,7 @@ const Clients = () => {
                 Nouveau client
               </Button>
             </motion.div>
-          )}
+          </PermissionGate>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -169,16 +179,16 @@ const Clients = () => {
                     </div>
                     <div className="text-sm text-muted-foreground">{client.telephone || "-"}</div>
                     <div className="flex items-center gap-2">
-                      {isAdmin && (
-                        <>
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(client)}>
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(client)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </>
-                      )}
+                      <PermissionGate permission="modifier_client">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(client)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </PermissionGate>
+                      <PermissionGate permission="supprimer_client">
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(client)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </PermissionGate>
                       <Button variant="ghost" size="sm" asChild>
                         <Link to={`/clients/${client.id}`}>
                           <Eye className="w-4 h-4 mr-1" />
@@ -193,7 +203,7 @@ const Clients = () => {
               <div className="p-12 text-center">
                 <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground">
-                  {isAdmin ? "Aucun client pour le moment" : "Aucun client assigné"}
+                  {hasPermission("creer_client") ? "Aucun client pour le moment" : "Aucun client assigné"}
                 </p>
               </div>
             )}
