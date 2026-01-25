@@ -262,18 +262,18 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8 flex flex-col">
+        <div className="flex-1 overflow-hidden p-4 lg:p-6 flex flex-col h-[calc(100vh-57px)]">
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-6 flex-shrink-0"
+            className="mb-3 flex-shrink-0"
           >
-            <h1 className="text-2xl lg:text-4xl font-extrabold mb-2 tracking-tight">
+            <h1 className="text-xl lg:text-3xl font-extrabold mb-1 tracking-tight">
               Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
             </h1>
-            <p className="text-muted-foreground text-sm lg:text-base">Voici un aperçu de votre activité aujourd'hui</p>
+            <p className="text-muted-foreground text-xs lg:text-sm">Voici un aperçu de votre activité aujourd'hui</p>
           </motion.div>
 
           {/* Quick Actions Section */}
@@ -281,7 +281,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 15 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.4, delay: 0.1 }} 
-            className="flex flex-wrap gap-2.5 mb-6 flex-shrink-0"
+            className="flex flex-wrap gap-2 mb-3 flex-shrink-0"
           >
             {quickActions.map((action, index) => (
               <motion.div
@@ -303,15 +303,15 @@ const Dashboard = () => {
             ))}
           </motion.div>
 
-          {/* Premium Separator */}
-          <div className="section-separator mb-6 flex-shrink-0" />
+          {/* Fluid Gradient Separator */}
+          <div className="flex-shrink-0 h-px w-full my-4 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* KPI Cards Section */}
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ duration: 0.5, delay: 0.2 }} 
-            className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-4 lg:gap-5 mb-6 flex-shrink-0`}
+            className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-3 lg:gap-4 flex-shrink-0`}
           >
             {statsDisplay.map((stat, index) => (
               <motion.div 
@@ -319,7 +319,7 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.25 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                className="card-kpi p-5 lg:p-6 rounded-2xl"
+                className="card-kpi p-4 lg:p-5 rounded-2xl"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="kpi-label">{stat.label}</span>
@@ -347,11 +347,11 @@ const Dashboard = () => {
             ))}
           </motion.div>
 
-          {/* Premium Separator */}
-          <div className="section-separator mb-6 flex-shrink-0" />
+          {/* Fluid Gradient Separator */}
+          <div className="flex-shrink-0 h-px w-full my-4 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 flex-1 min-h-0">
             {isAdmin && (
               <motion.div 
                 initial={{ opacity: 0, x: -20 }} 
