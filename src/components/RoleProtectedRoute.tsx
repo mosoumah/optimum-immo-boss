@@ -17,7 +17,7 @@ export const RoleProtectedRoute = ({
   redirectTo = "/dashboard"
 }: RoleProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
-  const { role, loading: roleLoading } = useUserRole();
+  const { role, loading: roleLoading, hasNoRole } = useUserRole();
   const location = useLocation();
 
   if (authLoading || roleLoading) {
@@ -30,6 +30,11 @@ export const RoleProtectedRoute = ({
 
   if (!user) {
     return <Navigate to="/connexion" state={{ from: location }} replace />;
+  }
+
+  // User exists but has no role assigned - redirect to error page
+  if (hasNoRole) {
+    return <Navigate to="/erreur-role" replace />;
   }
 
   if (!role || !allowedRoles.includes(role)) {

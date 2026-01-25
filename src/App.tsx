@@ -23,6 +23,7 @@ import Parametres from "./pages/Parametres";
 import Utilisateurs from "./pages/Utilisateurs";
 import GestionPermissions from "./pages/GestionPermissions";
 import PortailClient from "./pages/PortailClient";
+import ErreurRole from "./pages/ErreurRole";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -153,6 +154,8 @@ const App = () => (
                 </RoleProtectedRoute>
               }
             />
+            {/* Error page for users without role */}
+            <Route path="/erreur-role" element={<ErreurRole />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
