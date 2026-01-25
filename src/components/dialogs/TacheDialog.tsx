@@ -92,7 +92,8 @@ export const TacheDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Tac
       return;
     }
 
-    if (isAdmin && !assignedTo) {
+    // Only require assignment if admin AND agents are available
+    if (isAdmin && agents.length > 0 && !assignedTo) {
       toast.error("Veuillez sélectionner un utilisateur à assigner");
       return;
     }
@@ -176,21 +177,27 @@ export const TacheDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Tac
 
           {isAdmin && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="assigned_to">Assigner à *</Label>
-                <Select value={assignedTo} onValueChange={setAssignedTo}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un utilisateur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
-                        {agent.nom} ({agent.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {agents.length > 0 ? (
+                <div className="space-y-2">
+                  <Label htmlFor="assigned_to">Assigner à *</Label>
+                  <Select value={assignedTo} onValueChange={setAssignedTo}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un utilisateur" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agents.map((agent) => (
+                        <SelectItem key={agent.id} value={agent.id}>
+                          {agent.nom} ({agent.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Aucun agent disponible. La tâche sera créée sans assignation.
+                </p>
+              )}
 
               {clients.length > 0 && (
                 <div className="space-y-2">

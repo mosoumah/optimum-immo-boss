@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Building2, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -23,11 +23,12 @@ const Inscription = () => {
     entreprise: "",
   });
 
-  // Redirect if already logged in
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  // Redirect if already logged in (inscription = new admin signup, always go to profil-entreprise)
+  useEffect(() => {
+    if (user) {
+      navigate("/profil-entreprise");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
