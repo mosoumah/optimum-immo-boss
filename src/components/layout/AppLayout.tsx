@@ -23,10 +23,10 @@ export const AppLayout = ({
   };
 
   return (
-    <div className="min-h-screen flex relative">
+    <div className="h-screen flex relative overflow-hidden">
       {showParticles && <FloatingParticles count={particleCount} />}
       <DynamicSidebar onSignOut={handleSignOut} />
-      <main className="flex-1 ml-64 mesh-gradient min-h-screen">
+      <main className="flex-1 lg:ml-64 mesh-gradient h-screen overflow-hidden">
         {children}
       </main>
     </div>
