@@ -139,6 +139,11 @@ const Utilisateurs = () => {
   };
 
   const handleCreateUser = async () => {
+    // Diagnostic logs
+    console.log("=== DIAGNOSTIC CRÉATION UTILISATEUR ===");
+    console.log("Utilisateur connecté ID:", user?.id);
+    console.log("Utilisateur connecté Email:", user?.email);
+    
     if (!newUserEmail || !newUserNom || !newUserPassword) {
       toast({
         title: "Erreur",
