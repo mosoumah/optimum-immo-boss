@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Connexion = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,18 +16,23 @@ const Connexion = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
+  const { role, loading: roleLoading } = useUserRole();
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  // Redirect if already logged in
+  // Redirect based on role when already logged in
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
+    if (user && !roleLoading && role) {
+      if (role === "client") {
+        navigate("/portail-client");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }, [user, navigate]);
+  }, [user, role, roleLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +58,7 @@ const Connexion = () => {
     });
 
     setIsLoading(false);
-    navigate("/dashboard");
+    // Redirection is handled by useEffect after role is fetched
   };
 
   return (
@@ -99,7 +105,7 @@ const Connexion = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Mot de passe</Label>
-                <span className="text-sm text-primary hover:underline cursor-pointer">
+                <span className="text-sm text-muted-foreground cursor-default" title="Fonctionnalité à venir">
                   Mot de passe oublié?
                 </span>
               </div>
