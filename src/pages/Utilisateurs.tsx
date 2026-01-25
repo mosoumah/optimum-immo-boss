@@ -169,7 +169,7 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) throw new Error("Entreprise non trouvée");
 
-      // Create user via Supabase Auth
+      // Create user via Supabase Auth (empty metadata to avoid trigger creating new entreprise)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newUserEmail,
         password: newUserPassword,
@@ -177,7 +177,7 @@ const Utilisateurs = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             nom: newUserNom,
-            entreprise_nom: "", // Empty since we'll assign existing entreprise
+            entreprise_nom: "", // Empty to prevent trigger from creating new entreprise
           },
         },
       });
@@ -185,45 +185,20 @@ const Utilisateurs = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Wait a bit for the trigger to create profile and role
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        // Wait for the trigger to create the profile
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Update the profile to link to the same entreprise
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ entreprise_id: profileData.entreprise_id })
-          .eq("id", authData.user.id);
+        // Use the SECURITY DEFINER function to set entreprise_id, role, and client_account
+        const { error: rpcError } = await supabase.rpc("admin_create_user_in_entreprise", {
+          _new_user_id: authData.user.id,
+          _entreprise_id: profileData.entreprise_id,
+          _role: newUserRole,
+          _client_id: newUserRole === "client" ? selectedClientId : null,
+        });
 
-        if (profileError) {
-          console.error("Error updating profile:", profileError);
-        }
-
-        // Check if user_role exists, if so update, otherwise insert
-        const { data: existingRole } = await supabase
-          .from("user_roles")
-          .select("id")
-          .eq("user_id", authData.user.id)
-          .maybeSingle();
-
-        if (existingRole) {
-          // Update the existing role
-          await supabase
-            .from("user_roles")
-            .update({ role: newUserRole })
-            .eq("user_id", authData.user.id);
-        } else {
-          // Insert a new role
-          await supabase
-            .from("user_roles")
-            .insert({ user_id: authData.user.id, role: newUserRole });
-        }
-
-        // If client role, create client_account link
-        if (newUserRole === "client" && selectedClientId) {
-          await supabase.from("client_accounts").insert({
-            user_id: authData.user.id,
-            client_id: selectedClientId,
-          });
+        if (rpcError) {
+          console.error("Error calling admin_create_user_in_entreprise:", rpcError);
+          throw rpcError;
         }
 
         toast({
