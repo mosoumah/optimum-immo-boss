@@ -562,6 +562,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_user_in_entreprise: {
+        Args: {
+          _client_id?: string
+          _entreprise_id: string
+          _new_user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       create_user_with_role: {
         Args: {
           _client_id?: string
