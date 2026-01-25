@@ -225,17 +225,17 @@ const Dashboard = () => {
   const quickActions = getQuickActions();
 
   return (
-    <div className="h-screen flex relative overflow-hidden">
+    <div className="min-h-screen flex relative">
       <FloatingParticles count={35} />
       <DynamicSidebar onSignOut={handleSignOut} />
 
-      <main className="flex-1 ml-64 mesh-gradient h-screen flex flex-col overflow-hidden">
+      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen flex flex-col">
         <header className="flex-shrink-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
-          <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex items-center justify-between px-4 lg:px-6 py-3">
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative w-64"
+              className="relative w-40 lg:w-64 ml-12 lg:ml-0"
             >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
@@ -247,7 +247,7 @@ const Dashboard = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="flex items-center gap-4"
+              className="flex items-center gap-2 lg:gap-4"
             >
               <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors duration-300 rounded-lg h-9 w-9">
                 <Bell className="w-4 h-4" />
@@ -262,7 +262,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-5 lg:p-8 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8 flex flex-col">
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
@@ -351,13 +351,13 @@ const Dashboard = () => {
           <div className="section-separator mb-6 flex-shrink-0" />
 
           {/* Main Content Grid */}
-          <div className="flex-1 grid lg:grid-cols-3 gap-5 lg:gap-6 min-h-0 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             {isAdmin && (
               <motion.div 
                 initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ duration: 0.5, delay: 0.35 }} 
-                className="lg:col-span-2 p-5 lg:p-6 rounded-2xl card-premium flex flex-col min-h-0"
+                className="lg:col-span-2 p-4 lg:p-6 rounded-2xl card-premium flex flex-col"
               >
                 <div className="flex items-center justify-between mb-5 flex-shrink-0">
                   <h2 className="section-title-premium flex items-center gap-3">
@@ -380,7 +380,7 @@ const Dashboard = () => {
               initial={{ opacity: 0, x: 20 }} 
               animate={{ opacity: 1, x: 0 }} 
               transition={{ duration: 0.5, delay: 0.4 }} 
-              className={`p-5 lg:p-6 rounded-2xl card-premium flex flex-col min-h-0 ${!isAdmin ? 'lg:col-span-2' : ''}`}
+              className={`p-4 lg:p-6 rounded-2xl card-premium flex flex-col ${!isAdmin ? 'lg:col-span-2' : ''}`}
             >
               <div className="flex items-center justify-between mb-5 flex-shrink-0">
                 <h2 className="section-title-premium flex items-center gap-3">
@@ -393,7 +393,7 @@ const Dashboard = () => {
                   </Button>
                 )}
               </div>
-              <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+              <div className="space-y-3 max-h-64 lg:max-h-none overflow-y-auto">
                 {clients.length > 0 ? (
                   clients.map((client, index) => (
                     <motion.div 

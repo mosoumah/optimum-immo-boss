@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -13,9 +13,14 @@ import {
   LogOut,
   UserCog,
   Shield,
+  Menu,
+  X,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface SidebarItem {
   icon: typeof LayoutDashboard;
@@ -44,23 +49,41 @@ interface DynamicSidebarProps {
 export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
   const { role, isAdmin } = useUserRole();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
 
   const filteredItems = sidebarItems.filter(
     (item) => role && item.roles.includes(role as "admin" | "agent" | "client")
   );
 
-  return (
-    <aside className="w-64 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50">
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setIsOpen(false);
+    }
+  };
+
+  const sidebarContent = (
+    <>
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="p-6"
+        className="p-6 flex items-center justify-between"
       >
         <Logo size="sm" animated={false} />
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden hover:bg-primary/10"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        )}
       </motion.div>
 
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
         {filteredItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           return (
@@ -72,6 +95,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
             >
               <Link
                 to={item.path}
+                onClick={handleLinkClick}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
                   isActive
                     ? "bg-primary/10 text-primary border border-primary/20 glow-primary-sm"
@@ -105,6 +129,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         {isAdmin && (
           <Link
             to="/parametres"
+            onClick={handleLinkClick}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
           >
             <Settings className="w-5 h-5" />
@@ -119,6 +144,54 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
           <span className="font-medium text-sm">Déconnexion</span>
         </button>
       </motion.div>
+    </>
+  );
+
+  // Mobile: Hamburger button + overlay sidebar
+  if (isMobile) {
+    return (
+      <>
+        {/* Hamburger button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsOpen(true)}
+          className="fixed top-4 left-4 z-50 lg:hidden bg-card/80 backdrop-blur-sm border border-border/30 shadow-lg hover:bg-primary/10"
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+
+        {/* Overlay */}
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsOpen(false)}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 lg:hidden"
+              />
+              <motion.aside
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="w-72 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50"
+              >
+                {sidebarContent}
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
+
+  // Desktop: Fixed sidebar
+  return (
+    <aside className="w-64 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50 hidden lg:flex">
+      {sidebarContent}
     </aside>
   );
 };
