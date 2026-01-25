@@ -262,7 +262,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-4 lg:p-6 flex flex-col h-[calc(100vh-57px)]">
+        <div className="p-4 lg:p-6 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 57px)' }}>
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
