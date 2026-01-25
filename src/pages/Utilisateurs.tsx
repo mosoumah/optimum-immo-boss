@@ -91,26 +91,27 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) return;
 
-      // Fetch all profiles in this entreprise with their roles in a single query
+      // Fetch all profiles in this entreprise with their roles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select(`
-          id, 
-          nom, 
-          email, 
-          created_at,
-          user_roles (role)
-        `)
+        .select("id, nom, email, created_at")
         .eq("entreprise_id", profileData.entreprise_id);
 
       if (profiles) {
-        const usersWithRoles: UserWithRole[] = profiles.map((profile: any) => ({
-          id: profile.id,
-          nom: profile.nom,
-          email: profile.email,
-          created_at: profile.created_at,
-          role: profile.user_roles?.[0]?.role || "agent",
-        }));
+        // Fetch roles for each user
+        const usersWithRoles: UserWithRole[] = [];
+        for (const profile of profiles) {
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", profile.id)
+            .maybeSingle();
+
+          usersWithRoles.push({
+            ...profile,
+            role: (roleData?.role as AppRole) || "agent",
+          });
+        }
         setUsers(usersWithRoles);
       }
 
@@ -135,21 +136,6 @@ const Utilisateurs = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
-  };
-
-  // Helper function to wait for profile creation
-  const waitForProfile = async (userId: string, maxAttempts = 10): Promise<boolean> => {
-    for (let i = 0; i < maxAttempts; i++) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (data) return true;
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-    return false;
   };
 
   const handleCreateUser = async () => {
@@ -183,7 +169,7 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) throw new Error("Entreprise non trouvée");
 
-      // Create user via Supabase Auth - entreprise_nom is empty to skip trigger's admin creation
+      // Create user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newUserEmail,
         password: newUserPassword,
@@ -191,7 +177,7 @@ const Utilisateurs = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             nom: newUserNom,
-            entreprise_nom: "", // Empty - tells trigger NOT to create entreprise/admin role
+            entreprise_nom: "", // Empty since we'll assign existing entreprise
           },
         },
       });
@@ -199,40 +185,50 @@ const Utilisateurs = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Wait for the trigger to create profile with polling
-        const profileCreated = await waitForProfile(authData.user.id);
-        
-        if (!profileCreated) {
-          throw new Error("Le profil n'a pas été créé. Veuillez réessayer.");
+        // Wait a bit for the trigger to create profile and role
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // Update the profile to link to the same entreprise
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ entreprise_id: profileData.entreprise_id })
+          .eq("id", authData.user.id);
+
+        if (profileError) {
+          console.error("Error updating profile:", profileError);
         }
 
-        // Use the atomic SQL function to set up user with role
-        const { error: rpcError } = await supabase.rpc("create_user_with_role", {
-          _user_id: authData.user.id,
-          _entreprise_id: profileData.entreprise_id,
-          _role: newUserRole,
-          _client_id: newUserRole === "client" ? selectedClientId : null,
-        });
-
-        if (rpcError) {
-          console.error("Error in create_user_with_role:", rpcError);
-          throw new Error("Erreur lors de la configuration du compte");
-        }
-
-        // Verify the role was created
-        const { data: verifyRole } = await supabase
+        // Check if user_role exists, if so update, otherwise insert
+        const { data: existingRole } = await supabase
           .from("user_roles")
-          .select("role")
+          .select("id")
           .eq("user_id", authData.user.id)
           .maybeSingle();
 
-        if (!verifyRole) {
-          throw new Error("Le rôle n'a pas été attribué correctement");
+        if (existingRole) {
+          // Update the existing role
+          await supabase
+            .from("user_roles")
+            .update({ role: newUserRole })
+            .eq("user_id", authData.user.id);
+        } else {
+          // Insert a new role
+          await supabase
+            .from("user_roles")
+            .insert({ user_id: authData.user.id, role: newUserRole });
+        }
+
+        // If client role, create client_account link
+        if (newUserRole === "client" && selectedClientId) {
+          await supabase.from("client_accounts").insert({
+            user_id: authData.user.id,
+            client_id: selectedClientId,
+          });
         }
 
         toast({
           title: "Succès",
-          description: `L'utilisateur "${newUserNom}" a été créé avec le rôle ${getRoleLabel(newUserRole)}`,
+          description: "L'utilisateur a été créé avec succès",
         });
 
         setCreateDialogOpen(false);
@@ -245,21 +241,9 @@ const Utilisateurs = () => {
       }
     } catch (error: any) {
       console.error("Error creating user:", error);
-      
-      let message = "Une erreur est survenue";
-      if (error.message.includes("rôle") || error.message.includes("role")) {
-        message = "Erreur lors de l'attribution du rôle. Veuillez réessayer.";
-      } else if (error.message.includes("entreprise") || error.message.includes("Entreprise")) {
-        message = "Entreprise non trouvée. Veuillez contacter l'administrateur.";
-      } else if (error.message.includes("profil") || error.message.includes("profile")) {
-        message = "Erreur lors de la création du profil. Veuillez réessayer.";
-      } else if (error.message) {
-        message = error.message;
-      }
-      
       toast({
-        title: "Erreur de création",
-        description: message,
+        title: "Erreur",
+        description: error.message || "Une erreur est survenue",
         variant: "destructive",
       });
     } finally {
