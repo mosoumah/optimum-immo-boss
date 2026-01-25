@@ -169,7 +169,7 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) throw new Error("Entreprise non trouvée");
 
-      // Create user via Supabase Auth with empty entreprise_nom to avoid trigger creating admin role
+      // Create user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newUserEmail,
         password: newUserPassword,
@@ -177,7 +177,7 @@ const Utilisateurs = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             nom: newUserNom,
-            entreprise_nom: "", // Empty to prevent trigger from creating enterprise/admin role
+            entreprise_nom: "", // Empty since we'll assign existing entreprise
           },
         },
       });
@@ -185,35 +185,46 @@ const Utilisateurs = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Wait for profile to be created by the trigger using polling
-        const waitForProfile = async (userId: string, maxAttempts = 10): Promise<boolean> => {
-          for (let i = 0; i < maxAttempts; i++) {
-            const { data } = await supabase
-              .from("profiles")
-              .select("id")
-              .eq("id", userId)
-              .maybeSingle();
-            
-            if (data) return true;
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-          return false;
-        };
+        // Wait a bit for the trigger to create profile and role
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        const profileCreated = await waitForProfile(authData.user.id);
-        if (!profileCreated) {
-          throw new Error("Le profil utilisateur n'a pas été créé");
+        // Update the profile to link to the same entreprise
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ entreprise_id: profileData.entreprise_id })
+          .eq("id", authData.user.id);
+
+        if (profileError) {
+          console.error("Error updating profile:", profileError);
         }
 
-        // Use the atomic SQL function to set entreprise_id and role in one transaction
-        const { error: rpcError } = await supabase.rpc("create_user_with_role", {
-          _user_id: authData.user.id,
-          _entreprise_id: profileData.entreprise_id,
-          _role: newUserRole,
-          _client_id: newUserRole === "client" ? selectedClientId : null,
-        });
+        // Check if user_role exists, if so update, otherwise insert
+        const { data: existingRole } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", authData.user.id)
+          .maybeSingle();
 
-        if (rpcError) throw rpcError;
+        if (existingRole) {
+          // Update the existing role
+          await supabase
+            .from("user_roles")
+            .update({ role: newUserRole })
+            .eq("user_id", authData.user.id);
+        } else {
+          // Insert a new role
+          await supabase
+            .from("user_roles")
+            .insert({ user_id: authData.user.id, role: newUserRole });
+        }
+
+        // If client role, create client_account link
+        if (newUserRole === "client" && selectedClientId) {
+          await supabase.from("client_accounts").insert({
+            user_id: authData.user.id,
+            client_id: selectedClientId,
+          });
+        }
 
         toast({
           title: "Succès",
