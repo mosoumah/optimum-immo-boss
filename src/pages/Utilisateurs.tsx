@@ -169,7 +169,7 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) throw new Error("Entreprise non trouvée");
 
-      // Create user via Supabase Auth
+      // Create user via Supabase Auth - entreprise_nom is empty to skip trigger's admin creation
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newUserEmail,
         password: newUserPassword,
@@ -177,7 +177,7 @@ const Utilisateurs = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             nom: newUserNom,
-            entreprise_nom: "", // Empty since we'll assign existing entreprise
+            entreprise_nom: "", // Empty - tells trigger NOT to create entreprise/admin role
           },
         },
       });
@@ -185,10 +185,10 @@ const Utilisateurs = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Wait a bit for the trigger to create profile and role
+        // Wait for the trigger to create profile (without entreprise/role)
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        // Update the profile to link to the same entreprise
+        // Update the profile to link to the admin's entreprise
         const { error: profileError } = await supabase
           .from("profiles")
           .update({ entreprise_id: profileData.entreprise_id })
@@ -196,26 +196,17 @@ const Utilisateurs = () => {
 
         if (profileError) {
           console.error("Error updating profile:", profileError);
+          throw new Error("Erreur lors de la mise à jour du profil");
         }
 
-        // Check if user_role exists, if so update, otherwise insert
-        const { data: existingRole } = await supabase
+        // Insert the role chosen by the admin (not admin by default!)
+        const { error: roleError } = await supabase
           .from("user_roles")
-          .select("id")
-          .eq("user_id", authData.user.id)
-          .maybeSingle();
+          .insert({ user_id: authData.user.id, role: newUserRole });
 
-        if (existingRole) {
-          // Update the existing role
-          await supabase
-            .from("user_roles")
-            .update({ role: newUserRole })
-            .eq("user_id", authData.user.id);
-        } else {
-          // Insert a new role
-          await supabase
-            .from("user_roles")
-            .insert({ user_id: authData.user.id, role: newUserRole });
+        if (roleError) {
+          console.error("Error inserting role:", roleError);
+          throw new Error("Erreur lors de l'attribution du rôle");
         }
 
         // If client role, create client_account link
@@ -228,7 +219,7 @@ const Utilisateurs = () => {
 
         toast({
           title: "Succès",
-          description: "L'utilisateur a été créé avec succès",
+          description: `L'utilisateur "${newUserNom}" a été créé avec le rôle ${getRoleLabel(newUserRole)}`,
         });
 
         setCreateDialogOpen(false);
