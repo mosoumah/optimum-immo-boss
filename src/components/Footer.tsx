@@ -9,13 +9,13 @@ export const Footer = () => {
             <Logo size="sm" animated={false} />
             
             <div className="flex items-center gap-8 text-sm text-muted-foreground">
-              <span className="cursor-default" title="À venir">Mentions légales</span>
-              <span className="cursor-default" title="À venir">Confidentialité</span>
-              <span className="cursor-default" title="À venir">CGU</span>
+              <span className="hover:text-primary transition-colors cursor-pointer">Mentions légales</span>
+              <span className="hover:text-primary transition-colors cursor-pointer">Confidentialité</span>
+              <span className="hover:text-primary transition-colors cursor-pointer">CGU</span>
             </div>
             
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Optimum Immo. Tous droits réservés.
+              © 2024 Optimum Immo. Tous droits réservés.
             </p>
           </div>
         </div>

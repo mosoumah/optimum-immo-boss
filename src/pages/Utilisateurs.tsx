@@ -185,22 +185,8 @@ const Utilisateurs = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Wait for the trigger to create profile with retry logic
-        let attempts = 0;
-        let profileExists = false;
-        while (attempts < 10 && !profileExists) {
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          const { data: checkProfile } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("id", authData.user.id)
-            .maybeSingle();
-          profileExists = !!checkProfile;
-          attempts++;
-        }
-        if (!profileExists) {
-          throw new Error("Timeout: le profil utilisateur n'a pas été créé");
-        }
+        // Wait for the trigger to create profile (without entreprise/role)
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Update the profile to link to the admin's entreprise
         const { error: profileError } = await supabase
