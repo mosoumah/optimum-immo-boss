@@ -227,11 +227,11 @@ const Dashboard = () => {
   const quickActions = getQuickActions();
 
   return (
-    <div className="min-h-screen flex relative">
+    <div className="h-screen flex relative overflow-hidden">
       <FloatingParticles count={35} />
       <DynamicSidebar onSignOut={handleSignOut} />
 
-      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen flex flex-col">
+      <main className="flex-1 lg:ml-64 mesh-gradient h-screen flex flex-col overflow-hidden">
         <header className="flex-shrink-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
           <div className="flex items-center justify-between px-4 lg:px-6 py-3">
             <motion.div 
