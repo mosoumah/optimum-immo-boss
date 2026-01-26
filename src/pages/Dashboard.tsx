@@ -54,7 +54,7 @@ interface Client {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin, isAgent } = useUserRole();
+  const { isAdmin, isAgent, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<DashboardStats>({ revenus: 0, depenses: 0, facturesNonPayees: 0 });
@@ -148,8 +148,10 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [user, isAdmin]);
+    if (!roleLoading && user) {
+      fetchDashboardData();
+    }
+  }, [user, isAdmin, roleLoading]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -206,7 +208,7 @@ const Dashboard = () => {
     return actions;
   };
 
-  if (isLoading) {
+  if (isLoading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center mesh-gradient">
         <motion.div
