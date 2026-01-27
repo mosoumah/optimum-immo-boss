@@ -157,6 +157,15 @@ const Utilisateurs = () => {
       return;
     }
 
+    if (newUserPassword.length < 6) {
+      toast({
+        title: "Erreur",
+        description: "Le mot de passe doit contenir au moins 6 caractères",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
 
     try {
@@ -169,51 +178,39 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) throw new Error("Entreprise non trouvée");
 
-      // Create user via Supabase Auth (empty metadata to avoid trigger creating new entreprise)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newUserEmail,
-        password: newUserPassword,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            nom: newUserNom,
-            entreprise_nom: "", // Empty to prevent trigger from creating new entreprise
-          },
+      // Call the Edge Function to create user (preserves admin session!)
+      const { data, error } = await supabase.functions.invoke("admin-create-user", {
+        body: {
+          email: newUserEmail,
+          password: newUserPassword,
+          nom: newUserNom,
+          role: newUserRole,
+          entreprise_id: profileData.entreprise_id,
+          client_id: newUserRole === "client" ? selectedClientId : null,
         },
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Wait for the trigger to create the profile
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Use the SECURITY DEFINER function to set entreprise_id, role, and client_account
-        const { error: rpcError } = await supabase.rpc("admin_create_user_in_entreprise", {
-          _new_user_id: authData.user.id,
-          _entreprise_id: profileData.entreprise_id,
-          _role: newUserRole,
-          _client_id: newUserRole === "client" ? selectedClientId : null,
-        });
-
-        if (rpcError) {
-          console.error("Error calling admin_create_user_in_entreprise:", rpcError);
-          throw rpcError;
-        }
-
-        toast({
-          title: "Succès",
-          description: "L'utilisateur a été créé avec succès",
-        });
-
-        setCreateDialogOpen(false);
-        setNewUserEmail("");
-        setNewUserNom("");
-        setNewUserPassword("");
-        setNewUserRole("agent");
-        setSelectedClientId("");
-        fetchData();
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Erreur lors de la création");
       }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Succès",
+        description: "L'utilisateur a été créé avec succès",
+      });
+
+      setCreateDialogOpen(false);
+      setNewUserEmail("");
+      setNewUserNom("");
+      setNewUserPassword("");
+      setNewUserRole("agent");
+      setSelectedClientId("");
+      fetchData();
     } catch (error: any) {
       console.error("Error creating user:", error);
       toast({
