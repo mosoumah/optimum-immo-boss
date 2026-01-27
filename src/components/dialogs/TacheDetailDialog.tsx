@@ -72,15 +72,21 @@ export const TacheDetailDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
-        <DialogHeader className="pb-4 border-b border-border">
-          <DialogTitle className="text-lg font-semibold">
+      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col bg-[hsl(220,20%,6%)] border-primary/20">
+        {/* Premium header */}
+        <DialogHeader className="pb-4 border-b border-primary/20 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent -mx-6 -mt-6 px-6 pt-6 rounded-t-lg">
+          <DialogTitle className="text-lg font-semibold text-foreground">
             {tache.titre}
           </DialogTitle>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-2">
             <Badge
               variant={tache.statut === "fait" ? "default" : "secondary"}
-              className="gap-1"
+              className={cn(
+                "gap-1",
+                tache.statut === "fait" 
+                  ? "bg-primary/20 text-primary border border-primary/30" 
+                  : "bg-muted/50 text-muted-foreground"
+              )}
             >
               {tache.statut === "fait" ? (
                 <Check className="w-3 h-3" />
@@ -89,11 +95,11 @@ export const TacheDetailDialog = ({
               )}
               {tache.statut === "fait" ? "Fait" : "À faire"}
             </Badge>
-            <span>•</span>
+            <span className="text-primary/50">•</span>
             <span>{format(new Date(tache.date), "d MMMM yyyy", { locale: fr })}</span>
             {tache.assignee_name && (
               <>
-                <span>•</span>
+                <span className="text-primary/50">•</span>
                 <span className="flex items-center gap-1">
                   <User className="w-3 h-3" />
                   {tache.assignee_name}
@@ -108,11 +114,11 @@ export const TacheDetailDialog = ({
           )}
         </DialogHeader>
 
-        {/* Messages area */}
-        <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] pr-4">
+        {/* Messages area with dark theme */}
+        <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] pr-4 bg-black/20 -mx-6 px-6 py-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -142,7 +148,7 @@ export const TacheDetailDialog = ({
                       isOwn ? "flex-row-reverse" : "flex-row"
                     )}
                   >
-                    <Avatar className="w-8 h-8 shrink-0">
+                    <Avatar className="w-8 h-8 shrink-0 ring-1 ring-primary/20">
                       <AvatarFallback
                         className={cn(
                           "text-xs",
@@ -167,10 +173,10 @@ export const TacheDetailDialog = ({
                       )}
                       <div
                         className={cn(
-                          "rounded-2xl px-4 py-2 shadow-sm",
+                          "rounded-2xl px-4 py-2",
                           isOwn
-                            ? "bg-primary text-primary-foreground rounded-br-md"
-                            : "bg-muted rounded-bl-md"
+                            ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground rounded-br-md shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+                            : "bg-[hsl(220,15%,15%)] text-foreground rounded-bl-md border border-primary/10"
                         )}
                       >
                         <p className="text-sm whitespace-pre-wrap break-words">
@@ -192,20 +198,21 @@ export const TacheDetailDialog = ({
           )}
         </ScrollArea>
 
-        {/* Input area */}
-        <div className="flex gap-2 pt-4 border-t border-border">
+        {/* Input area with green accent */}
+        <div className="flex gap-2 pt-4 border-t border-primary/20 -mx-6 px-6 -mb-6 pb-6 bg-black/30">
           <Input
             placeholder="Écrire un message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isSending}
-            className="flex-1"
+            className="flex-1 bg-[hsl(220,15%,12%)] border-primary/20 focus:border-primary focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
           />
           <Button
             size="icon"
             onClick={handleSend}
             disabled={isSending || !newMessage.trim()}
+            className="bg-primary hover:bg-primary/90 shadow-[0_0_15px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all"
           >
             {isSending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
