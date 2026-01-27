@@ -1,158 +1,197 @@
 
-## Plan: Systeme de chat en temps reel pour les taches
+
+## Plan: Messagerie directe avec filtrage par rôle et design amélioré
 
 ### Objectif
 
-Permettre a l'admin et a l'agent assigne d'echanger des messages dans le contexte d'une tache specifique. L'agent peut repondre "fait", envoyer des preuves, et l'admin peut suivre l'avancement en temps reel.
+Permettre d'envoyer des messages directs à n'importe quel utilisateur (admin, agent, client) de l'entreprise. L'interface permet de filtrer par rôle, de voir le nom de chaque personne, et d'échanger en temps réel. Le design du chat sera modernisé avec avatars et mise en page soignée.
 
 ### Architecture de la solution
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    FLUX DE COMMUNICATION                            │
+│                    MESSAGERIE DIRECTE                               │
 ├─────────────────────────────────────────────────────────────────────┤
-│  1. Admin cree une tache et l'assigne a un agent                    │
-│     → Agent recoit une notification (deja en place)                 │
+│  1. L'utilisateur ouvre le panneau de messagerie                    │
+│     → Voit la liste des utilisateurs de son entreprise             │
 │                                                                     │
-│  2. L'agent clique sur la tache pour ouvrir le chat                 │
-│     → Affiche l'historique des messages                             │
+│  2. Il peut filtrer par rôle (Tous / Admin / Agent / Client)        │
+│     → Chaque utilisateur affiche son nom et badge de rôle          │
 │                                                                     │
-│  3. L'agent ecrit un message (ex: "Fait" ou "En cours...")          │
-│     → Message enregistre + notification admin                       │
+│  3. Il sélectionne un destinataire                                  │
+│     → Ouvre la conversation avec cette personne                     │
 │                                                                     │
-│  4. L'admin recoit la notification et repond si necessaire          │
-│     → Echange en temps reel via Supabase Realtime                   │
+│  4. Les messages s'affichent en temps réel (Supabase Realtime)      │
+│     → Design modernisé avec avatars et bulles de chat              │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Modifications a effectuer
+### Ce qui sera modifie
 
-#### 1. Migration SQL - Nouvelle table `tache_messages`
+#### 1. Migration SQL - Nouvelle table `direct_messages`
 
 | Colonne | Type | Description |
 |---------|------|-------------|
 | id | uuid | Identifiant unique |
-| tache_id | uuid | Reference vers la tache (FK) |
-| user_id | uuid | Auteur du message |
+| sender_id | uuid | Auteur du message |
+| receiver_id | uuid | Destinataire du message |
+| entreprise_id | uuid | Entreprise (pour isolation) |
 | message | text | Contenu du message |
-| created_at | timestamp | Date de creation |
+| read | boolean | Si lu par le destinataire |
+| created_at | timestamp | Date d'envoi |
 
 Politiques RLS:
-- SELECT: Admin de l'entreprise + agent assigne peuvent voir les messages
-- INSERT: Admin de l'entreprise + agent assigne peuvent envoyer des messages
+- SELECT: L'utilisateur voit les messages ou il est sender ou receiver
+- INSERT: L'utilisateur peut envoyer des messages a quelqu'un de la meme entreprise
 
-Trigger:
-- Quand un message est ajoute, creer une notification pour l'autre partie (admin ou agent)
+Activer Realtime sur cette table.
 
-Activer Realtime:
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.tache_messages;
-```
+#### 2. Nouveau hook: `src/hooks/useDirectMessages.tsx`
 
-#### 2. Nouveau composant: Dialog de detail de tache avec chat
+- Recuperer la liste des utilisateurs de l'entreprise avec leurs roles
+- Filtrer par role (admin, agent, client)
+- Recuperer les messages entre deux utilisateurs
+- Envoyer un message
+- Subscription realtime pour les nouveaux messages
+
+#### 3. Nouveau composant: `src/components/DirectMessagePanel.tsx`
+
+Interface complete de messagerie:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Tache: Contacter client Diallo                                     │
-│  Assignee a: Mamadou Bah                                            │
-│  Statut: A faire                Date: 27/01/2026                    │
+│  MESSAGERIE                                          [X]            │
 ├─────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │ Admin (14:30)                                                │   │
-│  │ Merci de contacter ce client aujourd'hui                     │   │
-│  ├──────────────────────────────────────────────────────────────┤   │
-│  │ Mamadou (15:45)                                              │   │
-│  │ Client contacte, il confirme son interet. Fait ✓             │   │
-│  ├──────────────────────────────────────────────────────────────┤   │
-│  │ Admin (15:50)                                                │   │
-│  │ Parfait, merci!                                              │   │
-│  └──────────────────────────────────────────────────────────────┘   │
-│                                                                     │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │ Ecrire un message...                              [Envoyer]  │   │
-│  └──────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
+│  Filtrer: [Tous ▼] [Admin] [Agent] [Client]                         │
+├──────────────────────┬──────────────────────────────────────────────┤
+│  Liste utilisateurs  │  Conversation                                │
+│  ┌────────────────┐  │  ┌──────────────────────────────────────┐    │
+│  │ 👤 Mamadou     │  │  │  ┌──────────────────────────────┐   │    │
+│  │ 🏷 Agent       │◀─┤  │  │ 👤 Bonjour, comment ca va?  │   │    │
+│  ├────────────────┤  │  │  └──────────────────────────────┘   │    │
+│  │ 👤 Admin Boss  │  │  │                                      │    │
+│  │ 🏷 Admin       │  │  │  ┌──────────────────────────────┐   │    │
+│  ├────────────────┤  │  │  │ Tout va bien, merci!    👤  │   │    │
+│  │ 👤 Client ABC  │  │  │  └──────────────────────────────┘   │    │
+│  │ 🏷 Client      │  │  │                                      │    │
+│  └────────────────┘  │  └──────────────────────────────────────┘    │
+│                      │  ┌──────────────────────────────────────┐    │
+│                      │  │ Ecrire un message...        [Envoyer]│    │
+│                      │  └──────────────────────────────────────┘    │
+└──────────────────────┴──────────────────────────────────────────────┘
 ```
 
-#### 3. Modification de la page Taches
+#### 4. Amelioration du design du chat existant (TacheDetailDialog)
 
-Rendre chaque tache cliquable pour ouvrir le dialog de detail/chat.
+- Ajouter des avatars avec initiales colorees
+- Arrondir davantage les bulles de message
+- Ameliorer les espacements et ombres
+- Ajouter une indication de statut en ligne (optionnel)
 
 ### Fichiers a creer/modifier
 
 | Fichier | Action |
 |---------|--------|
-| Migration SQL | Creer table `tache_messages` + trigger notification + RLS + Realtime |
-| `src/components/dialogs/TacheDetailDialog.tsx` | Creer (dialog avec infos tache + chat en temps reel) |
-| `src/hooks/useTacheMessages.tsx` | Creer (hook pour gerer les messages + realtime) |
-| `src/pages/Taches.tsx` | Modifier (ajouter onClick pour ouvrir le detail + state pour dialog) |
+| Migration SQL | Creer table `direct_messages` + RLS + Realtime |
+| `src/hooks/useDirectMessages.tsx` | Creer (hook pour la messagerie directe) |
+| `src/components/DirectMessagePanel.tsx` | Creer (panneau de messagerie complet) |
+| `src/components/dialogs/TacheDetailDialog.tsx` | Modifier (ameliorer le design du chat) |
+| `src/pages/Taches.tsx` | Modifier (ajouter bouton pour ouvrir la messagerie) |
 
 ### Details techniques
 
-**Structure de la table tache_messages:**
+**Structure de la table direct_messages:**
 ```sql
-CREATE TABLE public.tache_messages (
+CREATE TABLE public.direct_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tache_id UUID NOT NULL REFERENCES taches(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL,
+  sender_id UUID NOT NULL,
+  receiver_id UUID NOT NULL,
+  entreprise_id UUID NOT NULL,
   message TEXT NOT NULL,
+  read BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-**Trigger pour notification:**
-Quand un message est ajoute:
-- Si l'auteur est l'agent → notifier l'admin (createur de la tache ou admin de l'entreprise)
-- Si l'auteur est l'admin → notifier l'agent assigne
+**Recuperation des utilisateurs avec role:**
+```typescript
+// Fetch profiles de l'entreprise
+const { data: profiles } = await supabase
+  .from("profiles")
+  .select("id, nom, email")
+  .eq("entreprise_id", entrepriseId);
+
+// Pour chaque profil, recuperer le role
+for (const profile of profiles) {
+  const { data: roleData } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", profile.id)
+    .maybeSingle();
+  // Ajouter role au profil
+}
+```
+
+**Filtrage par role:**
+```typescript
+const filteredUsers = users.filter(u => 
+  selectedRole === "all" || u.role === selectedRole
+);
+```
 
 **Realtime Subscription:**
 ```typescript
-const channel = supabase
-  .channel(`tache-${tacheId}-messages`)
+supabase.channel('direct-messages')
   .on(
     'postgres_changes',
     {
       event: 'INSERT',
       schema: 'public',
-      table: 'tache_messages',
-      filter: `tache_id=eq.${tacheId}`,
+      table: 'direct_messages',
+      filter: `receiver_id=eq.${currentUserId}`,
     },
     (payload) => {
-      setMessages(prev => [...prev, payload.new]);
+      // Ajouter le nouveau message
     }
   )
   .subscribe();
 ```
 
-**Envoi de message:**
-```typescript
-const sendMessage = async (message: string) => {
-  await supabase.from('tache_messages').insert({
-    tache_id: tacheId,
-    user_id: user.id,
-    message: message,
-  });
-};
+### Design ameliore du chat
+
+Modifications visuelles:
+- Avatars avec initiales (premiere lettre du nom)
+- Couleurs differentes selon le role (admin: violet, agent: bleu, client: vert)
+- Bulles plus arrondies avec ombres douces
+- Animation d'apparition des messages
+- Horodatage plus discret
+
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│  ┌───┐                                                           │
+│  │ M │  Mamadou                                                  │
+│  └───┘  ┌───────────────────────────────────────────┐           │
+│         │ Bonjour, la tache est terminee ✓          │           │
+│         └───────────────────────────────────────────┘           │
+│                                              Il y a 5 min       │
+│                                                                  │
+│                        ┌───────────────────────────────┐  ┌───┐ │
+│                        │ Parfait, merci beaucoup!      │  │ A │ │
+│                        └───────────────────────────────┘  └───┘ │
+│                                              Il y a 2 min       │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### Securite
 
-- RLS sur `tache_messages`: seuls l'admin de l'entreprise et l'agent assigne peuvent lire/ecrire
-- Le trigger de notification respecte les regles d'acces
+- RLS sur `direct_messages`: chaque utilisateur ne voit que ses propres conversations
+- Verification que sender et receiver appartiennent a la meme entreprise
 - Pas de fuite d'information entre entreprises
-
-### Experience utilisateur
-
-1. L'admin cree une tache et l'assigne a un agent
-2. L'agent recoit une notification et clique dessus
-3. Il est redirige vers les taches et peut cliquer sur la tache pour ouvrir le chat
-4. Il ecrit "Fait" ou un message de suivi
-5. L'admin recoit une notification et peut repondre
-6. Les messages apparaissent en temps reel des deux cotes
 
 ### Ce qui ne sera PAS modifie
 
-- Le design global de l'application
 - Le dashboard
-- Les autres pages
-- La structure des notifications existantes (on la reutilise)
+- Les autres pages (Clients, Factures, Devis, etc.)
+- La structure des notifications existantes
+- Le design global de l'application
+
