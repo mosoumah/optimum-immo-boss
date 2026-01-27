@@ -1,122 +1,75 @@
 
-## Plan de correction - Création d'utilisateurs par l'admin
+## Probleme identifie
 
-### Problemes identifies
+La page "Gestion des utilisateurs" ne montre que l'admin connecte parce que la politique RLS sur la table `profiles` est trop restrictive:
 
-1. **"User already registered"** : L'email existe deja dans la base de donnees. Le code actuel ne gere pas ce cas proprement.
+```sql
+"Users can view their own profile" → USING (id = auth.uid())
+```
 
-2. **Session admin remplacee** : L'utilisation de `supabase.auth.signUp()` cote client cree automatiquement une session pour le nouvel utilisateur, ce qui deconnecte l'administrateur en cours.
+Cette regle empeche de voir les profils des autres utilisateurs de la meme entreprise.
 
-### Solution proposee
+Meme situation pour `user_roles`:
+```sql
+"Users can view their own roles" → USING (user_id = auth.uid())
+```
 
-Creer une **Edge Function** dediee qui utilise le **Service Role Key** pour creer les utilisateurs via `auth.admin.createUser()`. Cette methode:
-- Ne change PAS la session de l'admin
-- Permet de confirmer automatiquement l'email
-- Gere mieux les erreurs (email deja utilise)
+## Solution
 
-### Modifications a effectuer
+Modifier les politiques RLS pour permettre aux admins de voir tous les utilisateurs de leur entreprise.
 
-#### 1. Nouvelle Edge Function : `supabase/functions/admin-create-user/index.ts`
-
-Cette fonction backend securisee:
-- Recoit les donnees du nouvel utilisateur (email, mot de passe, nom, role, entreprise_id, client_id optionnel)
-- Verifie que l'appelant est un admin de la bonne entreprise (via le token JWT)
-- Utilise `supabase.auth.admin.createUser()` avec le Service Role Key
-- Configure le profil et le role atomiquement
-- Retourne le resultat sans affecter la session de l'admin
+### Migration SQL a appliquer
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    FLUX DE CREATION                             │
-├─────────────────────────────────────────────────────────────────┤
-│  AVANT (problematique)                                          │
-│  ──────────────────────                                         │
-│  Admin → signUp() → Nouvelle session creee → Admin deconnecte   │
-│                                                                 │
-│  APRES (correction)                                             │
-│  ────────────────────                                           │
-│  Admin → Edge Function → admin.createUser() → Session intacte   │
-│          (Service Role)                                         │
-└─────────────────────────────────────────────────────────────────┘
-```
+┌────────────────────────────────────────────────────────────────────┐
+│ Table: profiles                                                    │
+├────────────────────────────────────────────────────────────────────┤
+│ AVANT: "Users can view their own profile"                         │
+│        USING (id = auth.uid())                                     │
+│                                                                    │
+│ APRES: "Users can view profiles in their entreprise"              │
+│        USING (                                                     │
+│          id = auth.uid()                                           │
+│          OR                                                        │
+│          (entreprise_id = get_user_entreprise_id(auth.uid())       │
+│           AND has_role(auth.uid(), 'admin'))                       │
+│        )                                                           │
+└────────────────────────────────────────────────────────────────────┘
 
-#### 2. Modification : `src/pages/Utilisateurs.tsx`
-
-Remplacer l'appel direct a `supabase.auth.signUp()` par un appel a la nouvelle Edge Function:
-
-**AVANT:**
-```typescript
-const { data: authData, error: authError } = await supabase.auth.signUp({
-  email: newUserEmail,
-  password: newUserPassword,
-  // ...
-});
-```
-
-**APRES:**
-```typescript
-const { data, error } = await supabase.functions.invoke('admin-create-user', {
-  body: {
-    email: newUserEmail,
-    password: newUserPassword,
-    nom: newUserNom,
-    role: newUserRole,
-    entreprise_id: profileData.entreprise_id,
-    client_id: newUserRole === 'client' ? selectedClientId : null,
-  },
-});
-```
-
-#### 3. Amelioration de la gestion des erreurs
-
-Ajouter des messages d'erreur clairs en francais:
-- "Cet email est deja utilise" si l'utilisateur existe
-- "Mot de passe trop court (minimum 6 caracteres)" pour les mots de passe faibles
-- "Vous n'avez pas les droits pour creer des utilisateurs" si pas admin
-
-### Details techniques de l'Edge Function
-
-```typescript
-// Structure de la nouvelle Edge Function
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-// 1. Extraire le JWT de l'appelant pour verifier qu'il est admin
-// 2. Creer un client Supabase avec le Service Role Key
-const supabaseAdmin = createClient(
-  Deno.env.get('SUPABASE_URL'),
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-);
-
-// 3. Creer l'utilisateur sans changer de session
-const { data: userData, error } = await supabaseAdmin.auth.admin.createUser({
-  email: email,
-  password: password,
-  email_confirm: true, // Confirmer automatiquement
-  user_metadata: { nom: nom }
-});
-
-// 4. Configurer le profil et le role
-await supabaseAdmin.from('profiles').update({...});
-await supabaseAdmin.from('user_roles').insert({...});
+┌────────────────────────────────────────────────────────────────────┐
+│ Table: user_roles                                                  │
+├────────────────────────────────────────────────────────────────────┤
+│ AVANT: "Users can view their own roles"                            │
+│        USING (user_id = auth.uid())                                │
+│                                                                    │
+│ APRES: "Admins can view roles in their entreprise"                 │
+│        USING (                                                     │
+│          user_id = auth.uid()                                      │
+│          OR                                                        │
+│          (EXISTS(SELECT 1 FROM profiles p                          │
+│                  WHERE p.id = user_id                              │
+│                  AND p.entreprise_id =                             │
+│                      get_user_entreprise_id(auth.uid()))           │
+│           AND has_role(auth.uid(), 'admin'))                       │
+│        )                                                           │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Fichiers concernes
 
 | Fichier | Action |
 |---------|--------|
-| `supabase/functions/admin-create-user/index.ts` | Creer (nouvelle Edge Function) |
-| `src/pages/Utilisateurs.tsx` | Modifier (utiliser la nouvelle fonction) |
+| Nouvelle migration SQL | Creer pour modifier les politiques RLS |
+| `src/pages/Utilisateurs.tsx` | Aucune modification necessaire (la logique est deja correcte) |
+
+### Verification apres implementation
+
+1. L'admin connecte peut voir tous les utilisateurs de son entreprise
+2. Les agents ne peuvent toujours voir que leur propre profil
+3. Les nouveaux utilisateurs crees apparaissent immediatement dans le tableau
 
 ### Securite
 
-- La fonction verifie le JWT de l'appelant
-- Seuls les admins peuvent creer des utilisateurs
-- L'admin ne peut creer que dans son entreprise
-- Le Service Role Key n'est jamais expose au client
-
-### Tests de validation
-
-1. Creer un agent → L'admin reste connecte
-2. Creer un client → L'admin reste connecte
-3. Tenter de creer avec un email existant → Message d'erreur clair
-4. Verifier que le nouvel utilisateur peut se connecter
+- Les admins ne peuvent voir que les utilisateurs de **leur propre entreprise**
+- Les agents et clients ne peuvent toujours voir que leur propre profil
+- Aucune fuite de donnees entre entreprises
