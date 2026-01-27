@@ -149,7 +149,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!roleLoading && user) {
-      fetchDashboardData();
+      fetchDashboardData().catch((err) => {
+        console.error("Dashboard data fetch error:", err);
+        setIsLoading(false);
+      });
+    } else if (!user && !roleLoading) {
+      setIsLoading(false);
     }
   }, [user, isAdmin, roleLoading]);
 
@@ -210,7 +215,7 @@ const Dashboard = () => {
 
   if (isLoading || roleLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center mesh-gradient">
+      <div className="h-screen flex items-center justify-center mesh-gradient overflow-hidden">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
