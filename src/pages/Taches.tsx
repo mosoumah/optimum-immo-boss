@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2, MessageCircle } from "lucide-react";
+import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2, MessageCircle, Mail } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { useAuth } from "@/hooks/useAuth";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
 import { TacheDetailDialog } from "@/components/dialogs/TacheDetailDialog";
+import { DirectMessagePanel } from "@/components/DirectMessagePanel";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
 import { checkPermission } from "@/lib/checkPermission";
@@ -42,6 +43,7 @@ const Taches = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [messagePanelOpen, setMessagePanelOpen] = useState(false);
   const [selectedTache, setSelectedTache] = useState<Tache | null>(null);
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -217,6 +219,14 @@ const Taches = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-end gap-2 mb-6"
           >
+            <Button
+              variant="outline"
+              onClick={() => setMessagePanelOpen(true)}
+              className="gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Messagerie
+            </Button>
             <PermissionGate permission="creer_tache">
               <Button 
                 variant="outline" 
@@ -355,6 +365,11 @@ const Taches = () => {
           open={detailDialogOpen}
           onOpenChange={setDetailDialogOpen}
           tache={selectedTache}
+        />
+
+        <DirectMessagePanel
+          open={messagePanelOpen}
+          onOpenChange={setMessagePanelOpen}
         />
       </main>
     </div>
