@@ -10,7 +10,6 @@ import {
   CheckSquare,
   Sparkles,
   Plus,
-  Bell,
   Search,
   BarChart3,
 } from "lucide-react";
@@ -28,6 +27,7 @@ import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { FinancialChart } from "@/components/FinancialChart";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface DashboardStats {
   revenus: number;
@@ -256,10 +256,7 @@ const Dashboard = () => {
               transition={{ delay: 0.1 }}
               className="flex items-center gap-2 lg:gap-4"
             >
-              <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors duration-300 rounded-lg h-9 w-9">
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
-              </Button>
+              <NotificationBell />
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50">
                 <span className="text-xs font-bold text-primary">
                   {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
