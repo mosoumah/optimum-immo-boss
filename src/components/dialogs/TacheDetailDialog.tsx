@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTacheMessages } from "@/hooks/useTacheMessages";
+import { cn } from "@/lib/utils";
 
 interface TacheWithAssignee {
   id: string;
@@ -122,36 +124,66 @@ export const TacheDetailDialog = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-3 py-4">
+            <div className="space-y-4 py-4">
               {messages.map((message) => {
                 const isOwn = message.user_id === currentUserId;
+                const initials = (message.sender_name || "?")
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+                
                 return (
                   <div
                     key={message.id}
-                    className={`flex flex-col ${isOwn ? "items-end" : "items-start"}`}
+                    className={cn(
+                      "flex gap-2",
+                      isOwn ? "flex-row-reverse" : "flex-row"
+                    )}
                   >
+                    <Avatar className="w-8 h-8 shrink-0">
+                      <AvatarFallback
+                        className={cn(
+                          "text-xs",
+                          isOwn
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-blue-500 text-white"
+                        )}
+                      >
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
                     <div
-                      className={`max-w-[85%] rounded-lg px-3 py-2 ${
-                        isOwn
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
+                      className={cn(
+                        "flex flex-col max-w-[75%]",
+                        isOwn ? "items-end" : "items-start"
+                      )}
                     >
                       {!isOwn && (
-                        <p className="text-xs font-medium mb-1 opacity-70">
+                        <span className="text-xs font-medium text-muted-foreground mb-1 px-1">
                           {message.sender_name}
-                        </p>
+                        </span>
                       )}
-                      <p className="text-sm whitespace-pre-wrap break-words">
-                        {message.message}
-                      </p>
+                      <div
+                        className={cn(
+                          "rounded-2xl px-4 py-2 shadow-sm",
+                          isOwn
+                            ? "bg-primary text-primary-foreground rounded-br-md"
+                            : "bg-muted rounded-bl-md"
+                        )}
+                      >
+                        <p className="text-sm whitespace-pre-wrap break-words">
+                          {message.message}
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground mt-1 px-1">
+                        {formatDistanceToNow(new Date(message.created_at), {
+                          addSuffix: true,
+                          locale: fr,
+                        })}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(message.created_at), {
-                        addSuffix: true,
-                        locale: fr,
-                      })}
-                    </span>
                   </div>
                 );
               })}
