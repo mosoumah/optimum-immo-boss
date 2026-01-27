@@ -491,6 +491,38 @@ export type Database = {
         }
         Relationships: []
       }
+      tache_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          tache_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          tache_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          tache_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tache_messages_tache_id_fkey"
+            columns: ["tache_id"]
+            isOneToOne: false
+            referencedRelation: "taches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taches: {
         Row: {
           assigned_to: string | null
@@ -608,6 +640,10 @@ export type Database = {
         Returns: undefined
       }
       bootstrap_current_user: { Args: never; Returns: Json }
+      can_access_tache_messages: {
+        Args: { _tache_id: string }
+        Returns: boolean
+      }
       create_user_with_role: {
         Args: {
           _client_id?: string

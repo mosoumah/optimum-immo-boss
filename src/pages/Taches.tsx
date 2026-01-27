@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2 } from "lucide-react";
+import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2, MessageCircle } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
 import { useAuth } from "@/hooks/useAuth";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
+import { TacheDetailDialog } from "@/components/dialogs/TacheDetailDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
 import { checkPermission } from "@/lib/checkPermission";
@@ -22,6 +23,8 @@ interface Tache {
   statut: string;
   date: string;
   is_ai_generated: boolean | null;
+  assigned_to: string | null;
+  assignee_name?: string;
 }
 
 interface Suggestion {
@@ -38,6 +41,8 @@ const Taches = () => {
   const [taches, setTaches] = useState<Tache[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedTache, setSelectedTache] = useState<Tache | null>(null);
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
@@ -49,14 +54,38 @@ const Taches = () => {
   const fetchTaches = useCallback(async () => {
     if (!entrepriseId) return;
 
-    // RLS will automatically filter based on role (admin sees all, agent sees assigned)
-    const { data } = await supabase
+    // Fetch tasks
+    const { data: tachesData } = await supabase
       .from("taches")
       .select("*")
       .eq("entreprise_id", entrepriseId)
       .order("date", { ascending: false });
 
-    setTaches(data || []);
+    if (!tachesData) {
+      setTaches([]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch assignee names for tasks with assigned_to
+    const assignedUserIds = [...new Set(tachesData.filter(t => t.assigned_to).map(t => t.assigned_to!))];
+    
+    let profilesMap = new Map<string, string>();
+    if (assignedUserIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, nom")
+        .in("id", assignedUserIds);
+      
+      profilesMap = new Map((profilesData || []).map(p => [p.id, p.nom]));
+    }
+
+    const tachesWithNames = tachesData.map(t => ({
+      ...t,
+      assignee_name: t.assigned_to ? profilesMap.get(t.assigned_to) || undefined : undefined,
+    }));
+
+    setTaches(tachesWithNames);
     setIsLoading(false);
   }, [entrepriseId]);
 
@@ -258,10 +287,17 @@ const Taches = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
+                    className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item cursor-pointer"
+                    onClick={() => {
+                      setSelectedTache(tache);
+                      setDetailDialogOpen(true);
+                    }}
                   >
                     <button
-                      onClick={() => toggleStatut(tache)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleStatut(tache);
+                      }}
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                         tache.statut === "fait"
                           ? "bg-success border-success"
@@ -270,15 +306,21 @@ const Taches = () => {
                     >
                       {tache.statut === "fait" && <Check className="w-4 h-4 text-white" />}
                     </button>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className={`font-medium ${tache.statut === "fait" ? "line-through text-muted-foreground" : ""}`}>
                         {tache.titre}
                       </div>
                       {tache.description && (
-                        <div className="text-sm text-muted-foreground">{tache.description}</div>
+                        <div className="text-sm text-muted-foreground truncate">{tache.description}</div>
+                      )}
+                      {tache.assignee_name && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Assignée à: {tache.assignee_name}
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-muted-foreground" />
                       {tache.is_ai_generated && (
                         <Badge variant="outline" className="text-xs">IA</Badge>
                       )}
@@ -308,6 +350,12 @@ const Taches = () => {
             />
           )}
         </PermissionGate>
+
+        <TacheDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          tache={selectedTache}
+        />
       </main>
     </div>
   );
