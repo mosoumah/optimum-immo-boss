@@ -1,75 +1,82 @@
 
-## Probleme identifie
+## Plan: Amelioration de la redirection apres connexion
 
-La page "Gestion des utilisateurs" ne montre que l'admin connecte parce que la politique RLS sur la table `profiles` est trop restrictive:
+### Situation actuelle
 
-```sql
-"Users can view their own profile" → USING (id = auth.uid())
-```
+Les utilisateurs crees par l'admin (agents et clients) **peuvent deja se connecter** a l'application via `/connexion`. Cependant, la redirection post-connexion n'est pas optimisee:
 
-Cette regle empeche de voir les profils des autres utilisateurs de la meme entreprise.
+- Tous les utilisateurs sont rediriges vers `/dashboard`
+- Les clients sont ensuite re-rediriges vers `/portail-client` par le `RoleProtectedRoute`
+- Cela cree un "flash" visuel et une experience utilisateur degradee
 
-Meme situation pour `user_roles`:
-```sql
-"Users can view their own roles" → USING (user_id = auth.uid())
-```
+### Solution proposee
 
-## Solution
+Modifier la page de connexion pour rediriger intelligemment chaque utilisateur vers l'interface appropriee selon son role:
 
-Modifier les politiques RLS pour permettre aux admins de voir tous les utilisateurs de leur entreprise.
+| Role | Redirection |
+|------|-------------|
+| Admin | `/dashboard` |
+| Agent | `/dashboard` |
+| Client | `/portail-client` |
 
-### Migration SQL a appliquer
+### Modifications a effectuer
+
+#### 1. Modifier `src/pages/Connexion.tsx`
+
+Apres une connexion reussie, recuperer le role de l'utilisateur et rediriger vers la bonne page.
 
 ```text
-┌────────────────────────────────────────────────────────────────────┐
-│ Table: profiles                                                    │
-├────────────────────────────────────────────────────────────────────┤
-│ AVANT: "Users can view their own profile"                         │
-│        USING (id = auth.uid())                                     │
-│                                                                    │
-│ APRES: "Users can view profiles in their entreprise"              │
-│        USING (                                                     │
-│          id = auth.uid()                                           │
-│          OR                                                        │
-│          (entreprise_id = get_user_entreprise_id(auth.uid())       │
-│           AND has_role(auth.uid(), 'admin'))                       │
-│        )                                                           │
-└────────────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────────────┐
-│ Table: user_roles                                                  │
-├────────────────────────────────────────────────────────────────────┤
-│ AVANT: "Users can view their own roles"                            │
-│        USING (user_id = auth.uid())                                │
-│                                                                    │
-│ APRES: "Admins can view roles in their entreprise"                 │
-│        USING (                                                     │
-│          user_id = auth.uid()                                      │
-│          OR                                                        │
-│          (EXISTS(SELECT 1 FROM profiles p                          │
-│                  WHERE p.id = user_id                              │
-│                  AND p.entreprise_id =                             │
-│                      get_user_entreprise_id(auth.uid()))           │
-│           AND has_role(auth.uid(), 'admin'))                       │
-│        )                                                           │
-└────────────────────────────────────────────────────────────────────┘
++----------------------------------------------------+
+|               FLUX DE CONNEXION                    |
++----------------------------------------------------+
+|  1. Utilisateur entre email + mot de passe         |
+|  2. signIn() → authentification reussie            |
+|  3. Recuperation du role via user_roles            |
+|  4. Redirection intelligente:                      |
+|     - admin/agent → /dashboard                     |
+|     - client → /portail-client                     |
++----------------------------------------------------+
 ```
+
+#### 2. Logique de redirection
+
+```text
+AVANT:
+  Connexion → navigate("/dashboard") [toujours]
+  
+APRES:
+  Connexion → Fetch role → navigate(role === "client" ? "/portail-client" : "/dashboard")
+```
+
+### Details techniques
+
+1. **Apres `signIn()` reussi**: Attendre que le `onAuthStateChange` mette a jour l'utilisateur
+2. **Recuperer le role**: Faire une requete sur `user_roles` pour obtenir le role
+3. **Rediriger**: Utiliser `navigate()` vers la bonne destination
 
 ### Fichiers concernes
 
 | Fichier | Action |
 |---------|--------|
-| Nouvelle migration SQL | Creer pour modifier les politiques RLS |
-| `src/pages/Utilisateurs.tsx` | Aucune modification necessaire (la logique est deja correcte) |
+| `src/pages/Connexion.tsx` | Modifier (redirection intelligente basee sur le role) |
 
 ### Verification apres implementation
 
-1. L'admin connecte peut voir tous les utilisateurs de son entreprise
-2. Les agents ne peuvent toujours voir que leur propre profil
-3. Les nouveaux utilisateurs crees apparaissent immediatement dans le tableau
+1. Un agent se connecte → arrive sur `/dashboard`
+2. Un client se connecte → arrive sur `/portail-client`
+3. Un admin se connecte → arrive sur `/dashboard`
+4. Pas de "flash" ou redirection intermediaire visible
 
 ### Securite
 
-- Les admins ne peuvent voir que les utilisateurs de **leur propre entreprise**
-- Les agents et clients ne peuvent toujours voir que leur propre profil
-- Aucune fuite de donnees entre entreprises
+- Le role est recupere depuis la base de donnees (pas de localStorage)
+- Les pages restent protegees par `RoleProtectedRoute`
+- Aucune fuite d'information possible
+
+### Ce qui fonctionne deja
+
+- Les agents peuvent voir les clients qui leur sont assignes
+- Les clients peuvent voir leurs devis/factures
+- Les permissions granulaires fonctionnent via `PermissionGate`
+- L'admin peut personnaliser les droits de chaque utilisateur
+
