@@ -162,26 +162,61 @@ export const TacheDetailDialog = ({
       <DialogContent className="max-w-lg max-h-[80vh] flex flex-col bg-[hsl(220,20%,6%)] border-primary/20">
         {/* Premium header */}
         <DialogHeader className="pb-4 border-b border-primary/20 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent -mx-6 -mt-6 px-6 pt-6 rounded-t-lg">
-          <div className="flex items-start justify-between gap-2">
-            <DialogTitle className="text-lg font-semibold text-foreground flex-1">
-              {tache.titre}
-            </DialogTitle>
-            
-            {/* Bouton Assigner tâche avec sélecteur */}
+          <DialogTitle className="text-lg font-semibold text-foreground">
+            {tache.titre}
+          </DialogTitle>
+          
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-2">
+            <Badge
+              variant={tache.statut === "fait" ? "default" : "secondary"}
+              className={cn(
+                "gap-1",
+                tache.statut === "fait" 
+                  ? "bg-primary/20 text-primary border border-primary/30" 
+                  : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              {tache.statut === "fait" ? (
+                <Check className="w-3 h-3" />
+              ) : (
+                <Clock className="w-3 h-3" />
+              )}
+              {tache.statut === "fait" ? "Fait" : "À faire"}
+            </Badge>
+            <span className="text-primary/50">•</span>
+            <span>{format(new Date(tache.date), "d MMMM yyyy", { locale: fr })}</span>
+            {tache.assignee_name && (
+              <>
+                <span className="text-primary/50">•</span>
+                <span className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {tache.assignee_name}
+                </span>
+              </>
+            )}
+          </div>
+          
+          {tache.description && (
+            <p className="text-sm text-muted-foreground mt-2">
+              {tache.description}
+            </p>
+          )}
+          
+          {/* Bouton Assigner tâche - bien visible */}
+          <div className="pt-3">
             <Popover open={userSelectorOpen} onOpenChange={setUserSelectorOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  size="sm"
                   variant="outline"
-                  className="gap-1.5 border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary shrink-0"
+                  className="gap-2 border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary shadow-[0_0_15px_hsl(var(--primary)/0.15)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-all"
                 >
                   <ClipboardList className="w-4 h-4" />
-                  <span className="hidden sm:inline">Assigner tâche</span>
+                  Assigner tâche
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
                 className="w-72 p-0 bg-[hsl(220,20%,8%)] border-primary/20" 
-                align="end"
+                align="start"
               >
                 <div className="p-3 border-b border-primary/20">
                   <h4 className="font-medium text-sm text-foreground">Sélectionner un destinataire</h4>
@@ -254,41 +289,6 @@ export const TacheDetailDialog = ({
               </PopoverContent>
             </Popover>
           </div>
-          
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-2">
-            <Badge
-              variant={tache.statut === "fait" ? "default" : "secondary"}
-              className={cn(
-                "gap-1",
-                tache.statut === "fait" 
-                  ? "bg-primary/20 text-primary border border-primary/30" 
-                  : "bg-muted/50 text-muted-foreground"
-              )}
-            >
-              {tache.statut === "fait" ? (
-                <Check className="w-3 h-3" />
-              ) : (
-                <Clock className="w-3 h-3" />
-              )}
-              {tache.statut === "fait" ? "Fait" : "À faire"}
-            </Badge>
-            <span className="text-primary/50">•</span>
-            <span>{format(new Date(tache.date), "d MMMM yyyy", { locale: fr })}</span>
-            {tache.assignee_name && (
-              <>
-                <span className="text-primary/50">•</span>
-                <span className="flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  {tache.assignee_name}
-                </span>
-              </>
-            )}
-          </div>
-          {tache.description && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {tache.description}
-            </p>
-          )}
         </DialogHeader>
 
         {/* Messages area with dark theme */}
