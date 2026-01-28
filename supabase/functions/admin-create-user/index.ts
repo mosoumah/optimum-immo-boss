@@ -7,7 +7,6 @@ const corsHeaders = {
 
 interface CreateUserRequest {
   email: string
-  password: string
   nom: string
   role: 'admin' | 'agent' | 'client'
   entreprise_id: string
@@ -38,18 +37,17 @@ Deno.serve(async (req) => {
     )
 
     // Verify caller's JWT and get their info
-    const token = authHeader.replace('Bearer ', '')
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token)
+    const { data: { user: callerUser }, error: authError } = await supabaseUser.auth.getUser()
     
-    if (claimsError || !claimsData?.claims) {
-      console.error('JWT verification failed:', claimsError)
+    if (authError || !callerUser) {
+      console.error('JWT verification failed:', authError)
       return new Response(
         JSON.stringify({ error: 'Token invalide', code: 'invalid_token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const callerId = claimsData.claims.sub as string
+    const callerId = callerUser.id
 
     // Create admin client with service role key
     const supabaseAdmin = createClient(
@@ -87,10 +85,10 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: CreateUserRequest = await req.json()
-    const { email, password, nom, role, entreprise_id, client_id } = body
+    const { email, nom, role, entreprise_id, client_id } = body
 
     // Validate required fields
-    if (!email || !password || !nom || !role || !entreprise_id) {
+    if (!email || !nom || !role || !entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Champs obligatoires manquants', code: 'missing_fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -105,14 +103,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      return new Response(
-        JSON.stringify({ error: 'Mot de passe trop court (minimum 6 caractères)', code: 'weak_password' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
     // Validate client_id if role is client
     if (role === 'client' && !client_id) {
       return new Response(
@@ -121,26 +111,28 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Admin ${callerId} creating user: ${email} with role ${role}`)
+    console.log(`Admin ${callerId} inviting user: ${email} with role ${role}`)
 
-    // Create the user via admin API (doesn't affect caller's session!)
-    const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
+    // Get redirect URL from request origin or use default
+    const origin = req.headers.get('origin') || 'https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app'
+    const redirectTo = `${origin}/connexion`
+
+    // Invite user via email (sends confirmation email automatically!)
+    const { data: newUserData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: {
         nom,
         entreprise_nom: '', // Empty to prevent trigger from creating new entreprise
       },
+      redirectTo,
     })
 
-    if (createError) {
-      console.error('Error creating user:', createError)
+    if (inviteError) {
+      console.error('Error inviting user:', inviteError)
       
       // Handle specific errors with French messages
-      if (createError.message?.includes('already been registered') || 
-          createError.message?.includes('already registered') ||
-          createError.message?.includes('User already registered')) {
+      if (inviteError.message?.includes('already been registered') || 
+          inviteError.message?.includes('already registered') ||
+          inviteError.message?.includes('User already registered')) {
         return new Response(
           JSON.stringify({ error: 'Cet email est déjà utilisé', code: 'email_exists' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -148,7 +140,7 @@ Deno.serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ error: createError.message || 'Erreur lors de la création', code: 'create_error' }),
+        JSON.stringify({ error: inviteError.message || 'Erreur lors de la création', code: 'create_error' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -161,7 +153,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`User created with ID: ${newUserId}`)
+    console.log(`User invited with ID: ${newUserId}`)
 
     // Wait a bit for the trigger to create the base profile
     await new Promise(resolve => setTimeout(resolve, 500))
@@ -226,7 +218,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         user_id: newUserId,
-        message: 'Utilisateur créé avec succès'
+        message: 'Invitation envoyée avec succès'
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
