@@ -36,6 +36,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,10 +83,14 @@ const Utilisateurs = () => {
   // Form state for new user
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserNom, setNewUserNom] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState<AppRole>("agent");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchData = async () => {
     if (!user) return;
@@ -139,7 +153,7 @@ const Utilisateurs = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!newUserEmail || !newUserNom || !newUserPassword) {
+    if (!newUserEmail || !newUserNom) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -157,15 +171,6 @@ const Utilisateurs = () => {
       return;
     }
 
-    if (newUserPassword.length < 6) {
-      toast({
-        title: "Erreur",
-        description: "Le mot de passe doit contenir au moins 6 caractères",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsCreating(true);
 
     try {
@@ -178,11 +183,10 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) throw new Error("Entreprise non trouvée");
 
-      // Call the Edge Function to create user (preserves admin session!)
+      // Call the Edge Function to invite user (sends confirmation email!)
       const { data, error } = await supabase.functions.invoke("admin-create-user", {
         body: {
           email: newUserEmail,
-          password: newUserPassword,
           nom: newUserNom,
           role: newUserRole,
           entreprise_id: profileData.entreprise_id,
@@ -200,14 +204,13 @@ const Utilisateurs = () => {
       }
 
       toast({
-        title: "Succès",
-        description: "L'utilisateur a été créé avec succès",
+        title: "Invitation envoyée",
+        description: `Un email d'invitation a été envoyé à ${newUserEmail}`,
       });
 
       setCreateDialogOpen(false);
       setNewUserEmail("");
       setNewUserNom("");
-      setNewUserPassword("");
       setNewUserRole("agent");
       setSelectedClientId("");
       fetchData();
@@ -221,6 +224,59 @@ const Utilisateurs = () => {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setIsDeleting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { user_id: userToDelete.id },
+      });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Erreur lors de la suppression");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Succès",
+        description: `L'utilisateur ${userToDelete.nom} a été supprimé`,
+      });
+
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      fetchData();
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openDeleteDialog = (userToRemove: UserWithRole) => {
+    // Prevent deleting yourself
+    if (userToRemove.id === user?.id) {
+      toast({
+        title: "Action impossible",
+        description: "Vous ne pouvez pas vous supprimer vous-même",
+        variant: "destructive",
+      });
+      return;
+    }
+    setUserToDelete(userToRemove);
+    setDeleteDialogOpen(true);
   };
 
   const getRoleIcon = (role: AppRole) => {
@@ -343,7 +399,7 @@ const Utilisateurs = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Créer un utilisateur</DialogTitle>
+                  <DialogTitle>Inviter un utilisateur</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2">
@@ -362,15 +418,9 @@ const Utilisateurs = () => {
                       onChange={(e) => setNewUserEmail(e.target.value)}
                       placeholder="email@exemple.com"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Mot de passe *</Label>
-                    <Input
-                      type="password"
-                      value={newUserPassword}
-                      onChange={(e) => setNewUserPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
+                    <p className="text-xs text-muted-foreground">
+                      L'utilisateur recevra un email pour définir son mot de passe
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label>Rôle *</Label>
@@ -413,7 +463,7 @@ const Utilisateurs = () => {
                     onClick={handleCreateUser}
                     disabled={isCreating}
                   >
-                    {isCreating ? "Création..." : "Créer l'utilisateur"}
+                    {isCreating ? "Envoi de l'invitation..." : "Envoyer l'invitation"}
                   </Button>
                 </div>
               </DialogContent>
@@ -548,7 +598,10 @@ const Utilisateurs = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => openDeleteDialog(u)}
+                              >
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Supprimer
                               </DropdownMenuItem>
@@ -564,6 +617,31 @@ const Utilisateurs = () => {
           </motion.div>
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer l'utilisateur</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer{" "}
+              <span className="font-semibold">{userToDelete?.nom}</span> ?
+              <br />
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
