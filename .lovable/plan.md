@@ -1,125 +1,159 @@
 
 
-## Plan: Simplifier le TacheDetailDialog pour l'assignation directe de tâches IA
+## Plan: Corriger la création et suppression d'utilisateurs
 
-### Objectif
+### Problèmes identifiés
 
-Transformer le `TacheDetailDialog` en un dialog simple et efficace pour assigner directement une tâche IA (suggestion) à un utilisateur. Supprimer la zone de messagerie qui n'a pas sa place ici.
+1. **Email de confirmation non envoyé**: Dans l'edge function actuelle, `email_confirm: true` confirme automatiquement l'email. L'utilisateur ne reçoit jamais d'email.
 
-### Ce qui sera supprime
+2. **Suppression impossible**: Le bouton "Supprimer" n'a aucune action associée (`onClick` manquant), et il n'existe pas d'edge function pour supprimer les utilisateurs.
 
-1. **Zone de messagerie** (lignes 294-376) - Les messages se font dans le DirectMessagePanel
-2. **Zone d'input de message** (lignes 378-400) - Inutile sans messagerie
-3. **Hook useTacheMessages** - Plus necessaire
-4. **QuickTaskDialog** - On assigne la tache existante, pas besoin de creer une nouvelle
-5. **States inutiles** - newMessage, messagesEndRef, etc.
+### Solution proposée
 
-### Ce qui sera conserve
+#### Partie 1: Envoyer un email d'invitation
 
-1. Header avec titre de la tache
-2. Badge de statut (A faire / Fait)
-3. Date de la tache
-4. Description (si presente)
-5. Bouton "Assigner tache" avec le popover de selection d'utilisateurs
+Modifier l'edge function `admin-create-user` pour utiliser `inviteUserByEmail` au lieu de `createUser`. Cette méthode :
+- Crée le compte utilisateur
+- Envoie automatiquement un email d'invitation
+- L'utilisateur clique sur le lien et définit son mot de passe
+- Il est redirigé vers le dashboard
 
-### Nouveau comportement
+| Changement | Avant | Après |
+|------------|-------|-------|
+| Méthode | `auth.admin.createUser()` | `auth.admin.inviteUserByEmail()` |
+| Mot de passe | Défini par l'admin | Défini par l'utilisateur via l'email |
+| Email | Confirmé automatiquement | Envoyé automatiquement |
 
-Quand l'utilisateur selectionne un destinataire dans le popover:
-1. La tache actuelle est mise a jour avec `assigned_to = user.id`
-2. Une notification est creee pour le destinataire
-3. Un toast de succes s'affiche
-4. Le dialog se ferme
+#### Partie 2: Créer la suppression d'utilisateurs
 
-### Fichier a modifier
+1. **Nouvelle edge function** `admin-delete-user`:
+   - Vérifie que l'appelant est admin
+   - Vérifie que l'utilisateur appartient à la même entreprise
+   - Supprime l'utilisateur via `auth.admin.deleteUser()`
+   - Les cascades suppriment le profil, le rôle, etc.
 
-| Fichier | Modification |
-|---------|--------------|
-| `src/components/dialogs/TacheDetailDialog.tsx` | Refactoring complet |
+2. **Handler dans Utilisateurs.tsx**:
+   - Ajouter `handleDeleteUser(userId)` avec confirmation
+   - Afficher un toast de succès
+   - Rafraîchir la liste
 
-### Structure finale du dialog
+### Fichiers à créer/modifier
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│  📋 Preparation des contrats de vente/location                      │
-│  🏷 A faire  •  28 janvier 2026                                      │
-│                                                                     │
-│  Rassembler tous les documents necessaires (titres de propriete,   │
-│  diagnostics, pieces d'identite) et rediger les projets de         │
-│  contrats en conformite avec la legislation guineenne.             │
-│                                                                     │
-│  [📋 Assigner tache]                                                │
-│                                                                     │
-│         Clic → Popover selection utilisateur                        │
-│                    ↓                                                │
-│         Selection → UPDATE taches SET assigned_to = ?               │
-│                    ↓                                                │
-│         Notification creee → Dialog ferme                           │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Fichier | Action |
+|---------|--------|
+| `supabase/functions/admin-create-user/index.ts` | Modifier pour utiliser `inviteUserByEmail` |
+| `supabase/functions/admin-delete-user/index.ts` | Créer (nouvelle edge function) |
+| `src/pages/Utilisateurs.tsx` | Ajouter handler de suppression + confirmation |
 
-### Code de la nouvelle fonction handleSelectUser
+### Détails techniques
+
+#### 1. Modification de admin-create-user
 
 ```typescript
-const handleSelectUser = async (user: UserWithRole) => {
-  if (!tache) return;
-  
-  setIsAssigning(true);
-  try {
-    // Mettre a jour la tache avec le nouvel assignee
-    const { error: updateError } = await supabase
-      .from("taches")
-      .update({ assigned_to: user.id })
-      .eq("id", tache.id);
+// AVANT (ligne 127-135)
+const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+  email,
+  password,
+  email_confirm: true,
+  user_metadata: { nom, entreprise_nom: '' },
+})
 
-    if (updateError) throw updateError;
-
-    // Creer une notification pour le destinataire
-    await supabase.from("notifications").insert({
-      user_id: user.id,
-      titre: "Nouvelle tache assignee",
-      message: `Une tache vous a ete assignee: ${tache.titre}`,
-      type: "tache",
-    });
-
-    toast.success(`Tache assignee a ${user.nom}`);
-    setUserSelectorOpen(false);
-    onOpenChange(false);
-  } catch (error) {
-    console.error("Error assigning task:", error);
-    toast.error("Erreur lors de l'assignation");
-  } finally {
-    setIsAssigning(false);
-  }
-};
+// APRÈS
+const redirectUrl = req.headers.get('origin') || 'https://votre-app.lovable.app'
+const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+  data: { nom, entreprise_nom: '' },
+  redirectTo: `${redirectUrl}/connexion`,
+})
 ```
 
-### Imports a nettoyer
+Note: Le mot de passe ne sera plus défini par l'admin, l'utilisateur le choisira lui-même via l'email.
 
-**Supprimer:**
-- `Send` de lucide-react
-- `Input` de ui/input
-- `formatDistanceToNow` de date-fns
-- `useTacheMessages` hook
-- `QuickTaskDialog` import
+#### 2. Nouvelle edge function admin-delete-user
 
-**Ajouter:**
-- `toast` de sonner (pour les notifications UI)
+```typescript
+Deno.serve(async (req) => {
+  // Vérifications similaires à admin-create-user
+  // ...
+  
+  const { user_id } = await req.json()
+  
+  // Vérifier que l'utilisateur à supprimer est dans la même entreprise
+  const { data: targetProfile } = await supabaseAdmin
+    .from('profiles')
+    .select('entreprise_id')
+    .eq('id', user_id)
+    .maybeSingle()
+  
+  if (targetProfile?.entreprise_id !== callerProfile.entreprise_id) {
+    return error('forbidden')
+  }
+  
+  // Supprimer l'utilisateur (les cascades font le reste)
+  await supabaseAdmin.auth.admin.deleteUser(user_id)
+  
+  return success()
+})
+```
 
-### Resume des changements
+#### 3. Handler de suppression dans Utilisateurs.tsx
 
-| Element | Avant | Apres |
-|---------|-------|-------|
-| Zone messagerie | Presente | Supprimee |
-| Input message | Present | Supprime |
-| QuickTaskDialog | Utilise | Supprime |
-| Bouton Assigner | Ouvre QuickTaskDialog | Assigne directement la tache |
-| Comportement | Cree nouvelle tache | Met a jour la tache existante |
+```typescript
+const handleDeleteUser = async (userId: string) => {
+  if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) return
+  
+  const { error } = await supabase.functions.invoke("admin-delete-user", {
+    body: { user_id: userId },
+  })
+  
+  if (error) {
+    toast({ title: "Erreur", description: error.message, variant: "destructive" })
+    return
+  }
+  
+  toast({ title: "Succès", description: "Utilisateur supprimé" })
+  fetchData()
+}
 
-### Ce qui ne sera PAS modifie
+// Dans le JSX
+<DropdownMenuItem onClick={() => handleDeleteUser(u.id)} className="text-destructive">
+  <Trash2 className="w-4 h-4 mr-2" />
+  Supprimer
+</DropdownMenuItem>
+```
+
+### Impact sur le formulaire de création
+
+Puisque le mot de passe sera défini par l'utilisateur via l'email:
+- Retirer le champ "Mot de passe" du formulaire de création
+- L'admin saisit seulement: Nom, Email, Rôle (et Client si rôle client)
+- L'utilisateur reçoit un email avec un lien pour définir son mot de passe
+
+### Flux utilisateur final
+
+```
+Admin                          Système                        Nouvel utilisateur
+  │                               │                                    │
+  ├─ Remplit nom, email, rôle ────►                                    │
+  │                               ├─ Crée compte (sans mdp)            │
+  │                               ├─ Envoie email d'invitation ────────►
+  │                               │                                    │
+  │                               │                       Clique le lien
+  │                               │◄─────────────────────────────────────
+  │                               │                                    │
+  │                               ├─ Affiche page "définir mot de passe"
+  │                               │                                    │
+  │                               │            Définit son mot de passe
+  │                               │◄─────────────────────────────────────
+  │                               │                                    │
+  │                               ├─ Redirige vers /connexion ou /dashboard
+  │                               │                                    ▼
+```
+
+### Ce qui ne sera PAS modifié
 
 - Le dashboard
-- Les autres pages
+- Les autres pages (Clients, Factures, etc.)
+- La logique de rôles et permissions
 - Le DirectMessagePanel
-- La page Taches (sauf le comportement du dialog)
-- Les autres dialogs
+- Le TacheDetailDialog
 
