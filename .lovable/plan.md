@@ -1,141 +1,145 @@
 
 
-## Plan: Envoi de taches depuis la messagerie + Design premium vert-noir
+## Plan: Bouton "Assigner tâche" dans le TacheDetailDialog
 
 ### Objectif
 
-1. Permettre d'envoyer une tache a un utilisateur selectionne directement depuis le panneau de messagerie (sans avoir a quitter la conversation)
-2. Ameliorer le design du chat avec un theme premium degradé vert-noir qui s'integre au style existant de l'application
+Ajouter un bouton "Assigner tâche" directement dans le header du TacheDetailDialog (la vue des détails d'une tâche). Ce bouton ouvrira un sélecteur d'utilisateurs permettant de choisir à qui envoyer une nouvelle tâche.
 
 ### Architecture de la solution
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    MESSAGERIE AMELIOREE                             │
+│  TacheDetailDialog (avec nouveau bouton)                            │
 ├─────────────────────────────────────────────────────────────────────┤
-│  1. L'utilisateur selectionne un destinataire                       │
-│     → Voit la conversation + nouveau bouton "Assigner tâche"        │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │ 📋 Relance des prospects chauds      [📋 Assigner tâche]     │  │
+│  │ 🏷 À faire • 27 janvier 2026 • 👤 Mamadou                     │  │
+│  │                                                               │  │
+│  │ Description de la tâche...                                    │  │
+│  └───────────────────────────────────────────────────────────────┘  │
 │                                                                     │
-│  2. Il clique sur "Assigner tâche"                                  │
-│     → Dialog de creation de tache avec le destinataire pre-rempli   │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │ Zone de chat...                                               │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                           │
+                           ▼ Clic sur "Assigner tâche"
+┌─────────────────────────────────────────────────────────────────────┐
+│  SÉLECTIONNER UN DESTINATAIRE                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  Filtrer: [Tous] [Admin] [Agent] [Client]                           │
 │                                                                     │
-│  3. Il envoie la tache                                              │
-│     → Tache creee + notification automatique au destinataire        │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │ 👤 Admin Boss          [🟣 Admin]                             │  │
+│  │ 👤 Mamadou Bah         [🔵 Agent]                             │  │
+│  │ 👤 Client ABC          [🟢 Client]                            │  │
+│  └───────────────────────────────────────────────────────────────┘  │
 │                                                                     │
-│  4. Design premium avec degradé vert-noir                           │
-│     → Header avec glow vert, bulles stylisees, fond sombre          │
+│  → Clic sur un utilisateur                                         │
+└─────────────────────────────────────────────────────────────────────┘
+                           │
+                           ▼ QuickTaskDialog s'ouvre
+┌─────────────────────────────────────────────────────────────────────┐
+│  ASSIGNER UNE TÂCHE                                                 │
+├─────────────────────────────────────────────────────────────────────┤
+│  👤 Destinataire: Mamadou Bah (Agent)                               │
+│                                                                     │
+│  Titre de la tâche *                                                │
+│  [____________________________________]                             │
+│                                                                     │
+│  Description (optionnel)                                            │
+│  [____________________________________]                             │
+│                                                                     │
+│  Date d'échéance: [📅 27/01/2026]                                   │
+│                                                                     │
+│  [Annuler]                      [📋 Envoyer]                        │
 └─────────────────────────────────────────────────────────────────────┘
 ```
-
-### Ce qui sera modifie
-
-#### 1. DirectMessagePanel.tsx - Ajout du bouton "Assigner tâche"
-
-Dans l'en-tete de la conversation (quand un utilisateur est selectionne), ajouter un bouton qui ouvre un formulaire rapide pour creer une tache assignee a cet utilisateur.
-
-**Nouveau bouton dans la zone de conversation:**
-```text
-┌────────────────────────────────────────────────────────────────┐
-│  👤 Mamadou Bah                                                │
-│  🏷 Agent                     [📋 Assigner tâche]              │
-└────────────────────────────────────────────────────────────────┘
-```
-
-#### 2. Nouveau composant: QuickTaskDialog
-
-Un dialog simplifie pour creer rapidement une tache depuis la messagerie:
-- Titre de la tache (requis)
-- Description (optionnel)
-- Date (par defaut aujourd'hui)
-- Destinataire pre-selectionne (non modifiable)
-
-#### 3. Design premium vert-noir du chat
-
-**Modifications visuelles:**
-- Header de conversation avec fond degradé vert-noir
-- Zone de messages avec fond semi-transparent sombre
-- Bulles de message avec effet glow vert subtil pour les messages envoyes
-- Bouton d'envoi avec effet glow vert
-- Barre de saisie avec bordure verte subtile
-- Separateurs avec degradé vert
-
-**Palette de couleurs:**
-- Fond principal: hsl(220, 20%, 6%) - noir profond
-- Accent: hsl(72, 100%, 50%) - vert lime
-- Bulles envoyees: degradé vert-noir
-- Bulles recues: fond gris fonce
 
 ### Fichiers a modifier
 
 | Fichier | Action |
 |---------|--------|
-| `src/components/DirectMessagePanel.tsx` | Ajouter bouton assigner tache + design premium |
-| `src/components/dialogs/QuickTaskDialog.tsx` | Creer (dialog simplifie pour creer une tache) |
-| `src/components/dialogs/TacheDetailDialog.tsx` | Appliquer le meme design premium |
+| `src/components/dialogs/TacheDetailDialog.tsx` | Ajouter bouton "Assigner tâche" + sélecteur d'utilisateurs intégré |
+
+### Ce qui sera modifie dans TacheDetailDialog.tsx
+
+1. **Nouveau bouton dans le header**: Un bouton "Assigner tâche" (icône ClipboardList) placé dans l'en-tête à côté du titre de la tâche
+
+2. **Sélecteur d'utilisateurs intégré**: Un menu déroulant ou popover qui s'ouvre au clic, affichant:
+   - Filtres par rôle (Tous / Admin / Agent / Client)
+   - Liste des utilisateurs de l'entreprise avec leur nom et badge de rôle
+   - Clic sur un utilisateur ouvre le QuickTaskDialog avec ce destinataire
+
+3. **Intégration du QuickTaskDialog**: Le dialog existant sera utilisé pour créer la tâche avec le destinataire pré-sélectionné
 
 ### Details techniques
 
-**Structure du QuickTaskDialog:**
+**Nouveau state dans TacheDetailDialog:**
 ```typescript
-interface QuickTaskDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  assigneeId: string;
-  assigneeName: string;
-  entrepriseId: string;
-  onSuccess: () => void;
-}
+const [showUserSelector, setShowUserSelector] = useState(false);
+const [roleFilter, setRoleFilter] = useState<string>("all");
+const [users, setUsers] = useState<UserWithRole[]>([]);
+const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
+const [quickTaskOpen, setQuickTaskOpen] = useState(false);
 ```
 
-**Nouveau design du DirectMessagePanel:**
+**Recuperation des utilisateurs:**
+```typescript
+// Fetch users from the same entreprise with their roles
+const fetchUsers = async () => {
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, nom, email")
+    .eq("entreprise_id", entrepriseId);
+  
+  // Get roles for each user
+  for (const profile of profiles) {
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", profile.id)
+      .maybeSingle();
+    // Add to users list
+  }
+};
+```
 
+**Structure du sélecteur (Popover):**
 ```text
-┌─────────────────────────────────────────────────────────────────────┐
-│  🟢 MESSAGERIE           [gradient-header: noir → vert subtil]     │
-├──────────────────────┬──────────────────────────────────────────────┤
-│  [Liste users]       │  ┌────────────────────────────────────────┐  │
-│  fond sombre         │  │ 👤 Mamadou     [📋 Assigner tâche]    │  │
-│  highlight vert      │  │ Agent          [glow-header]           │  │
-│  au survol           │  ├────────────────────────────────────────┤  │
-│                      │  │                                        │  │
-│  ┌───────────────┐   │  │   ┌──────────────────────────┐        │  │
-│  │ 👤 Admin Boss │   │  │   │ Message recu          │        │  │
-│  │ 🟣 Admin     │   │  │   │ [fond gris fonce]      │        │  │
-│  ├───────────────┤   │  │   └──────────────────────────┘        │  │
-│  │ 👤 Mamadou   │◀──┤  │                                        │  │
-│  │ 🔵 Agent     │   │  │        ┌───────────────────────┐       │  │
-│  ├───────────────┤   │  │        │ Message envoye      │ 👤    │  │
-│  │ 👤 Client X  │   │  │        │ [gradient vert-noir] │       │  │
-│  │ 🟢 Client    │   │  │        │ [glow subtil]        │       │  │
-│  └───────────────┘   │  │        └───────────────────────┘       │  │
-│                      │  │                                        │  │
-│                      │  ├────────────────────────────────────────┤  │
-│                      │  │ [🟢 Input avec bordure verte] [Send]   │  │
-│                      │  └────────────────────────────────────────┘  │
-└──────────────────────┴──────────────────────────────────────────────┘
+┌────────────────────────────────────────────┐
+│ Sélectionner un destinataire              │
+├────────────────────────────────────────────┤
+│ [Tous] [Admin] [Agent] [Client]           │
+├────────────────────────────────────────────┤
+│ 👤 Admin Boss          🟣 Admin           │
+│ 👤 Mamadou Bah         🔵 Agent           │
+│ 👤 Client ABC          🟢 Client          │
+└────────────────────────────────────────────┘
 ```
 
-**Classes CSS a utiliser:**
-- `premium-header` pour l'en-tete avec animation
-- `bg-gradient-to-r from-primary/20 to-transparent` pour les highlights
-- `shadow-[0_0_20px_hsl(72,100%,50%,0.2)]` pour l'effet glow
-- Bulles envoyees: `bg-gradient-to-br from-primary/90 to-primary/70`
-- Zone de messages: `bg-black/20` avec `backdrop-blur`
+### Dependances a ajouter au composant
 
-### Experience utilisateur
+- Import du QuickTaskDialog existant
+- Import du hook useEntreprise pour obtenir l'entrepriseId
+- Ajout du Popover pour le sélecteur d'utilisateurs
 
-1. L'admin/agent ouvre la messagerie et selectionne un destinataire
-2. Il peut chatter normalement OU cliquer sur "Assigner tâche"
-3. Un dialog rapide s'ouvre avec le destinataire pre-rempli
-4. Il entre le titre et description, puis envoie
-5. La tache est creee et le destinataire est notifie
-6. Le design premium offre une experience visuelle moderne et coherente
+### Flux utilisateur
+
+1. L'utilisateur ouvre le détail d'une tâche (TacheDetailDialog)
+2. Il clique sur le bouton "Assigner tâche" dans le header
+3. Un popover s'ouvre avec la liste des utilisateurs (filtrables par rôle)
+4. Il sélectionne un destinataire
+5. Le QuickTaskDialog s'ouvre avec ce destinataire pré-rempli
+6. Il entre le titre, description et date de la tâche
+7. Il envoie - la tâche est créée et le destinataire reçoit une notification
 
 ### Ce qui ne sera PAS modifie
 
 - Le dashboard
-- Les autres pages (Clients, Factures, Devis, etc.)
-- La structure des tables existantes (taches)
-- Les autres dialogues de l'application
-- La logique de notifications existante
+- Les autres pages
+- Le DirectMessagePanel (le bouton y reste aussi)
+- La logique de chat existante dans TacheDetailDialog
+- Le design premium vert-noir déjà implémenté
 
