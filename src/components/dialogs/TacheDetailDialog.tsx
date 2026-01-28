@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { format, formatDistanceToNow } from "date-fns";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Send, Loader2, Check, Clock, User, ClipboardList } from "lucide-react";
+import { Loader2, Check, Clock, User, ClipboardList } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,16 +9,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useTacheMessages } from "@/hooks/useTacheMessages";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
-import { QuickTaskDialog } from "./QuickTaskDialog";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -51,28 +49,13 @@ export const TacheDetailDialog = ({
   onOpenChange,
   tache,
 }: TacheDetailDialogProps) => {
-  const [newMessage, setNewMessage] = useState("");
   const [userSelectorOpen, setUserSelectorOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
-  const [quickTaskOpen, setQuickTaskOpen] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, isLoading, isSending, sendMessage, currentUserId } =
-    useTacheMessages(tache?.id || null);
   const { entrepriseId } = useEntreprise();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom();
-    }
-  }, [messages]);
 
   // Fetch users when popover opens
   useEffect(() => {
@@ -120,10 +103,36 @@ export const TacheDetailDialog = ({
     return user.role === roleFilter;
   });
 
-  const handleSelectUser = (user: UserWithRole) => {
-    setSelectedUser(user);
-    setUserSelectorOpen(false);
-    setQuickTaskOpen(true);
+  const handleSelectUser = async (user: UserWithRole) => {
+    if (!tache) return;
+    
+    setIsAssigning(true);
+    try {
+      // Mettre à jour la tâche avec le nouvel assignee
+      const { error: updateError } = await supabase
+        .from("taches")
+        .update({ assigned_to: user.id })
+        .eq("id", tache.id);
+
+      if (updateError) throw updateError;
+
+      // Créer une notification pour le destinataire
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        titre: "Nouvelle tâche assignée",
+        message: `Une tâche vous a été assignée: ${tache.titre}`,
+        type: "tache",
+      });
+
+      toast.success(`Tâche assignée à ${user.nom}`);
+      setUserSelectorOpen(false);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error assigning task:", error);
+      toast.error("Erreur lors de l'assignation");
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   const getRoleBadgeColor = (role: AppRole | null) => {
@@ -139,28 +148,11 @@ export const TacheDetailDialog = ({
     }
   };
 
-  const handleSend = async () => {
-    if (!newMessage.trim()) return;
-    
-    const success = await sendMessage(newMessage);
-    if (success) {
-      setNewMessage("");
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   if (!tache) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col bg-[hsl(220,20%,6%)] border-primary/20">
-        {/* Premium header */}
+      <DialogContent className="max-w-lg bg-[hsl(220,20%,6%)] border-primary/20">
         <DialogHeader className="pb-4 border-b border-primary/20 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent -mx-6 -mt-6 px-6 pt-6 rounded-t-lg">
           <DialogTitle className="text-lg font-semibold text-foreground">
             {tache.titre}
@@ -197,20 +189,25 @@ export const TacheDetailDialog = ({
           </div>
           
           {tache.description && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-3">
               {tache.description}
             </p>
           )}
           
-          {/* Bouton Assigner tâche - bien visible */}
-          <div className="pt-3">
+          {/* Bouton Assigner tâche */}
+          <div className="pt-4">
             <Popover open={userSelectorOpen} onOpenChange={setUserSelectorOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
+                  disabled={isAssigning}
                   className="gap-2 border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary shadow-[0_0_15px_hsl(var(--primary)/0.15)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-all"
                 >
-                  <ClipboardList className="w-4 h-4" />
+                  {isAssigning ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ClipboardList className="w-4 h-4" />
+                  )}
                   Assigner tâche
                 </Button>
               </PopoverTrigger>
@@ -258,7 +255,8 @@ export const TacheDetailDialog = ({
                         <button
                           key={user.id}
                           onClick={() => handleSelectUser(user)}
-                          className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-primary/10 transition-colors text-left"
+                          disabled={isAssigning}
+                          className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-primary/10 transition-colors text-left disabled:opacity-50"
                         >
                           <Avatar className="w-8 h-8">
                             <AvatarFallback className="bg-muted text-muted-foreground text-xs">
@@ -290,130 +288,7 @@ export const TacheDetailDialog = ({
             </Popover>
           </div>
         </DialogHeader>
-
-        {/* Messages area with dark theme */}
-        <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] pr-4 bg-black/20 -mx-6 px-6 py-2">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-muted-foreground text-sm">
-                Aucun message pour le moment
-              </p>
-              <p className="text-muted-foreground text-xs mt-1">
-                Envoyez un message pour démarrer la conversation
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 py-4">
-              {messages.map((message) => {
-                const isOwn = message.user_id === currentUserId;
-                const initials = (message.sender_name || "?")
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2);
-                
-                return (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex gap-2",
-                      isOwn ? "flex-row-reverse" : "flex-row"
-                    )}
-                  >
-                    <Avatar className="w-8 h-8 shrink-0 ring-1 ring-primary/20">
-                      <AvatarFallback
-                        className={cn(
-                          "text-xs",
-                          isOwn
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-blue-500 text-white"
-                        )}
-                      >
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div
-                      className={cn(
-                        "flex flex-col max-w-[75%]",
-                        isOwn ? "items-end" : "items-start"
-                      )}
-                    >
-                      {!isOwn && (
-                        <span className="text-xs font-medium text-muted-foreground mb-1 px-1">
-                          {message.sender_name}
-                        </span>
-                      )}
-                      <div
-                        className={cn(
-                          "rounded-2xl px-4 py-2",
-                          isOwn
-                            ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground rounded-br-md shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
-                            : "bg-[hsl(220,15%,15%)] text-foreground rounded-bl-md border border-primary/10"
-                        )}
-                      >
-                        <p className="text-sm whitespace-pre-wrap break-words">
-                          {message.message}
-                        </p>
-                      </div>
-                      <span className="text-xs text-muted-foreground mt-1 px-1">
-                        {formatDistanceToNow(new Date(message.created_at), {
-                          addSuffix: true,
-                          locale: fr,
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </ScrollArea>
-
-        {/* Input area with green accent */}
-        <div className="flex gap-2 pt-4 border-t border-primary/20 -mx-6 px-6 -mb-6 pb-6 bg-black/30">
-          <Input
-            placeholder="Écrire un message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isSending}
-            className="flex-1 bg-[hsl(220,15%,12%)] border-primary/20 focus:border-primary focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
-          />
-          <Button
-            size="icon"
-            onClick={handleSend}
-            disabled={isSending || !newMessage.trim()}
-            className="bg-primary hover:bg-primary/90 shadow-[0_0_15px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all"
-          >
-            {isSending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
       </DialogContent>
-      
-      {/* QuickTaskDialog pour créer la tâche */}
-      {selectedUser && entrepriseId && (
-        <QuickTaskDialog
-          open={quickTaskOpen}
-          onOpenChange={setQuickTaskOpen}
-          assigneeId={selectedUser.id}
-          assigneeName={selectedUser.nom}
-          entrepriseId={entrepriseId}
-          onSuccess={() => {
-            setQuickTaskOpen(false);
-            setSelectedUser(null);
-          }}
-        />
-      )}
     </Dialog>
   );
 };
