@@ -266,7 +266,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-3 lg:p-5 flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
+        <div className="p-2 lg:p-4 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 57px)' }}>
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
@@ -308,7 +308,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Fluid Gradient Separator */}
-          <div className="flex-shrink-0 h-px w-full my-1.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="flex-shrink-0 h-px w-full my-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* KPI Cards Section */}
           <motion.div 
@@ -352,16 +352,16 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Fluid Gradient Separator */}
-          <div className="flex-shrink-0 h-px w-full my-1.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="flex-shrink-0 h-px w-full my-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4 flex-1 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3 flex-1 min-h-0">
             {isAdmin && (
               <motion.div 
                 initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ duration: 0.5, delay: 0.35 }} 
-                className="lg:col-span-2 p-3 lg:p-4 rounded-2xl card-premium flex flex-col"
+                className="lg:col-span-2 p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0"
               >
                 <div className="flex items-center justify-between mb-3 flex-shrink-0">
                   <h2 className="section-title-premium flex items-center gap-3">
@@ -384,7 +384,7 @@ const Dashboard = () => {
               initial={{ opacity: 0, x: 20 }} 
               animate={{ opacity: 1, x: 0 }} 
               transition={{ duration: 0.5, delay: 0.4 }} 
-              className={`p-3 lg:p-4 rounded-2xl card-premium flex flex-col ${!isAdmin ? 'lg:col-span-2' : ''}`}
+              className={`p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0 ${!isAdmin ? 'lg:col-span-2' : ''}`}
             >
               <div className="flex items-center justify-between mb-3 flex-shrink-0">
                 <h2 className="section-title-premium flex items-center gap-3">
