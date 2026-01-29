@@ -285,7 +285,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 15 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.4, delay: 0.1 }} 
-            className="flex flex-wrap gap-2 mb-3 flex-shrink-0"
+            className="flex flex-wrap gap-1.5 lg:gap-2 mb-2 lg:mb-3 flex-shrink-0"
           >
             {quickActions.map((action, index) => (
               <motion.div
@@ -308,7 +308,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Fluid Gradient Separator */}
-          <div className="flex-shrink-0 h-px w-full my-4 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="flex-shrink-0 h-px w-full my-2 lg:my-3 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* KPI Cards Section */}
           <motion.div 
@@ -335,7 +335,7 @@ const Dashboard = () => {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.4 + index * 0.05 }}
-                  className="kpi-value lg:kpi-value-lg mb-3"
+                  className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 lg:mb-3 break-words"
                 >
                   {stat.value}
                 </motion.div>
@@ -352,16 +352,16 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Fluid Gradient Separator */}
-          <div className="flex-shrink-0 h-px w-full my-4 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="flex-shrink-0 h-px w-full my-2 lg:my-3 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 flex-1 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4 flex-1 min-h-0 overflow-hidden">
             {isAdmin && (
               <motion.div 
                 initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ duration: 0.5, delay: 0.35 }} 
-                className="lg:col-span-2 p-4 lg:p-6 rounded-2xl card-premium flex flex-col"
+                className="lg:col-span-2 p-3 lg:p-5 rounded-2xl card-premium flex flex-col max-h-[45vh] lg:max-h-none overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-5 flex-shrink-0">
                   <h2 className="section-title-premium flex items-center gap-3">
@@ -397,7 +397,7 @@ const Dashboard = () => {
                   </Button>
                 )}
               </div>
-              <div className="space-y-3 max-h-64 lg:max-h-none overflow-y-auto">
+              <div className="space-y-2 lg:space-y-3 flex-1 overflow-y-auto">
                 {clients.length > 0 ? (
                   clients.map((client, index) => (
                     <motion.div 
