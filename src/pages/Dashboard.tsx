@@ -266,18 +266,18 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-4 lg:p-6 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 57px)' }}>
+        <div className="p-3 lg:p-5 flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-3 flex-shrink-0"
+            className="mb-2 flex-shrink-0"
           >
-            <h1 className="text-xl lg:text-3xl font-extrabold mb-1 tracking-tight">
+            <h1 className="text-lg lg:text-2xl font-extrabold mb-0.5 tracking-tight">
               Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
             </h1>
-            <p className="text-muted-foreground text-xs lg:text-sm">Voici un aperçu de votre activité aujourd'hui</p>
+            <p className="text-muted-foreground text-xs">Voici un aperçu de votre activité aujourd'hui</p>
           </motion.div>
 
           {/* Quick Actions Section */}
@@ -285,7 +285,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 15 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.4, delay: 0.1 }} 
-            className="flex flex-wrap gap-1.5 lg:gap-2 mb-2 lg:mb-3 flex-shrink-0"
+            className="flex flex-wrap gap-1.5 mb-2 flex-shrink-0"
           >
             {quickActions.map((action, index) => (
               <motion.div
@@ -298,9 +298,9 @@ const Dashboard = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={action.onClick}
-                  className="action-button border-border/40 hover:border-primary/50 rounded-xl h-9 px-4 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-300"
+                  className="action-button border-border/40 hover:border-primary/50 rounded-lg h-8 px-3 text-xs font-medium shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <Plus className="w-4 h-4 mr-2 text-primary" />
+                  <Plus className="w-3.5 h-3.5 mr-1.5 text-primary" />
                   {action.label}
                 </Button>
               </motion.div>
@@ -308,14 +308,14 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Fluid Gradient Separator */}
-          <div className="flex-shrink-0 h-px w-full my-2 lg:my-3 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="flex-shrink-0 h-px w-full my-1.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* KPI Cards Section */}
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ duration: 0.5, delay: 0.2 }} 
-            className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-3 lg:gap-4 flex-shrink-0`}
+            className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-2 lg:gap-3 flex-shrink-0`}
           >
             {statsDisplay.map((stat, index) => (
               <motion.div 
@@ -323,23 +323,23 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.25 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                className="card-kpi p-4 lg:p-5 rounded-2xl"
+                className="card-kpi p-3 lg:p-4 rounded-xl"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="kpi-label">{stat.label}</span>
-                  <div className={`p-2.5 rounded-xl ${stat.positive ? "bg-success/10 ring-1 ring-success/20" : "bg-destructive/10 ring-1 ring-destructive/20"}`}>
-                    <stat.icon className={`w-4 h-4 lg:w-5 lg:h-5 ${stat.positive ? "text-success" : "text-destructive"}`} />
+                <div className="flex items-center justify-between mb-2">
+                  <span className="kpi-label text-xs">{stat.label}</span>
+                  <div className={`p-1.5 rounded-lg ${stat.positive ? "bg-success/10 ring-1 ring-success/20" : "bg-destructive/10 ring-1 ring-destructive/20"}`}>
+                    <stat.icon className={`w-3.5 h-3.5 ${stat.positive ? "text-success" : "text-destructive"}`} />
                   </div>
                 </div>
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.4 + index * 0.05 }}
-                  className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 lg:mb-3 break-words"
+                  className="text-base lg:text-lg font-bold mb-1.5 break-words"
                 >
                   {stat.value}
                 </motion.div>
-                <div className="h-1 w-full bg-secondary/40 rounded-full overflow-hidden">
+                <div className="h-0.5 w-full bg-secondary/40 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: "60%" }}
@@ -352,18 +352,18 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Fluid Gradient Separator */}
-          <div className="flex-shrink-0 h-px w-full my-2 lg:my-3 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="flex-shrink-0 h-px w-full my-1.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4 flex-1 min-h-0 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4 flex-1 min-h-0">
             {isAdmin && (
               <motion.div 
                 initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ duration: 0.5, delay: 0.35 }} 
-                className="lg:col-span-2 p-3 lg:p-5 rounded-2xl card-premium flex flex-col max-h-[45vh] lg:max-h-none overflow-hidden"
+                className="lg:col-span-2 p-3 lg:p-4 rounded-2xl card-premium flex flex-col"
               >
-                <div className="flex items-center justify-between mb-5 flex-shrink-0">
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
                   <h2 className="section-title-premium flex items-center gap-3">
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                     Analyse financière
@@ -384,9 +384,9 @@ const Dashboard = () => {
               initial={{ opacity: 0, x: 20 }} 
               animate={{ opacity: 1, x: 0 }} 
               transition={{ duration: 0.5, delay: 0.4 }} 
-              className={`p-4 lg:p-6 rounded-2xl card-premium flex flex-col ${!isAdmin ? 'lg:col-span-2' : ''}`}
+              className={`p-3 lg:p-4 rounded-2xl card-premium flex flex-col ${!isAdmin ? 'lg:col-span-2' : ''}`}
             >
-              <div className="flex items-center justify-between mb-5 flex-shrink-0">
+              <div className="flex items-center justify-between mb-3 flex-shrink-0">
                 <h2 className="section-title-premium flex items-center gap-3">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   {isAdmin ? "Clients récents" : "Mes clients"}
@@ -397,7 +397,7 @@ const Dashboard = () => {
                   </Button>
                 )}
               </div>
-              <div className="space-y-2 lg:space-y-3 flex-1 overflow-y-auto">
+              <div className="space-y-2 flex-1">
                 {clients.length > 0 ? (
                   clients.map((client, index) => (
                     <motion.div 
@@ -405,26 +405,26 @@ const Dashboard = () => {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
-                      className="flex items-center gap-4 p-3.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
+                      className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
-                        <Users className="w-5 h-5 text-primary" />
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
+                        <Users className="w-4 h-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm lg:text-base truncate">{client.nom}</div>
-                        <div className="text-xs lg:text-sm text-muted-foreground truncate mt-0.5">{client.email || "Pas d'email"}</div>
+                        <div className="font-semibold text-sm truncate">{client.nom}</div>
+                        <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
                       </div>
                       <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <Button variant="ghost" size="sm" className="h-8 px-3 text-sm hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs hover:bg-primary/10 hover:text-primary rounded-lg">
                           Voir
                         </Button>
                       </Link>
                     </motion.div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                    <p className="text-sm">Aucun client</p>
+                  <div className="text-center py-4 text-muted-foreground">
+                    <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-xs">Aucun client</p>
                   </div>
                 )}
               </div>
