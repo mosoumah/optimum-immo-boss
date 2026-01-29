@@ -164,8 +164,8 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 bg-secondary/30 rounded-lg p-1">
           <Button
             variant={period === "week" ? "default" : "ghost"}
@@ -213,7 +213,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
         </div>
       </div>
 
-      <div className="h-[140px]">
+      <div className="flex-1 min-h-0">
         {isLoading ? (
           <div className="h-full flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -261,7 +261,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
         )}
       </div>
 
-      <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-border/30">
+      <div className="flex items-center justify-center gap-4 mt-1 pt-1 border-t border-border/30">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-success" />
           <span className="text-xs text-muted-foreground">Revenus</span>
