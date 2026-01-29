@@ -199,16 +199,16 @@ const Taches = () => {
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-4 mb-8 premium-header rounded-xl p-4"
+            className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 premium-header rounded-xl p-3 sm:p-4"
           >
             <Button variant="ghost" size="icon" asChild>
               <Link to="/dashboard">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Tâches</h1>
-              <p className="text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold">Tâches</h1>
+              <p className="text-sm sm:text-base text-muted-foreground truncate">
                 {hasPermission("creer_tache") ? "Gérez les tâches de l'équipe" : "Vos tâches assignées"}
               </p>
             </div>
@@ -217,15 +217,16 @@ const Taches = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex justify-end gap-2 mb-6"
+            className="flex flex-wrap justify-end gap-2 mb-6"
           >
             <Button
               variant="outline"
               onClick={() => setMessagePanelOpen(true)}
               className="gap-2"
+              size="sm"
             >
               <Mail className="w-4 h-4" />
-              Messagerie
+              <span className="hidden sm:inline">Messagerie</span>
             </Button>
             <PermissionGate permission="creer_tache">
               <Button 
@@ -233,17 +234,18 @@ const Taches = () => {
                 onClick={generateSuggestions}
                 disabled={isGeneratingSuggestions}
                 className="gap-2"
+                size="sm"
               >
                 {isGeneratingSuggestions ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                Suggestions IA
+                <span className="hidden sm:inline">Suggestions IA</span>
               </Button>
-              <Button onClick={() => setDialogOpen(true)} className="premium-button">
-                <Plus className="w-4 h-4 mr-2" />
-                Nouvelle tâche
+              <Button onClick={() => setDialogOpen(true)} className="premium-button" size="sm">
+                <Plus className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Nouvelle tâche</span>
               </Button>
             </PermissionGate>
           </motion.div>
