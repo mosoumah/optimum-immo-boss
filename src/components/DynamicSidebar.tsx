@@ -68,7 +68,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="p-6 flex items-center justify-between"
+        className="p-4 flex items-center justify-between"
       >
         <Logo size="sm" animated={false} />
         {isMobile && (
@@ -83,7 +83,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         )}
       </motion.div>
 
-      <nav className="flex-1 px-3 space-y-1 overflow-hidden">
+      <nav className="flex-1 px-3 space-y-0.5 overflow-hidden">
         {filteredItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           return (
@@ -96,7 +96,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
               <Link
                 to={item.path}
                 onClick={handleLinkClick}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
+                className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-300 group ${
                   isActive
                     ? "bg-primary/10 text-primary border border-primary/20 glow-primary-sm"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-1"
@@ -130,7 +130,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
           <Link
             to="/parametres"
             onClick={handleLinkClick}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
+            className="flex items-center gap-3 px-4 py-2 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
           >
             <Settings className="w-5 h-5" />
             <span className="font-medium text-sm">Paramètres</span>
@@ -138,7 +138,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         )}
         <button
           onClick={onSignOut}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full"
+          className="flex items-center gap-3 px-4 py-2 rounded-xl text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full"
         >
           <LogOut className="w-5 h-5" />
           <span className="font-medium text-sm">Déconnexion</span>
