@@ -1,62 +1,77 @@
 
-Objectif (scope strict)
-- Supprimer la barre de scroll horizontale (gauche/droite) sur la page **/taches** uniquement.
-- Ne toucher à rien d’autre (pas de dashboard, pas de sidebar, pas de styles globaux).
 
-Constat / Cause probable (d’après le code actuel)
-- La page `Taches.tsx` utilise ce layout :
-  - Conteneur racine : `div className="min-h-screen flex relative"`
-  - Sidebar : `DynamicSidebar` est en `position: fixed` (donc elle ne “prend pas de place” dans le flux du layout)
-  - Contenu : `main className="flex-1 lg:ml-64 ..."`
-- Problème : en **Flexbox**, un élément `flex-1` prend déjà toute la largeur disponible. Ajouter `lg:ml-64` (16rem de marge) peut provoquer une largeur totale > viewport (car la marge s’ajoute), ce qui déclenche une barre de scroll horizontale en bas.
-- Sur d’autres pages, vous ne le voyez pas forcément car certains layouts ont `overflow-hidden` sur le conteneur (ex: Dashboard/AppLayout), ce qui masque le problème. Sur /taches, ce masque n’existe pas, donc la barre apparaît.
+## Plan : Aligner la structure de GestionPermissions sur celle de Utilisateurs
 
-Approche de correction (minimaliste, uniquement sur /taches)
-- Corriger la cause (éviter le “flex item plein écran + marge” qui dépasse), plutôt que cacher le problème globalement.
-- Option la plus propre et limitée à cette page : enlever `flex` du conteneur racine, pour repasser en layout “block” classique où `ml-64` ne crée pas de dépassement (la largeur auto s’ajuste).
-- Ajouter en plus une sécurité `overflow-x-hidden` sur le wrapper de la page (toujours uniquement dans `Taches.tsx`) pour empêcher toute micro-débordement (1–2px) lié à un contenu dynamique.
+### Problème identifié
 
-Changements précis (1 seul fichier : `src/pages/Taches.tsx`)
-1) Modifier le conteneur racine de la page
-- Avant :
-  - `<div className="min-h-screen flex relative">`
-- Après :
-  - `<div className="min-h-screen relative overflow-x-hidden">`
-Pourquoi :
-- On supprime le comportement Flexbox qui additionne `flex-1` + marge.
-- On empêche toute création de scroll horizontal sur cette page uniquement.
+La page **Gestion des Permissions** n'est pas centrée comme la page **Utilisateurs** car :
 
-2) Ajuster la classe du `<main>` pour être cohérente avec le nouveau wrapper
-- Actuellement :
-  - `<main className="flex-1 lg:ml-64 mesh-gradient min-h-screen p-4 lg:p-8">`
-- Après (proposition simple) :
-  - `<main className="w-full lg:ml-64 mesh-gradient min-h-screen p-4 lg:p-8">`
-Pourquoi :
-- `flex-1` n’est plus utile si le parent n’est plus `flex`.
-- `w-full` garantit un comportement de largeur standard.
-- `lg:ml-64` continue à décaler le contenu pour ne pas passer sous la sidebar fixe, sans générer de dépassement horizontal.
+1. **Structure différente** : Le `<main>` a un `p-8` direct, alors que Utilisateurs utilise un wrapper `<div className="p-8">` à l'intérieur
+2. **Marge non responsive** : `ml-64` au lieu de `lg:ml-64`
+3. **Pas de header sticky** : La page Utilisateurs a un header avec barre de recherche, la page Permissions n'en a pas
 
-3) Si un contenu “long” force encore un débordement (sécurité ciblée dans la liste des tâches)
-- Si le débordement vient d’un titre/texte très long sans espaces (ex: un code, une URL, etc.), on fera une mini-correction locale :
-  - Ajouter `break-words` (ou `break-all` si nécessaire) sur l’affichage du titre (et éventuellement description).
-- Exemple :
-  - Le titre : ajouter `break-words` et/ou `truncate`
-  - L’objectif : empêcher qu’une seule “longue chaîne” pousse la largeur au-delà du viewport.
-Note :
-- Je commencerai par la correction layout (#1/#2) qui est la cause la plus probable. Le point #3 ne sera appliqué que si nécessaire, et toujours dans `Taches.tsx`.
+### Fichier à modifier
 
-Vérifications (end-to-end)
-- Tester /taches en :
-  - Mobile (390px) : vérifier absence de barre horizontale.
-  - Tablette / Desktop (≥ 1024px) : vérifier absence de barre horizontale + sidebar visible + contenu correctement aligné.
-- Tester avec :
-  - Une tâche au titre très long (pour confirmer que le texte ne force pas le débordement).
-  - Ouverture du détail de tâche (pour vérifier qu’aucun composant overlay ne crée un overflow inattendu).
+- `src/pages/GestionPermissions.tsx`
 
-Impact attendu
-- Plus de scroll horizontal en bas sur /taches.
-- Mise en page alignée correctement avec la sidebar fixe.
-- Aucun changement sur les autres pages, ni sur les styles globaux.
+### Changements précis
 
-Fichiers concernés
-- Uniquement : `src/pages/Taches.tsx`
+**1. Conteneur racine (ligne 225)**
+
+Avant :
+```tsx
+<div className="min-h-screen flex relative">
+```
+
+Après :
+```tsx
+<div className="min-h-screen flex relative overflow-x-hidden">
+```
+
+**2. Élément `<main>` (ligne 229)**
+
+Avant :
+```tsx
+<main className="flex-1 ml-64 mesh-gradient min-h-screen p-8">
+```
+
+Après :
+```tsx
+<main className="flex-1 lg:ml-64 mesh-gradient min-h-screen">
+```
+
+- Suppression du `p-8` sur le main (sera mis sur un wrapper interne)
+- Ajout de `lg:` pour rendre la marge responsive
+
+**3. Wrapper du contenu (ligne 230)**
+
+Avant :
+```tsx
+<div className="max-w-6xl mx-auto relative z-10">
+```
+
+Après :
+```tsx
+<div className="p-4 lg:p-8">
+  <div className="max-w-6xl mx-auto relative z-10">
+```
+
+- Ajout d'un wrapper avec padding responsive `p-4 lg:p-8`
+- Le contenu reste centré avec `max-w-6xl mx-auto`
+
+**4. Fermeture du nouveau wrapper**
+
+Ajouter une fermeture `</div>` avant la fermeture du `</main>` (ligne 392)
+
+### Résultat attendu
+
+- Le contenu sera centré au milieu comme sur la page Utilisateurs
+- La page sera responsive sur mobile (pas de marge fixe qui coupe le contenu)
+- Structure alignée avec les autres sections de l'application
+
+### Ce qui ne sera PAS modifié
+
+- Aucune autre page
+- Aucun style global
+- Aucune fonctionnalité
+
