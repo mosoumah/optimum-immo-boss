@@ -1,60 +1,57 @@
 
-Contexte et objectif (scope strict)
-- Vous signalez que la page **Tâches** “déborde” et n’est pas responsive : certaines actions (ex. “Nouvelle tâche / Ajouter une nouvelle tâche”) ne sont pas visibles selon la largeur écran.
-- Objectif : corriger le responsive **uniquement** sur `/taches`, sans toucher aux autres pages.
+Objectif (scope strict)
+- Corriger uniquement la page **/taches** pour que tout le contenu soit :
+  1) bien décalé par rapport à la sidebar sur desktop
+  2) centré comme les autres pages (Utilisateurs / Permissions)
+  3) responsive (sans débordement / éléments masqués)
 
-Diagnostic (cause la plus probable)
-1) Décalage sidebar vs breakpoint Tailwind
-- La sidebar passe en “mode desktop” dès **768px** (voir `useIsMobile()` : `< 768` = mobile).
-- Dans `Taches.tsx`, le contenu est décalé seulement à partir de `lg:` (1024px) via `lg:ml-64`.
-- Conséquence : entre **768px et 1023px** (petits laptops, tablettes paysage), la sidebar desktop est visible, mais le contenu n’est pas assez décalé → une partie passe sous la sidebar, donnant l’impression de “non responsive” (boutons/texte partiellement invisibles).
+Diagnostic (pourquoi ça “passe à gauche” et déborde)
+- Actuellement, dans `src/pages/Taches.tsx`, le `<main>` a : `p-4 lg:p-8 md:pl-72`.
+- Sur desktop (>= 1024px), **`lg:p-8` écrase `md:pl-72`** (car les règles `lg:` sont générées après les `md:` dans Tailwind).  
+  Résultat : le padding-left “anti-sidebar” disparaît en desktop → le contenu revient à gauche et passe sous la sidebar fixe.
+- Les autres pages “OK” (ex: Permissions) utilisent une structure stable : `lg:ml-64` + wrapper `p-4 lg:p-8` + `max-w-6xl mx-auto`.
 
-2) “Fix” actuel qui masque le problème en coupant le contenu
-- Le wrapper actuel de `/taches` a `overflow-x-hidden`.
-- Si le layout provoque encore un léger overflow, ce `overflow-x-hidden` supprime la barre de scroll… mais peut aussi **couper** ce qui dépasse (donc un bouton peut devenir invisible au lieu d’être scrollable).
-
-Approche de correction (uniquement /taches)
-- Aligner le breakpoint de décalage du contenu sur celui de la sidebar (768px = `md:`).
-- Éviter les layouts qui créent un overflow horizontal (et donc éviter d’avoir à “cacher” avec overflow-x-hidden).
-- Garder la structure “centrée” identique aux autres pages : `max-w-6xl mx-auto` + padding responsive.
-
-Changements précis (1 fichier)
+Changements à faire (1 seul fichier)
 Fichier : `src/pages/Taches.tsx`
 
-1) Corriger le décalage lié à la sidebar (breakpoint)
-Option recommandée (robuste, sans overflow) : remplacer le décalage par marge (`ml-64`) par un décalage par padding gauche sur le main, calé sur `md:` :
-- Remplacer dans `<main ...>` :
-  - Avant : `className="flex-1 lg:ml-64 mesh-gradient min-h-screen p-4 lg:p-8"`
-  - Après : `className="flex-1 mesh-gradient min-h-screen p-4 lg:p-8 md:pl-72"`
-Pourquoi `md:pl-72` ?
-- 72 = 18rem = 16rem (sidebar) + 2rem (padding “desktop” habituel).
-- Cela reproduit l’alignement visuel des pages qui font `ml-64` + `p-8`, tout en évitant le “width + margin = dépassement”.
-- Et surtout : le décalage s’active dès `md` (768), cohérent avec la sidebar.
+1) Revenir à la structure utilisée par les pages centrées (comme GestionPermissions)
+- Modifier le `<main>` pour qu’il se comporte comme les autres pages :
+  - Enlever le système `md:pl-72` (qui se fait écraser à `lg`)
+  - Utiliser `lg:ml-64` pour compenser la sidebar fixe sur desktop
+  - Déplacer le padding dans un wrapper interne `p-4 lg:p-8` (comme Permissions)
 
-2) Retirer le `lg:ml-64` (puisqu’on utilise le padding-left)
-- Supprimer complètement `lg:ml-64` du `<main>`.
+Concrètement :
 
-3) Revoir le `overflow-x-hidden` de la page Tâches
-- Après la correction ci-dessus, le contenu ne devrait plus déborder horizontalement.
-- Donc je vais :
-  - soit retirer `overflow-x-hidden` du wrapper racine `/taches` (préférable : on évite de couper du contenu),
-  - soit le laisser uniquement si un micro-débordement (1–2px) persiste (mais alors on doit être sûr que rien n’est coupé).
-Recommandation : le retirer et vérifier : si aucune barre horizontale ne réapparaît, c’est gagné.
+A. `<main>` (layout)
+- Avant :
+  - `className="flex-1 mesh-gradient min-h-screen p-4 lg:p-8 md:pl-72"`
+- Après :
+  - `className="flex-1 lg:ml-64 mesh-gradient min-h-screen"`
 
-4) (Optionnel, seulement si nécessaire) Empêcher un débordement “par contenu”
-Si après #1-#3 il reste un débordement, alors ce n’est plus le layout sidebar, mais un contenu qui force la largeur (ex: nom assigné très long, titre sans espaces, etc.). Dans ce cas, correction ciblée dans la liste :
-- Ajouter `truncate` ou `break-words` sur `tache.titre`
-- Ajouter `truncate` sur la ligne “Assignée à: …”
-- Mettre `shrink-0` sur le bloc de droite (icône + date) pour stabiliser l’alignement
-Important : je ne ferai ce point #4 que si le problème persiste après la correction structurelle, pour rester strictement dans votre scope.
+B. Wrapper de padding (centrage + responsive)
+- Ajouter juste après l’ouverture du `<main>` :
+  - `<div className="p-4 lg:p-8">`
+- Et déplacer le contenu existant (`<div className="max-w-6xl mx-auto ...">...</div>`) à l’intérieur.
+- Ajouter la fermeture `</div>` juste avant `</main>`.
 
-Vérification (end-to-end)
-- Tester `/taches` aux largeurs suivantes :
-  - 390px (mobile) : hamburger sidebar, contenu full width, aucun débordement.
-  - 800–900px (petit laptop) : sidebar desktop visible + contenu correctement décalé, bouton “Nouvelle tâche” visible.
-  - 1366px+ (desktop) : même comportement, tout visible, pas de barre horizontale.
+Pourquoi cette structure marche
+- `lg:ml-64` crée un “vrai” espace réservé à gauche uniquement sur desktop (où la sidebar est visible).
+- Le padding `p-4 lg:p-8` est indépendant du décalage sidebar, donc plus de conflit/écrasement Tailwind.
+- `max-w-6xl mx-auto` re-centre parfaitement le contenu au milieu de la zone disponible (comme les pages Utilisateurs/Permissions).
 
-Impact attendu
-- La page Tâches devient réellement responsive (notamment entre 768 et 1023px).
-- Le contenu reste centré comme les autres sections (même “logique” de largeur max + centrage).
-- Le bouton “Nouvelle tâche / Ajouter une nouvelle tâche” n’est plus coupé/masqué.
+2) (Optionnel, seulement si un débordement horizontal persiste après #1)
+Si après la correction structurelle il reste un débordement (souvent causé par un texte très long sans espaces), je ferai une micro-correction ciblée dans la liste des tâches, sans changer le design :
+- Mettre le titre en mode “wrap/truncate” :
+  - ajouter `break-words` (ou `truncate`) sur le bloc du titre
+- Mettre le bloc droite (icône + date) en `shrink-0` et la date en `whitespace-nowrap`
+But : empêcher une ligne de forcer la largeur et créer une barre horizontale.
+
+Vérification end-to-end (après implémentation)
+- Ouvrir `/taches` et tester :
+  - Desktop (>= 1024px) : contenu bien décalé, centré, rien sous la sidebar
+  - Tablette (768–1023px) : contenu plein écran sans décalage inutile, centré
+  - Mobile (< 768px) : contenu plein écran, boutons visibles, pas de débordement
+
+Impact
+- Aucun changement fonctionnel (création/édition de tâches inchangée)
+- Uniquement une correction de structure/layout pour correspondre aux pages “qui marchent” (Utilisateurs/Permissions)
