@@ -194,9 +194,9 @@ const Taches = () => {
       <FloatingParticles count={25} />
       <DynamicSidebar onSignOut={handleSignOut} />
       
-      <main className="flex-1 mesh-gradient min-h-screen lg:pl-64">
+      <main className="flex-1 mesh-gradient min-h-screen lg:ml-64">
         <div className="p-4 lg:p-8">
-          <div className="max-w-6xl mx-auto relative z-10">
+          <div className="max-w-6xl mx-auto relative z-10 overflow-hidden">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -227,7 +227,7 @@ const Taches = () => {
               size="sm"
             >
               <Mail className="w-4 h-4" />
-              <span className="hidden sm:inline">Messagerie</span>
+              <span className="hidden md:inline">Messagerie</span>
             </Button>
             <PermissionGate permission="creer_tache">
               <Button 
@@ -242,11 +242,11 @@ const Taches = () => {
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                <span className="hidden sm:inline">Suggestions IA</span>
+                <span className="hidden md:inline">Suggestions IA</span>
               </Button>
               <Button onClick={() => setDialogOpen(true)} className="premium-button" size="sm">
                 <Plus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Nouvelle tâche</span>
+                <span className="hidden md:inline">Nouvelle tâche</span>
               </Button>
             </PermissionGate>
           </motion.div>
