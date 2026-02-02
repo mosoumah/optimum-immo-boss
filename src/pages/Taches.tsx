@@ -190,12 +190,13 @@ const Taches = () => {
   }
 
   return (
-    <div className="min-h-screen flex relative">
+    <div className="min-h-screen flex relative overflow-x-hidden">
       <FloatingParticles count={25} />
       <DynamicSidebar onSignOut={handleSignOut} />
       
-      <main className="flex-1 mesh-gradient min-h-screen p-4 lg:p-8 md:pl-72">
-        <div className="max-w-6xl mx-auto relative z-10">
+      <main className="flex-1 mesh-gradient min-h-screen lg:pl-64">
+        <div className="p-4 lg:p-8">
+          <div className="max-w-6xl mx-auto relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -265,16 +266,16 @@ const Taches = () => {
                 <div className="space-y-3">
                   {suggestions.map((suggestion, index) => (
                     <div key={index} className="p-3 rounded-lg bg-background/50 flex items-start gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">{suggestion.titre}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="font-medium break-words">{suggestion.titre}</span>
                           <Badge className={getPriorityColor(suggestion.priorite)}>
                             {suggestion.priorite}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+                        <p className="text-sm text-muted-foreground break-words">{suggestion.description}</p>
                       </div>
-                      <Button size="sm" onClick={() => addSuggestionAsTask(suggestion)}>
+                      <Button size="sm" onClick={() => addSuggestionAsTask(suggestion)} className="shrink-0">
                         <Plus className="w-4 h-4 mr-1" />
                         Ajouter
                       </Button>
@@ -319,24 +320,24 @@ const Taches = () => {
                       {tache.statut === "fait" && <Check className="w-4 h-4 text-white" />}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <div className={`font-medium ${tache.statut === "fait" ? "line-through text-muted-foreground" : ""}`}>
+                      <div className={`font-medium break-words ${tache.statut === "fait" ? "line-through text-muted-foreground" : ""}`}>
                         {tache.titre}
                       </div>
                       {tache.description && (
                         <div className="text-sm text-muted-foreground truncate">{tache.description}</div>
                       )}
                       {tache.assignee_name && (
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground mt-1 truncate min-w-0">
                           Assignée à: {tache.assignee_name}
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <MessageCircle className="w-4 h-4 text-muted-foreground" />
                       {tache.is_ai_generated && (
                         <Badge variant="outline" className="text-xs">IA</Badge>
                       )}
-                      <span className="text-sm text-muted-foreground">{formatDate(tache.date)}</span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">{formatDate(tache.date)}</span>
                     </div>
                   </motion.div>
                 ))}
@@ -373,6 +374,7 @@ const Taches = () => {
           open={messagePanelOpen}
           onOpenChange={setMessagePanelOpen}
         />
+        </div>
       </main>
     </div>
   );
