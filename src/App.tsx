@@ -19,6 +19,7 @@ import Revenus from "./pages/Revenus";
 import Depenses from "./pages/Depenses";
 import Taches from "./pages/Taches";
 import DocumentsIA from "./pages/DocumentsIA";
+import StudioIA from "./pages/StudioIA";
 import Parametres from "./pages/Parametres";
 import Utilisateurs from "./pages/Utilisateurs";
 import GestionPermissions from "./pages/GestionPermissions";
@@ -100,6 +101,14 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <DocumentsIA />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/studio-ia"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                  <StudioIA />
                 </RoleProtectedRoute>
               }
             />
