@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generated_images: {
+        Row: {
+          bien_description: string
+          created_at: string
+          created_by: string
+          entreprise_id: string
+          format: string
+          id: string
+          image_url: string
+          include_logo: boolean
+          include_phone: boolean
+          mention: string
+          prix: string | null
+          prompt_used: string
+        }
+        Insert: {
+          bien_description: string
+          created_at?: string
+          created_by: string
+          entreprise_id: string
+          format?: string
+          id?: string
+          image_url: string
+          include_logo?: boolean
+          include_phone?: boolean
+          mention?: string
+          prix?: string | null
+          prompt_used: string
+        }
+        Update: {
+          bien_description?: string
+          created_at?: string
+          created_by?: string
+          entreprise_id?: string
+          format?: string
+          id?: string
+          image_url?: string
+          include_logo?: boolean
+          include_phone?: boolean
+          mention?: string
+          prix?: string | null
+          prompt_used?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_generated_images_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_accounts: {
         Row: {
           client_id: string
@@ -480,6 +533,47 @@ export type Database = {
           },
         ]
       }
+      redesign_requests: {
+        Row: {
+          created_at: string
+          created_by: string
+          entreprise_id: string
+          id: string
+          instruction: string
+          original_image_url: string
+          result_image_url: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entreprise_id: string
+          id?: string
+          instruction: string
+          original_image_url: string
+          result_image_url?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entreprise_id?: string
+          id?: string
+          instruction?: string
+          original_image_url?: string
+          result_image_url?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redesign_requests_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       revenus: {
         Row: {
           created_at: string
@@ -542,6 +636,41 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
         }
         Relationships: []
+      }
+      studio_ia_quotas: {
+        Row: {
+          entreprise_id: string
+          generations_used: number
+          id: string
+          month_year: string
+          plan: string
+          updated_at: string
+        }
+        Insert: {
+          entreprise_id: string
+          generations_used?: number
+          id?: string
+          month_year?: string
+          plan?: string
+          updated_at?: string
+        }
+        Update: {
+          entreprise_id?: string
+          generations_used?: number
+          id?: string
+          month_year?: string
+          plan?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_ia_quotas_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tache_messages: {
         Row: {
