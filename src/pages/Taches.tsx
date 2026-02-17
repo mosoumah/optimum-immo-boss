@@ -196,7 +196,7 @@ const Taches = () => {
       
       <main className="flex-1 mesh-gradient min-h-screen lg:ml-64">
         <div className="p-4 lg:p-8">
-          <div className="max-w-6xl mx-auto relative z-10 overflow-hidden">
+          <div className="max-w-6xl mx-auto relative z-10 w-full">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -300,7 +300,7 @@ const Taches = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item cursor-pointer"
+                    className="p-4 flex items-center gap-2 sm:gap-4 hover:bg-secondary/30 transition-colors premium-list-item cursor-pointer overflow-hidden"
                     onClick={() => {
                       setSelectedTache(tache);
                       setDetailDialogOpen(true);
@@ -337,7 +337,7 @@ const Taches = () => {
                       {tache.is_ai_generated && (
                         <Badge variant="outline" className="text-xs">IA</Badge>
                       )}
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">{formatDate(tache.date)}</span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">{formatDate(tache.date)}</span>
                     </div>
                   </motion.div>
                 ))}
