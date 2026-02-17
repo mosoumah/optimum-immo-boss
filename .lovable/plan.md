@@ -1,80 +1,41 @@
 
-## Objectif
-Corriger la page `/taches` pour que :
-1. Le contenu soit **toujours centré** et **responsive**
-2. Plus aucun élément ne soit coupé (boutons, dates, etc.)
-3. La page fonctionne correctement dans un **nouvel onglet navigateur** à toutes les tailles d'écran
 
-## Diagnostic technique
-- La sidebar desktop est visible à partir de `lg:` (1024px)
-- Le décalage `lg:pl-64` dans le `<main>` s'active aussi à `lg:`
-- **Problème** : Entre 768px et 1023px, et même autour de 1024-1100px, le contenu peut déborder car le calcul `100vw - 256px` ne laisse pas assez de place pour le contenu `max-w-6xl` (72rem = 1152px)
-- Le bouton "Nouvelle tâche" avec `whitespace-nowrap` (hérité de `buttonVariants`) force le texte à rester sur une ligne, poussant le bouton hors de l'écran
+## Correction de la responsivite de /taches
 
-## Solution proposée
+### Probleme identifie
+Sur l'ecran actuel (capture et verification en direct), on voit :
+- Le bouton "Suggestions IA" est coupe a droite
+- Le bouton "Nouvelle tache" est completement invisible
+- Les dates et icones de message a droite de chaque tache ne sont pas visibles
+- Les descriptions longues poussent le contenu hors de la zone visible
 
-### Changements dans `src/pages/Taches.tsx`
+### Cause racine
+Le `overflow-hidden` sur le conteneur `max-w-6xl` coupe tout ce qui depasse. Mais le vrai probleme est que le contenu interne (boutons, lignes de taches) n'est pas correctement contraint en largeur.
 
-**1) Changer le système de décalage sidebar**
-- Problème : `lg:pl-64` sur le `<main>` + `max-w-6xl` crée un débordement
-- Solution : Utiliser `lg:ml-64` (marge) au lieu de `lg:pl-64` (padding)
-  - Cela permet au flexbox de calculer correctement la largeur disponible
-  - Le `max-w-6xl mx-auto` centrera le contenu dans l'espace restant
+### Corrections (fichier unique : `src/pages/Taches.tsx`)
 
-Modification :
-```text
-<main className="flex-1 mesh-gradient min-h-screen lg:pl-64">
-```
-devient :
-```text
-<main className="flex-1 mesh-gradient min-h-screen lg:ml-64">
-```
+**1) Retirer `overflow-hidden` du conteneur principal**
+- Ligne 199 : `max-w-6xl mx-auto relative z-10 overflow-hidden`
+- Devient : `max-w-6xl mx-auto relative z-10`
+- Ce `overflow-hidden` cache les boutons et le contenu a droite
 
-**2) Ajouter un wrapper de padding interne**
-- Le wrapper actuel `<div className="p-4 lg:p-8">` est déjà présent et correct
+**2) Ajouter `w-full` au conteneur pour forcer le respect de la largeur parente**
+- Ligne 199 : ajouter `w-full` pour que `max-w-6xl` ne depasse jamais la largeur disponible
+- Resultat : `max-w-6xl mx-auto relative z-10 w-full`
 
-**3) Empêcher le débordement horizontal du conteneur central**
-- Ajouter `overflow-hidden` sur le wrapper `max-w-6xl` pour contenir tout débordement de contenu
+**3) Contraindre les lignes de taches avec `overflow-hidden` au bon niveau**
+- Ligne 303 : le conteneur de chaque tache (`p-4 flex items-center gap-4 ...`)
+- Ajouter `overflow-hidden` sur cette ligne pour que le texte long ne force pas la largeur du parent
+- Resultat : `p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item cursor-pointer overflow-hidden`
 
-Modification :
-```text
-<div className="max-w-6xl mx-auto relative z-10">
-```
-devient :
-```text
-<div className="max-w-6xl mx-auto relative z-10 overflow-hidden">
-```
+**4) Reduire le `gap` des lignes de taches sur mobile**
+- Ligne 303 : changer `gap-4` en `gap-2 sm:gap-4` pour gagner de l'espace sur petit ecran
 
-**4) Gérer les boutons sur petits écrans**
-- Les boutons utilisent `whitespace-nowrap` par défaut (dans `buttonVariants`)
-- Le texte est déjà masqué sur mobile avec `hidden sm:inline`
-- Mais entre `sm` (640px) et `lg` (1024px), le texte est visible et peut déborder
+**5) Masquer la date sur tres petit ecran**
+- Ligne 340 : `<span className="text-sm text-muted-foreground whitespace-nowrap">`
+- Ajouter `hidden sm:inline` pour masquer la date sous 640px et liberer de l'espace
 
-Solution : Ajouter `whitespace-normal` sur les boutons qui ont du texte long pour permettre le retour à la ligne si nécessaire, ou bien masquer le texte jusqu'à un breakpoint plus large.
-
-Pour rester cohérent avec le design actuel (texte masqué sur mobile), je propose de changer `hidden sm:inline` en `hidden lg:inline` sur les boutons "Messagerie", "Suggestions IA" et "Nouvelle tâche" pour que le texte ne s'affiche que sur desktop large.
-
-Modifications sur les 3 boutons :
-- `<span className="hidden sm:inline">Messagerie</span>` → `<span className="hidden md:inline">Messagerie</span>`
-- `<span className="hidden sm:inline">Suggestions IA</span>` → `<span className="hidden md:inline">Suggestions IA</span>`
-- `<span className="hidden sm:inline">Nouvelle tâche</span>` → `<span className="hidden md:inline">Nouvelle tâche</span>`
-
-Cela permet d'afficher uniquement les icônes sur tablette (640-767px), et le texte à partir de `md:` (768px) où il y a plus de place.
-
-## Résumé des modifications
-
-| Ligne | Avant | Après |
-|-------|-------|-------|
-| 197 | `lg:pl-64` | `lg:ml-64` |
-| 199 | `max-w-6xl mx-auto relative z-10` | `max-w-6xl mx-auto relative z-10 overflow-hidden` |
-| 230 | `hidden sm:inline` | `hidden md:inline` |
-| 245 | `hidden sm:inline` | `hidden md:inline` |
-| 249 | `hidden sm:inline` | `hidden md:inline` |
-
-## Vérification
-Après implémentation, tester dans un nouvel onglet navigateur :
-- À 1366px : sidebar + contenu centré, tous les boutons visibles
-- À 1024px : sidebar + contenu, boutons avec texte visibles
-- À 800px : sidebar mobile (hamburger), boutons avec texte visibles
-- À 640px : sidebar mobile, boutons sans texte (icônes seulement)
-- À 375px : mobile, tout visible et fonctionnel
+### Resume des changements
+- 1 fichier modifie : `src/pages/Taches.tsx`
+- 4 lignes impactees
+- Aucun changement fonctionnel, uniquement du CSS responsive
