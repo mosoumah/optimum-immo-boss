@@ -190,11 +190,11 @@ const Taches = () => {
   }
 
   return (
-    <div className="min-h-screen flex relative overflow-x-hidden">
+    <div className="h-screen flex relative overflow-hidden">
       <FloatingParticles count={25} />
       <DynamicSidebar onSignOut={handleSignOut} />
       
-      <main className="flex-1 mesh-gradient min-h-screen lg:ml-64">
+      <main className="flex-1 mesh-gradient h-screen overflow-y-auto lg:ml-64">
         <div className="p-4 lg:p-8">
           <div className="max-w-6xl mx-auto relative z-10 w-full">
           <motion.div 
