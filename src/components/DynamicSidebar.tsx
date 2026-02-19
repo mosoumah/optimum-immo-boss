@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
+  CalendarCheck,
   FileText,
   Receipt,
   TrendingUp,
@@ -33,6 +34,7 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard", roles: ["admin", "agent"] },
   { icon: Users, label: "Clients", path: "/clients", roles: ["admin", "agent"] },
+  { icon: CalendarCheck, label: "Réservations", path: "/reservations", roles: ["admin", "agent"] },
   { icon: FileText, label: "Devis", path: "/devis", roles: ["admin", "agent"] },
   { icon: Receipt, label: "Factures", path: "/factures", roles: ["admin", "agent"] },
   { icon: TrendingUp, label: "Revenus", path: "/revenus", roles: ["admin"] },

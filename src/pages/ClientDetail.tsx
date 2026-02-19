@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, ArrowLeft, FileText, Receipt, Mail, Phone } from "lucide-react";
+import { Users, ArrowLeft, FileText, Receipt, CalendarCheck, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,12 +31,26 @@ interface Facture {
   date: string;
 }
 
+interface Reservation {
+  id: string;
+  property_name: string;
+  date_arrivee: string;
+  date_depart: string;
+  montant_total: number;
+  statut: string;
+}
+
 const statutColors: Record<string, string> = {
   brouillon: "bg-muted text-muted-foreground",
   envoye: "bg-blue-500/20 text-blue-400",
   accepte: "bg-success/20 text-success",
   refuse: "bg-destructive/20 text-destructive",
   paye: "bg-success/20 text-success",
+  en_attente: "bg-warning/20 text-warning",
+  confirmee: "bg-blue-500/20 text-blue-400",
+  en_cours: "bg-success/20 text-success",
+  terminee: "bg-muted text-muted-foreground",
+  annulee: "bg-destructive/20 text-destructive",
   non_paye: "bg-warning/20 text-warning",
 };
 
@@ -46,6 +60,11 @@ const statutLabels: Record<string, string> = {
   accepte: "Accepté",
   refuse: "Refusé",
   paye: "Payée",
+  en_attente: "En attente",
+  confirmee: "Confirmée",
+  en_cours: "En cours",
+  terminee: "Terminée",
+  annulee: "Annulée",
   non_paye: "Non payée",
 };
 
@@ -55,12 +74,13 @@ const ClientDetail = () => {
   const [client, setClient] = useState<Client | null>(null);
   const [devis, setDevis] = useState<Devis[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchClientData = useCallback(async () => {
     if (!entrepriseId || !id) return;
 
-    const [clientRes, devisRes, facturesRes] = await Promise.all([
+    const [clientRes, devisRes, facturesRes, reservationsRes] = await Promise.all([
       supabase
         .from("clients")
         .select("*")
@@ -77,11 +97,17 @@ const ClientDetail = () => {
         .select("id, description, montant, statut, date")
         .eq("client_id", id)
         .order("date", { ascending: false }),
+      supabase
+        .from("reservations" as any)
+        .select("id, property_name, date_arrivee, date_depart, montant_total, statut")
+        .eq("client_id", id)
+        .order("created_at", { ascending: false }),
     ]);
 
     setClient(clientRes.data);
     setDevis(devisRes.data || []);
     setFactures(facturesRes.data || []);
+    setReservations((reservationsRes.data || []) as unknown as Reservation[]);
     setIsLoading(false);
   }, [entrepriseId, id]);
 
@@ -221,6 +247,33 @@ const ClientDetail = () => {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">Aucune facture pour ce client</p>
+              )}
+            </div>
+
+            <div className="p-6 rounded-xl border border-border/50 bg-card">
+              <div className="flex items-center gap-2 mb-4">
+                <CalendarCheck className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Réservations ({reservations.length})</h3>
+              </div>
+              {reservations.length > 0 ? (
+                <div className="space-y-2">
+                  {reservations.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                      <div>
+                        <div className="font-medium text-sm">{r.property_name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{formatCurrency(r.montant_total)}</span>
+                        <Badge className={statutColors[r.statut]}>{statutLabels[r.statut]}</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Aucune réservation pour ce client</p>
               )}
             </div>
           </motion.div>
