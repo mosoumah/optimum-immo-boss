@@ -1,154 +1,120 @@
 
 
-## Studio IA -- Accelerateur de Vente Immobiliere
+## Module Reservations -- Planification technique
 
-Module independant ajoute a l'application sans modifier aucune fonctionnalite existante.
-
----
-
-### 1. Base de donnees (2 nouvelles tables + 1 bucket storage)
-
-**Table `ai_generated_images`**
-| Colonne | Type | Description |
-|---------|------|-------------|
-| id | uuid (PK) | Identifiant unique |
-| entreprise_id | uuid (FK -> entreprises) | Entreprise proprietaire |
-| created_by | uuid | Utilisateur createur |
-| format | text | "instagram_post" ou "instagram_story" |
-| prompt_used | text | Prompt envoye a Gemini |
-| image_url | text | URL de l'image dans le bucket storage |
-| bien_description | text | Description du bien |
-| prix | text (nullable) | Prix affiche |
-| mention | text | "Disponible", "A vendre", "A louer" |
-| include_logo | boolean | Logo agence inclus |
-| include_phone | boolean | Numero de telephone inclus |
-| created_at | timestamptz | Date de creation |
-
-**Table `redesign_requests`**
-| Colonne | Type | Description |
-|---------|------|-------------|
-| id | uuid (PK) | Identifiant unique |
-| entreprise_id | uuid (FK -> entreprises) | Entreprise proprietaire |
-| created_by | uuid | Utilisateur createur |
-| original_image_url | text | URL de la photo originale |
-| result_image_url | text (nullable) | URL de l'image modifiee |
-| instruction | text | Instruction de modification |
-| status | text | "pending", "completed", "failed" |
-| created_at | timestamptz | Date de creation |
-
-**Table `studio_ia_quotas`**
-| Colonne | Type | Description |
-|---------|------|-------------|
-| id | uuid (PK) | Identifiant |
-| entreprise_id | uuid (FK -> entreprises, UNIQUE) | 1 ligne par entreprise |
-| plan | text | "standard", "pro", "premium" |
-| generations_used | integer | Nombre de generations ce mois |
-| month_year | text | "2026-02" pour reset mensuel |
-| updated_at | timestamptz | Derniere mise a jour |
-
-Limites par plan :
-- Standard : 10 generations/mois
-- Pro : 50 generations/mois  
-- Premium : 100 generations/mois
-
-**Bucket storage** : `studio-ia` (public) pour stocker les images generees et uploadees.
-
-**RLS** : Toutes les tables sont protegees par `entreprise_id = get_user_entreprise_id(auth.uid())`, accessibles aux roles admin et agent uniquement.
+Module totalement independant pour la gestion des locations (jour, semaine, mois).
 
 ---
 
-### 2. Edge Function : `studio-ia-generate`
+### 1. Base de donnees
 
-Une seule edge function qui gere deux types de requetes :
+**Nouvelle table `reservations`**
 
-**Type "visual"** (Onglet 1 - Creation visuel reseaux sociaux) :
-- Recoit : description du bien, prix, mention, options (logo, telephone), format
-- Utilise Lovable AI avec le modele `google/gemini-2.5-flash-image` pour generer l'image
-- Le prompt inclut les couleurs de branding de l'entreprise
-- Sauvegarde l'image base64 dans le bucket `studio-ia`
-- Enregistre la reference dans `ai_generated_images`
+| Colonne | Type | Default | Description |
+|---------|------|---------|-------------|
+| id | uuid (PK) | gen_random_uuid() | Identifiant |
+| entreprise_id | uuid | NOT NULL | Entreprise proprietaire |
+| client_id | uuid | NOT NULL | Reference au client (pas de FK formelle pour ne rien modifier) |
+| property_name | text | NOT NULL | Nom du bien (texte libre MVP) |
+| type_location | text | NOT NULL | "jour", "semaine", "mois" |
+| date_arrivee | date | NOT NULL | Date d'arrivee |
+| date_depart | date | NOT NULL | Date de depart |
+| prix_unitaire | numeric | 0 | Prix par unite (jour/semaine/mois) |
+| montant_total | numeric | 0 | Montant total calcule |
+| montant_paye | numeric | 0 | Montant deja paye |
+| caution | numeric | 0 | Caution versee |
+| statut | text | 'confirmee' | "en_attente", "confirmee", "en_cours", "terminee", "annulee" |
+| generer_facture | boolean | false | Option de generation de facture |
+| notes | text | NULL | Notes libres |
+| created_at | timestamptz | now() | Date de creation |
+| updated_at | timestamptz | now() | Derniere modification |
 
-**Type "redesign"** (Onglet 2 - Redesign et Modification IA) :
-- Recoit : URL de l'image originale + instruction textuelle
-- Utilise Lovable AI avec `google/gemini-2.5-flash-image` en mode edition d'image
-- Sauvegarde le resultat dans le bucket `studio-ia`
-- Met a jour `redesign_requests` avec l'URL du resultat
+**RLS** : Memes regles role-based que les autres tables :
+- Admin : acces a toutes les reservations de son entreprise
+- Agent : acces aux reservations des clients qui lui sont assignes (via jointure `clients.assigned_to`)
 
-**Verification quota** : Avant chaque generation, verifie le quota dans `studio_ia_quotas`. Si le mois a change, reset le compteur. Si le quota est depasse, retourne une erreur 403.
-
----
-
-### 3. Frontend
-
-**Fichier `src/pages/StudioIA.tsx`** -- Page principale du module
-
-Structure :
-- Meme layout que les autres pages (DynamicSidebar + FloatingParticles + h-screen flex overflow-hidden)
-- 2 onglets via le composant `Tabs` de shadcn/radix
-
-**Onglet 1 : "Creation Visuel Reseaux Sociaux"**
-- Formulaire :
-  - Textarea : description du bien
-  - Input : prix (optionnel, avec toggle afficher/masquer)
-  - Select : mention ("Disponible" / "A vendre" / "A louer")
-  - Switch : inclure logo agence
-  - Switch : inclure numero de telephone
-  - Select : format ("Instagram Post 1080x1080" / "Story 1080x1920")
-- Bouton "Creer visuel"
-- Zone de resultat avec l'image generee
-- Boutons : Telecharger / Regenerer
-- Compteur de quota restant affiche en haut
-
-**Onglet 2 : "Redesign et Modification IA"**
-- Upload d'image (drag & drop ou click)
-- Textarea : instruction de modification
-- Bouton "Modifier avec l'IA"
-- Affichage avant/apres cote a cote (ou empile sur mobile)
-- Boutons : Telecharger / Regenerer
-- Mention obligatoire sous l'image : "Simulation visuelle a titre illustratif"
-- Compteur de quota restant
-
-**Galerie** : En dessous de chaque onglet, affichage des generations precedentes de l'entreprise avec miniatures.
+Aucune FK formelle vers `clients` pour respecter la contrainte de ne modifier aucune table existante. La relation est geree cote application.
 
 ---
 
-### 4. Integration dans le menu lateral
+### 2. Frontend -- Fichiers a creer/modifier
 
-**Fichier `src/components/DynamicSidebar.tsx`** :
-- Ajouter une entree apres "Documents IA" :
-  - Icone : `ImagePlus` (lucide-react)
-  - Label : "Studio IA"
-  - Path : `/studio-ia`
+**Nouveau fichier : `src/pages/Reservations.tsx`**
+
+Structure de la page :
+- Layout standard : `DynamicSidebar` + `FloatingParticles` + `h-screen flex overflow-hidden`
+- Header avec bouton retour + titre "Reservations"
+
+**Bandeau de statistiques** (4 cartes en grille) :
+- Arrivees aujourd'hui : count des reservations avec `date_arrivee = today` et statut confirmee/en_cours
+- Departs aujourd'hui : count des reservations avec `date_depart = today`
+- Sejours en cours : count des reservations avec statut "en_cours"
+- Paiements en retard : count des reservations ou `montant_paye < montant_total` et `date_depart < today` et statut terminee
+
+**Bouton "Nouvelle reservation"** : ouvre un dialog de creation
+
+**Liste des reservations** : tableau avec nom client, bien, dates, montant, statut, actions
+
+**Nouveau fichier : `src/components/dialogs/ReservationDialog.tsx`**
+
+Formulaire de creation/edition :
+- Select client (charge depuis la table `clients` de l'entreprise)
+- Input texte : nom du bien
+- Select : type de location (jour/semaine/mois)
+- DatePicker : date arrivee
+- DatePicker : date depart
+- Input numerique : prix unitaire
+- Champ calcule automatique : montant total (nombre d'unites x prix unitaire)
+- Input numerique : montant paye
+- Input numerique : caution
+- Select : statut
+- Checkbox : "Generer facture automatiquement" (stocke le booleen, pas de logique facture pour le moment)
+
+Le calcul automatique du montant total :
+- Type jour : nombre de jours entre arrivee et depart x prix unitaire
+- Type semaine : nombre de semaines (arrondi) x prix unitaire
+- Type mois : nombre de mois (arrondi) x prix unitaire
+
+---
+
+### 3. Onglet Reservations dans la fiche client
+
+**Fichier modifie : `src/pages/ClientDetail.tsx`**
+
+Ajouter un troisieme bloc dans la section droite (apres Devis et Factures) :
+- Icone `CalendarCheck` + titre "Reservations (X)"
+- Liste des reservations du client avec : bien, dates, montant, statut
+- Meme style que les blocs Devis et Factures existants
+
+Cette modification est limitee a l'affichage en lecture seule. Aucune table existante n'est touchee.
+
+---
+
+### 4. Integration dans la navigation
+
+**Fichier modifie : `src/components/DynamicSidebar.tsx`**
+- Ajouter une entree apres "Clients" (ligne 35) :
+  - Icone : `CalendarCheck` (lucide-react)
+  - Label : "Reservations"
+  - Path : `/reservations`
   - Roles : `["admin", "agent"]`
 
----
-
-### 5. Route dans App.tsx
-
-Ajouter la route `/studio-ia` protegee par `RoleProtectedRoute` avec `allowedRoles={["admin", "agent"]}`, positionnee apres `/documents-ia`.
+**Fichier modifie : `src/App.tsx`**
+- Ajouter la route `/reservations` protegee par `RoleProtectedRoute` avec `allowedRoles={["admin", "agent"]}`
+- Positionner apres la route `/clients/:id`
 
 ---
 
-### 6. Configuration edge function
-
-Ajouter dans `supabase/config.toml` :
-```text
-[functions.studio-ia-generate]
-verify_jwt = false
-```
-
----
-
-### 7. Fichiers crees ou modifies
+### 5. Resume des fichiers
 
 | Fichier | Action |
 |---------|--------|
-| Migration SQL | Creer tables + bucket + RLS |
-| `supabase/functions/studio-ia-generate/index.ts` | Nouvelle edge function |
-| `supabase/config.toml` | Ajouter config function |
-| `src/pages/StudioIA.tsx` | Nouvelle page |
-| `src/components/DynamicSidebar.tsx` | Ajouter entree menu |
-| `src/App.tsx` | Ajouter route |
+| Migration SQL | Creer table `reservations` + RLS |
+| `src/pages/Reservations.tsx` | Nouveau -- page principale |
+| `src/components/dialogs/ReservationDialog.tsx` | Nouveau -- formulaire creation/edition |
+| `src/pages/ClientDetail.tsx` | Modifie -- ajout bloc Reservations |
+| `src/components/DynamicSidebar.tsx` | Modifie -- ajout entree menu |
+| `src/App.tsx` | Modifie -- ajout route |
 
-Aucune modification sur les tables, pages ou composants existants (clients, factures, revenus, dashboard, etc.).
+Aucune table existante modifiee. Aucun impact sur factures, revenus, depenses ou permissions.
 
