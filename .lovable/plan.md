@@ -1,120 +1,228 @@
 
 
-## Module Reservations -- Planification technique
+## Architecture Modulaire -- Vente, Location, Mixte
 
-Module totalement independant pour la gestion des locations (jour, semaine, mois).
+Restructuration d'Optimum Immo pour supporter trois profils d'agence via un systeme de configuration dynamique.
 
 ---
 
-### 1. Base de donnees
+### 1. Nouvelle table `agency_settings`
 
-**Nouvelle table `reservations`**
+| Colonne | Type | Default | Description |
+|---------|------|---------|-------------|
+| id | uuid (PK) | gen_random_uuid() | Identifiant |
+| entreprise_id | uuid (UNIQUE) | NOT NULL | 1 ligne par entreprise |
+| vente_enabled | boolean | true | Module Vente actif |
+| location_enabled | boolean | true | Module Location actif |
+| created_at | timestamptz | now() | Creation |
+| updated_at | timestamptz | now() | Mise a jour |
+
+RLS : lecture/ecriture limitee a `entreprise_id = get_user_entreprise_id(auth.uid())` pour les roles admin uniquement. Les agents ont un acces en lecture seule.
+
+A la premiere connexion d'une entreprise a la page Parametres, une ligne est inseree automatiquement avec les deux modules actifs par defaut.
+
+---
+
+### 2. Nouvelle table `properties` (Biens)
 
 | Colonne | Type | Default | Description |
 |---------|------|---------|-------------|
 | id | uuid (PK) | gen_random_uuid() | Identifiant |
 | entreprise_id | uuid | NOT NULL | Entreprise proprietaire |
-| client_id | uuid | NOT NULL | Reference au client (pas de FK formelle pour ne rien modifier) |
-| property_name | text | NOT NULL | Nom du bien (texte libre MVP) |
-| type_location | text | NOT NULL | "jour", "semaine", "mois" |
-| date_arrivee | date | NOT NULL | Date d'arrivee |
-| date_depart | date | NOT NULL | Date de depart |
-| prix_unitaire | numeric | 0 | Prix par unite (jour/semaine/mois) |
-| montant_total | numeric | 0 | Montant total calcule |
-| montant_paye | numeric | 0 | Montant deja paye |
-| caution | numeric | 0 | Caution versee |
-| statut | text | 'confirmee' | "en_attente", "confirmee", "en_cours", "terminee", "annulee" |
-| generer_facture | boolean | false | Option de generation de facture |
+| created_by | uuid | NULL | Createur |
+| nom | text | NOT NULL | Nom du bien |
+| adresse | text | NULL | Adresse |
+| type_bien | text | NOT NULL | "appartement", "maison", "terrain", "bureau", "commercial" |
+| surface | numeric | NULL | Surface en m2 |
+| prix | numeric | 0 | Prix de vente ou loyer de reference |
+| statut | text | 'disponible' | "disponible", "reserve", "vendu", "loue" |
+| description | text | NULL | Description libre |
+| nombre_pieces | integer | NULL | Nombre de pieces |
+| images | text[] | NULL | URLs des photos (stockees dans bucket existant ou nouveau) |
+| created_at | timestamptz | now() | Creation |
+| updated_at | timestamptz | now() | Mise a jour |
+
+RLS : meme pattern role-based que les autres tables (admin = toute l'entreprise, agent = biens qu'il a crees).
+
+---
+
+### 3. Table `reservations` (existante)
+
+La table `reservations` existe deja dans la base de donnees avec la bonne structure. Elle sera modifiee pour referencer `property_id` au lieu de `property_name` :
+
+**Colonne a ajouter** : `property_id uuid NULL` (reference vers `properties.id`, gere cote application)
+
+L'ancien champ `property_name` reste intact pour compatibilite. Le frontend utilisera `property_id` en priorite si disponible, sinon `property_name` comme fallback.
+
+---
+
+### 4. Nouvelle table `sales_transactions`
+
+| Colonne | Type | Default | Description |
+|---------|------|---------|-------------|
+| id | uuid (PK) | gen_random_uuid() | Identifiant |
+| entreprise_id | uuid | NOT NULL | Entreprise proprietaire |
+| client_id | uuid | NOT NULL | Acheteur (relation applicative) |
+| property_id | uuid | NOT NULL | Bien vendu (relation applicative) |
+| created_by | uuid | NULL | Agent responsable |
+| montant_vente | numeric | 0 | Prix de vente final |
+| commission | numeric | 0 | Commission agence |
+| date_vente | date | CURRENT_DATE | Date de la transaction |
+| statut | text | 'en_cours' | "en_cours", "sous_compromis", "finalisee", "annulee" |
 | notes | text | NULL | Notes libres |
-| created_at | timestamptz | now() | Date de creation |
-| updated_at | timestamptz | now() | Derniere modification |
+| created_at | timestamptz | now() | Creation |
+| updated_at | timestamptz | now() | Mise a jour |
 
-**RLS** : Memes regles role-based que les autres tables :
-- Admin : acces a toutes les reservations de son entreprise
-- Agent : acces aux reservations des clients qui lui sont assignes (via jointure `clients.assigned_to`)
-
-Aucune FK formelle vers `clients` pour respecter la contrainte de ne modifier aucune table existante. La relation est geree cote application.
+RLS : admin = toute l'entreprise, agent = ses propres transactions (`created_by = auth.uid()`).
 
 ---
 
-### 2. Frontend -- Fichiers a creer/modifier
+### 5. Logique conditionnelle d'affichage
 
-**Nouveau fichier : `src/pages/Reservations.tsx`**
+**Nouveau hook : `src/hooks/useAgencySettings.tsx`**
 
-Structure de la page :
-- Layout standard : `DynamicSidebar` + `FloatingParticles` + `h-screen flex overflow-hidden`
-- Header avec bouton retour + titre "Reservations"
+Ce hook charge les parametres `vente_enabled` et `location_enabled` depuis `agency_settings` et les met en cache via React Query.
 
-**Bandeau de statistiques** (4 cartes en grille) :
-- Arrivees aujourd'hui : count des reservations avec `date_arrivee = today` et statut confirmee/en_cours
-- Departs aujourd'hui : count des reservations avec `date_depart = today`
-- Sejours en cours : count des reservations avec statut "en_cours"
-- Paiements en retard : count des reservations ou `montant_paye < montant_total` et `date_depart < today` et statut terminee
+**Modifications dans `src/components/DynamicSidebar.tsx`** :
 
-**Bouton "Nouvelle reservation"** : ouvre un dialog de creation
+Le tableau `sidebarItems` actuel reste statique. On ajoute un filtrage dynamique supplementaire :
+- "Biens" : toujours visible si vente OU location est active
+- "Reservations" : visible uniquement si `location_enabled = true`
+- "Transactions" : visible uniquement si `vente_enabled = true`
+- Tous les autres menus restent inchanges
 
-**Liste des reservations** : tableau avec nom client, bien, dates, montant, statut, actions
+Chaque item de sidebar recevra un champ optionnel `requires?: "vente" | "location"` qui sera croise avec les settings de l'agence.
 
-**Nouveau fichier : `src/components/dialogs/ReservationDialog.tsx`**
+**Nouvelles entrees dans le menu** :
 
-Formulaire de creation/edition :
-- Select client (charge depuis la table `clients` de l'entreprise)
-- Input texte : nom du bien
-- Select : type de location (jour/semaine/mois)
-- DatePicker : date arrivee
-- DatePicker : date depart
-- Input numerique : prix unitaire
-- Champ calcule automatique : montant total (nombre d'unites x prix unitaire)
-- Input numerique : montant paye
-- Input numerique : caution
-- Select : statut
-- Checkbox : "Generer facture automatiquement" (stocke le booleen, pas de logique facture pour le moment)
+```text
+Position actuelle :
+  Tableau de bord
+  Clients
+  Devis
+  Factures
+  ...
 
-Le calcul automatique du montant total :
-- Type jour : nombre de jours entre arrivee et depart x prix unitaire
-- Type semaine : nombre de semaines (arrondi) x prix unitaire
-- Type mois : nombre de mois (arrondi) x prix unitaire
-
----
-
-### 3. Onglet Reservations dans la fiche client
-
-**Fichier modifie : `src/pages/ClientDetail.tsx`**
-
-Ajouter un troisieme bloc dans la section droite (apres Devis et Factures) :
-- Icone `CalendarCheck` + titre "Reservations (X)"
-- Liste des reservations du client avec : bien, dates, montant, statut
-- Meme style que les blocs Devis et Factures existants
-
-Cette modification est limitee a l'affichage en lecture seule. Aucune table existante n'est touchee.
+Nouveau :
+  Tableau de bord
+  Clients
+  Biens           <-- NOUVEAU (icone Building)
+  Reservations    <-- NOUVEAU (icone CalendarCheck, si location active)
+  Transactions    <-- NOUVEAU (icone Handshake, si vente active)
+  Devis
+  Factures
+  ...
+```
 
 ---
 
-### 4. Integration dans la navigation
+### 6. Nouvelles pages
 
-**Fichier modifie : `src/components/DynamicSidebar.tsx`**
-- Ajouter une entree apres "Clients" (ligne 35) :
-  - Icone : `CalendarCheck` (lucide-react)
-  - Label : "Reservations"
-  - Path : `/reservations`
-  - Roles : `["admin", "agent"]`
+| Page | Route | Description |
+|------|-------|-------------|
+| `src/pages/Biens.tsx` | `/biens` | Catalogue des biens : liste, creation, edition, filtres par statut/type |
+| `src/pages/BienDetail.tsx` | `/biens/:id` | Fiche bien avec historique reservations + transactions liees |
+| `src/pages/Reservations.tsx` | `/reservations` | Page reservations (bandeau stats + liste + dialog creation) |
+| `src/pages/Transactions.tsx` | `/transactions` | Page transactions de vente (bandeau stats + liste + dialog creation) |
 
-**Fichier modifie : `src/App.tsx`**
-- Ajouter la route `/reservations` protegee par `RoleProtectedRoute` avec `allowedRoles={["admin", "agent"]}`
-- Positionner apres la route `/clients/:id`
+**Dialogs** :
+- `src/components/dialogs/BienDialog.tsx` : creation/edition d'un bien
+- `src/components/dialogs/ReservationDialog.tsx` : creation/edition reservation (select client + select bien)
+- `src/components/dialogs/TransactionDialog.tsx` : creation/edition transaction de vente
 
 ---
 
-### 5. Resume des fichiers
+### 7. Section Parametres -- Mode d'activite
+
+**Modification de `src/pages/Parametres.tsx`** :
+
+Ajouter une nouvelle section "Mode d'activite de l'agence" entre la section Entreprise et les boutons d'action :
+- Switch "Vente immobiliere" (active/desactive le module Transactions)
+- Switch "Location immobiliere" (active/desactive le module Reservations)
+- Au moins un des deux doit rester actif (validation cote frontend)
+
+---
+
+### 8. Integration dans la fiche client
+
+**Modification de `src/pages/ClientDetail.tsx`** :
+
+Ajouter conditionnellement (selon les settings de l'agence) :
+- Bloc "Reservations" : si location active, afficher les reservations du client
+- Bloc "Transactions" : si vente active, afficher les transactions du client
+
+Ces blocs s'ajoutent apres les blocs Devis et Factures existants, sans les modifier.
+
+---
+
+### 9. Routes dans App.tsx
+
+Nouvelles routes protegees par `RoleProtectedRoute` avec `allowedRoles={["admin", "agent"]}` :
+- `/biens`
+- `/biens/:id`
+- `/reservations`
+- `/transactions`
+
+---
+
+### 10. Impact sur l'existant
+
+| Element | Impact |
+|---------|--------|
+| Tables existantes | AUCUN -- aucune table modifiee |
+| Factures / Revenus / Depenses | AUCUN |
+| Permissions (app_permission) | AUCUN pour le MVP -- les nouvelles pages heritent des roles admin/agent |
+| Dashboard | AUCUN |
+| Clients | Ajout de blocs en lecture seule dans ClientDetail uniquement |
+| Sidebar | Ajout d'entrees conditionnelles, aucune suppression |
+| Table reservations existante | Ajout d'une colonne `property_id` nullable, champ `property_name` conserve |
+
+---
+
+### 11. Strategie d'integration progressive
+
+**Phase 1** : Base de donnees
+- Creer `agency_settings`, `properties`, `sales_transactions`
+- Ajouter `property_id` a `reservations`
+- RLS sur toutes les nouvelles tables
+
+**Phase 2** : Hook et navigation conditionnelle
+- Creer `useAgencySettings`
+- Modifier `DynamicSidebar` pour le filtrage conditionnel
+- Ajouter la section Mode d'activite dans Parametres
+
+**Phase 3** : Module Biens
+- Page Biens + BienDetail + BienDialog
+- Routes dans App.tsx
+
+**Phase 4** : Module Reservations
+- Page Reservations + ReservationDialog
+- Lien avec properties via `property_id`
+
+**Phase 5** : Module Transactions
+- Page Transactions + TransactionDialog
+- Lien avec properties via `property_id`
+
+**Phase 6** : Integration fiche client
+- Blocs conditionnels Reservations et Transactions dans ClientDetail
+
+---
+
+### 12. Resume des fichiers
 
 | Fichier | Action |
 |---------|--------|
-| Migration SQL | Creer table `reservations` + RLS |
-| `src/pages/Reservations.tsx` | Nouveau -- page principale |
-| `src/components/dialogs/ReservationDialog.tsx` | Nouveau -- formulaire creation/edition |
-| `src/pages/ClientDetail.tsx` | Modifie -- ajout bloc Reservations |
-| `src/components/DynamicSidebar.tsx` | Modifie -- ajout entree menu |
-| `src/App.tsx` | Modifie -- ajout route |
-
-Aucune table existante modifiee. Aucun impact sur factures, revenus, depenses ou permissions.
+| Migration SQL | Creer tables + modifier reservations + RLS |
+| `src/hooks/useAgencySettings.tsx` | Nouveau -- hook settings agence |
+| `src/pages/Biens.tsx` | Nouveau -- catalogue biens |
+| `src/pages/BienDetail.tsx` | Nouveau -- fiche bien |
+| `src/pages/Reservations.tsx` | Nouveau -- gestion reservations |
+| `src/pages/Transactions.tsx` | Nouveau -- gestion transactions vente |
+| `src/components/dialogs/BienDialog.tsx` | Nouveau -- formulaire bien |
+| `src/components/dialogs/ReservationDialog.tsx` | Nouveau -- formulaire reservation |
+| `src/components/dialogs/TransactionDialog.tsx` | Nouveau -- formulaire transaction |
+| `src/components/DynamicSidebar.tsx` | Modifie -- ajout entrees conditionnelles |
+| `src/pages/Parametres.tsx` | Modifie -- section Mode d'activite |
+| `src/pages/ClientDetail.tsx` | Modifie -- blocs conditionnels |
+| `src/App.tsx` | Modifie -- ajout routes |
 
