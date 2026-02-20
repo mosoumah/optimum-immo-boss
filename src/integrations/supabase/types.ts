@@ -574,6 +574,63 @@ export type Database = {
           },
         ]
       }
+      reservations: {
+        Row: {
+          caution: number
+          client_id: string
+          created_at: string
+          date_arrivee: string
+          date_depart: string
+          entreprise_id: string
+          generer_facture: boolean
+          id: string
+          montant_paye: number
+          montant_total: number
+          notes: string | null
+          prix_unitaire: number
+          property_name: string
+          statut: string
+          type_location: string
+          updated_at: string
+        }
+        Insert: {
+          caution?: number
+          client_id: string
+          created_at?: string
+          date_arrivee: string
+          date_depart: string
+          entreprise_id: string
+          generer_facture?: boolean
+          id?: string
+          montant_paye?: number
+          montant_total?: number
+          notes?: string | null
+          prix_unitaire?: number
+          property_name: string
+          statut?: string
+          type_location: string
+          updated_at?: string
+        }
+        Update: {
+          caution?: number
+          client_id?: string
+          created_at?: string
+          date_arrivee?: string
+          date_depart?: string
+          entreprise_id?: string
+          generer_facture?: boolean
+          id?: string
+          montant_paye?: number
+          montant_total?: number
+          notes?: string | null
+          prix_unitaire?: number
+          property_name?: string
+          statut?: string
+          type_location?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       revenus: {
         Row: {
           created_at: string
