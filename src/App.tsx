@@ -13,7 +13,6 @@ import ProfilEntreprise from "./pages/ProfilEntreprise";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
-import Reservations from "./pages/Reservations";
 import Devis from "./pages/Devis";
 import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
@@ -70,14 +69,6 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <ClientDetail />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/reservations"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Reservations />
                 </RoleProtectedRoute>
               }
             />
