@@ -97,7 +97,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         )}
       </motion.div>
 
-      <nav className="flex-1 px-3 space-y-0.5 overflow-hidden">
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {filteredItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           return (
