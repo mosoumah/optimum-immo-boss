@@ -5,18 +5,22 @@ import {
   Users,
   FileText,
   Receipt,
-  TrendingUp,
   TrendingDown,
   CheckSquare,
   Sparkles,
   Plus,
   Search,
   BarChart3,
+  LayoutDashboard,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useEntreprise } from "@/hooks/useEntreprise";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
 import { DevisDialog } from "@/components/dialogs/DevisDialog";
@@ -25,25 +29,24 @@ import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
-import { FinancialChart } from "@/components/FinancialChart";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
 
-interface DashboardStats {
-  revenus: number;
-  depenses: number;
-  facturesNonPayees: number;
-}
+// Dashboard components
+import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummary";
+import { SimpleDailyActivity } from "@/components/dashboard/SimpleDailyActivity";
+import { SimpleChart } from "@/components/dashboard/SimpleChart";
+import { AdvancedFinanceDetails } from "@/components/dashboard/AdvancedFinanceDetails";
+import { AdvancedPropertyMetrics } from "@/components/dashboard/AdvancedPropertyMetrics";
+import { AdvancedTopProperties } from "@/components/dashboard/AdvancedTopProperties";
+import { AdvancedAlerts } from "@/components/dashboard/AdvancedAlerts";
+import { AdvancedFinancialChartWrapper } from "@/components/dashboard/AdvancedFinancialChartWrapper";
+import { AdvancedAISummary } from "@/components/dashboard/AdvancedAISummary";
+import { PremiumUpgradeCard } from "@/components/dashboard/PremiumUpgradeCard";
 
 interface Profile {
   nom: string;
   entreprise_id: string | null;
-}
-
-interface Tache {
-  id: string;
-  titre: string;
-  statut: string;
 }
 
 interface Client {
@@ -52,15 +55,31 @@ interface Client {
   email: string | null;
 }
 
+type DashboardMode = "simple" | "advanced";
+
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { isAdmin, isAgent, loading: roleLoading } = useUserRole();
+  const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
+  const { isPremium, isLoading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [stats, setStats] = useState<DashboardStats>({ revenus: 0, depenses: 0, facturesNonPayees: 0 });
-  const [taches, setTaches] = useState<Tache[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Dashboard mode with localStorage persistence
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(() => {
+    const saved = localStorage.getItem("dashboard-mode");
+    return (saved === "advanced" ? "advanced" : "simple") as DashboardMode;
+  });
+
+  const handleModeChange = (mode: DashboardMode) => {
+    setDashboardMode(mode);
+    localStorage.setItem("dashboard-mode", mode);
+  };
+
+  // Fetch dashboard data from views
+  const dashboardData = useDashboardData(entrepriseId, dashboardMode, isPremium);
 
   // Dialog states
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
@@ -70,7 +89,7 @@ const Dashboard = () => {
   const [tacheDialogOpen, setTacheDialogOpen] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
 
-  const fetchDashboardData = async () => {
+  const fetchProfileAndClients = async () => {
     if (!user) return;
 
     const { data: profileData } = await supabase
@@ -82,115 +101,34 @@ const Dashboard = () => {
     if (profileData) {
       setProfile({ nom: profileData.nom, entreprise_id: profileData.entreprise_id });
 
-      const entrepriseId = profileData.entreprise_id;
-
-      if (entrepriseId) {
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-
-        // Only fetch revenus/depenses for admin
-        if (isAdmin) {
-          const { data: revenusData } = await supabase
-            .from("revenus")
-            .select("montant")
-            .eq("entreprise_id", entrepriseId)
-            .gte("date", startOfMonth.toISOString().split("T")[0]);
-
-          const totalRevenus = revenusData?.reduce((sum, r) => sum + Number(r.montant), 0) || 0;
-
-          const { data: depensesData } = await supabase
-            .from("depenses")
-            .select("montant")
-            .eq("entreprise_id", entrepriseId)
-            .gte("date", startOfMonth.toISOString().split("T")[0]);
-
-          const totalDepenses = depensesData?.reduce((sum, d) => sum + Number(d.montant), 0) || 0;
-
-          const { count: unpaidCount } = await supabase
-            .from("factures")
-            .select("*", { count: "exact", head: true })
-            .eq("entreprise_id", entrepriseId)
-            .eq("statut", "non_paye");
-
-          setStats({
-            revenus: totalRevenus,
-            depenses: totalDepenses,
-            facturesNonPayees: unpaidCount || 0,
-          });
-        }
-
-        // Fetch taches - RLS will filter based on role
-        const today = new Date().toISOString().split("T")[0];
-        const { data: tachesData } = await supabase
-          .from("taches")
-          .select("id, titre, statut")
-          .eq("entreprise_id", entrepriseId)
-          .eq("date", today)
-          .eq("statut", "a_faire")
-          .limit(5);
-
-        setTaches(tachesData || []);
-
-        // Fetch clients - RLS will filter based on role
+      if (profileData.entreprise_id) {
         const { data: clientsData } = await supabase
           .from("clients")
           .select("id, nom, email")
-          .eq("entreprise_id", entrepriseId)
+          .eq("entreprise_id", profileData.entreprise_id)
           .order("created_at", { ascending: false })
           .limit(3);
 
         setClients(clientsData || []);
       }
     }
-
     setIsLoading(false);
   };
 
   useEffect(() => {
     if (!roleLoading && user) {
-      fetchDashboardData().catch((err) => {
+      fetchProfileAndClients().catch((err) => {
         console.error("Dashboard data fetch error:", err);
         setIsLoading(false);
       });
     } else if (!user && !roleLoading) {
       setIsLoading(false);
     }
-  }, [user, isAdmin, roleLoading]);
+  }, [user, roleLoading]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
-  };
-
-  const markTaskDone = async (taskId: string) => {
-    await supabase.from("taches").update({ statut: "fait" }).eq("id", taskId);
-    setTaches(taches.filter(t => t.id !== taskId));
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("fr-GN", {
-      style: "decimal",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount) + " GNF";
-  };
-
-  // Build stats display based on role
-  const getStatsDisplay = () => {
-    if (isAdmin) {
-      return [
-        { label: "Revenus du mois", value: formatCurrency(stats.revenus), positive: true, icon: TrendingUp },
-        { label: "Dépenses du mois", value: formatCurrency(stats.depenses), positive: false, icon: TrendingDown },
-        { label: "Bénéfice estimé", value: formatCurrency(stats.revenus - stats.depenses), positive: stats.revenus > stats.depenses, icon: TrendingUp },
-        { label: "Factures non payées", value: String(stats.facturesNonPayees), positive: stats.facturesNonPayees === 0, icon: Receipt },
-      ];
-    }
-    // Agent sees limited stats
-    return [
-      { label: "Tâches du jour", value: String(taches.length), positive: true, icon: CheckSquare },
-      { label: "Clients assignés", value: String(clients.length), positive: true, icon: Users },
-    ];
   };
 
   // Build quick actions based on role
@@ -213,7 +151,7 @@ const Dashboard = () => {
     return actions;
   };
 
-  if (isLoading || roleLoading) {
+  if (isLoading || roleLoading || entrepriseLoading || subLoading) {
     return (
       <div className="h-screen flex items-center justify-center mesh-gradient overflow-hidden">
         <motion.div
@@ -228,7 +166,6 @@ const Dashboard = () => {
     );
   }
 
-  const statsDisplay = getStatsDisplay();
   const quickActions = getQuickActions();
 
   return (
@@ -266,7 +203,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-2 lg:p-4 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 57px)' }}>
+        <div className="p-2 lg:p-4 flex flex-col overflow-y-auto" style={{ height: 'calc(100vh - 57px)' }}>
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
@@ -274,10 +211,45 @@ const Dashboard = () => {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="mb-2 flex-shrink-0"
           >
-            <h1 className="text-lg lg:text-2xl font-extrabold mb-0.5 tracking-tight">
-              Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
-            </h1>
-            <p className="text-muted-foreground text-xs">Voici un aperçu de votre activité aujourd'hui</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-lg lg:text-2xl font-extrabold mb-0.5 tracking-tight">
+                  Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
+                </h1>
+                <p className="text-muted-foreground text-xs">Voici un aperçu de votre activité aujourd'hui</p>
+              </div>
+              {/* Mode Toggle */}
+              {isAdmin && (
+                <div className="flex items-center gap-1 bg-secondary/30 rounded-lg p-1">
+                  <Button
+                    variant={dashboardMode === "simple" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleModeChange("simple")}
+                    className={`rounded-md h-8 px-3 text-xs ${
+                      dashboardMode === "simple"
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-secondary/50"
+                    }`}
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />
+                    Simple
+                  </Button>
+                  <Button
+                    variant={dashboardMode === "advanced" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleModeChange("advanced")}
+                    className={`rounded-md h-8 px-3 text-xs ${
+                      dashboardMode === "advanced"
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-secondary/50"
+                    }`}
+                  >
+                    <Zap className="w-3.5 h-3.5 mr-1.5" />
+                    Avancé
+                  </Button>
+                </div>
+              )}
+            </div>
           </motion.div>
 
           {/* Quick Actions Section */}
@@ -307,130 +279,114 @@ const Dashboard = () => {
             ))}
           </motion.div>
 
-          {/* Fluid Gradient Separator */}
+          {/* Separator */}
           <div className="flex-shrink-0 h-px w-full my-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
-          {/* KPI Cards Section */}
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            transition={{ duration: 0.5, delay: 0.2 }} 
-            className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-2 lg:gap-3 flex-shrink-0`}
-          >
-            {statsDisplay.map((stat, index) => (
-              <motion.div 
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.25 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                className="card-kpi p-3 lg:p-4 rounded-xl"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="kpi-label text-xs">{stat.label}</span>
-                  <div className={`p-1.5 rounded-lg ${stat.positive ? "bg-success/10 ring-1 ring-success/20" : "bg-destructive/10 ring-1 ring-destructive/20"}`}>
-                    <stat.icon className={`w-3.5 h-3.5 ${stat.positive ? "text-success" : "text-destructive"}`} />
+          {/* Dashboard Content */}
+          {dashboardMode === "simple" ? (
+            <div className="space-y-3 flex-shrink-0">
+              {/* Ligne 1 - Résumé financier */}
+              {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
+
+              {/* Separator */}
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Ligne 2 - Activité du jour */}
+              {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
+
+              {/* Separator */}
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Ligne 3 - Graphique + Ligne 4 - Clients */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3">
+                {entrepriseId && (
+                  <div className="lg:col-span-2">
+                    <SimpleChart entrepriseId={entrepriseId} />
                   </div>
-                </div>
+                )}
+
                 <motion.div 
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.4 + index * 0.05 }}
-                  className="text-base lg:text-lg font-bold mb-1.5 break-words"
+                  initial={{ opacity: 0, x: 20 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  transition={{ duration: 0.5, delay: 0.4 }} 
+                  className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col"
                 >
-                  {stat.value}
+                  <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                    <h2 className="section-title-premium flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      Clients récents
+                    </h2>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-xl h-9 w-9">
+                        <Plus className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    {clients.length > 0 ? (
+                      clients.map((client, index) => (
+                        <motion.div 
+                          key={client.id} 
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
+                            <Users className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{client.nom}</div>
+                            <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
+                          </div>
+                          <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs hover:bg-primary/10 hover:text-primary rounded-lg">
+                              Voir
+                            </Button>
+                          </Link>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                        <p className="text-xs">Aucun client</p>
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
-                <div className="h-0.5 w-full bg-secondary/40 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "60%" }}
-                    transition={{ duration: 0.8, delay: 0.5 + index * 0.05, ease: "easeOut" }}
-                    className={`h-full rounded-full ${stat.positive ? "bg-gradient-to-r from-success/60 to-success" : "bg-gradient-to-r from-destructive/60 to-destructive"}`}
-                  />
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Fluid Gradient Separator */}
-          <div className="flex-shrink-0 h-px w-full my-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3 flex-1 min-h-0">
-            {isAdmin && (
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }} 
-                animate={{ opacity: 1, x: 0 }} 
-                transition={{ duration: 0.5, delay: 0.35 }} 
-                className="lg:col-span-2 p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0"
-              >
-                <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                  <h2 className="section-title-premium flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    Analyse financière
-                  </h2>
-                  <div className="p-2 rounded-xl bg-secondary/50">
-                    <BarChart3 className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                </div>
-                <div className="flex-1 min-h-0">
-                  {profile?.entreprise_id && (
-                    <FinancialChart entrepriseId={profile.entreprise_id} />
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              transition={{ duration: 0.5, delay: 0.4 }} 
-              className={`p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0 ${!isAdmin ? 'lg:col-span-2' : ''}`}
-            >
-              <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                <h2 className="section-title-premium flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  {isAdmin ? "Clients récents" : "Mes clients"}
-                </h2>
-                {isAdmin && (
-                  <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-xl h-9 w-9">
-                    <Plus className="w-5 h-5" />
-                  </Button>
-                )}
               </div>
-              <div className="space-y-2 flex-1">
-                {clients.length > 0 ? (
-                  clients.map((client, index) => (
-                    <motion.div 
-                      key={client.id} 
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
-                      className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
-                        <Users className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{client.nom}</div>
-                        <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
-                      </div>
-                      <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs hover:bg-primary/10 hover:text-primary rounded-lg">
-                          Voir
-                        </Button>
-                      </Link>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground">
-                    <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                    <p className="text-xs">Aucun client</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
+            </div>
+          ) : dashboardMode === "advanced" && isPremium ? (
+            <div className="space-y-3 flex-shrink-0">
+              {/* Ligne 1 - Finances détaillées */}
+              {dashboardData.advancedFinance && <AdvancedFinanceDetails data={dashboardData.advancedFinance} />}
 
-          </div>
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Ligne 2 - Indicateurs immobiliers */}
+              {dashboardData.advancedProperty && <AdvancedPropertyMetrics data={dashboardData.advancedProperty} />}
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Ligne 3 - Top 3 + Ligne 4 - Alertes */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-3">
+                <AdvancedTopProperties data={dashboardData.topProperties} />
+                <AdvancedAlerts data={dashboardData.alerts} />
+              </div>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Ligne 5 - Graphiques séparés */}
+              {entrepriseId && <AdvancedFinancialChartWrapper entrepriseId={entrepriseId} />}
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Ligne 6 - Résumé IA */}
+              {entrepriseId && <AdvancedAISummary entrepriseId={entrepriseId} />}
+            </div>
+          ) : (
+            <PremiumUpgradeCard />
+          )}
         </div>
       </main>
 
@@ -441,37 +397,37 @@ const Dashboard = () => {
             open={clientDialogOpen}
             onOpenChange={setClientDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchDashboardData}
+            onSuccess={fetchProfileAndClients}
           />
           <DevisDialog
             open={devisDialogOpen}
             onOpenChange={setDevisDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchDashboardData}
+            onSuccess={fetchProfileAndClients}
           />
           <FactureDialog
             open={factureDialogOpen}
             onOpenChange={setFactureDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchDashboardData}
+            onSuccess={fetchProfileAndClients}
           />
           <DepenseDialog
             open={depenseDialogOpen}
             onOpenChange={setDepenseDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchDashboardData}
+            onSuccess={fetchProfileAndClients}
           />
           <TacheDialog
             open={tacheDialogOpen}
             onOpenChange={setTacheDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchDashboardData}
+            onSuccess={fetchProfileAndClients}
           />
           <DocumentDialog
             open={documentDialogOpen}
             onOpenChange={setDocumentDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchDashboardData}
+            onSuccess={fetchProfileAndClients}
           />
         </>
       )}
