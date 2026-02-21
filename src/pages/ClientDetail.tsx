@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, ArrowLeft, FileText, Receipt, Mail, Phone } from "lucide-react";
+import { Users, ArrowLeft, FileText, Receipt, Mail, Phone, CalendarCheck, Handshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { useAgencySettings } from "@/hooks/useAgencySettings";
 
 interface Client {
   id: string;
@@ -52,38 +53,36 @@ const statutLabels: Record<string, string> = {
 const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
+  const { venteEnabled, locationEnabled } = useAgencySettings();
   const [client, setClient] = useState<Client | null>(null);
   const [devis, setDevis] = useState<Devis[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchClientData = useCallback(async () => {
     if (!entrepriseId || !id) return;
 
-    const [clientRes, devisRes, facturesRes] = await Promise.all([
-      supabase
-        .from("clients")
-        .select("*")
-        .eq("id", id)
-        .eq("entreprise_id", entrepriseId)
-        .maybeSingle(),
-      supabase
-        .from("devis")
-        .select("id, description, montant, statut, date")
-        .eq("client_id", id)
-        .order("date", { ascending: false }),
-      supabase
-        .from("factures")
-        .select("id, description, montant, statut, date")
-        .eq("client_id", id)
-        .order("date", { ascending: false }),
-    ]);
+    const clientRes = await supabase.from("clients").select("*").eq("id", id).eq("entreprise_id", entrepriseId).maybeSingle();
+    const devisRes = await supabase.from("devis").select("id, description, montant, statut, date").eq("client_id", id).order("date", { ascending: false });
+    const facturesRes = await supabase.from("factures").select("id, description, montant, statut, date").eq("client_id", id).order("date", { ascending: false });
 
     setClient(clientRes.data);
     setDevis(devisRes.data || []);
     setFactures(facturesRes.data || []);
+
+    if (locationEnabled) {
+      const resRes = await supabase.from("reservations").select("id, property_name, date_arrivee, date_depart, montant_total, statut").eq("client_id", id).order("date_arrivee", { ascending: false });
+      setReservations(resRes.data || []);
+    }
+    if (venteEnabled) {
+      const transRes = await supabase.from("sales_transactions").select("id, montant_vente, date_vente, statut, properties(nom)").eq("client_id", id).order("date_vente", { ascending: false });
+      setTransactions(transRes.data || []);
+    }
+
     setIsLoading(false);
-  }, [entrepriseId, id]);
+  }, [entrepriseId, id, locationEnabled, venteEnabled]);
 
   useEffect(() => {
     if (entrepriseId && id) {
@@ -223,6 +222,58 @@ const ClientDetail = () => {
                 <p className="text-muted-foreground text-sm">Aucune facture pour ce client</p>
               )}
             </div>
+
+            {/* Reservations block */}
+            {locationEnabled && (
+              <div className="p-6 rounded-xl border border-border/50 bg-card">
+                <div className="flex items-center gap-2 mb-4">
+                  <CalendarCheck className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Réservations ({reservations.length})</h3>
+                </div>
+                {reservations.length > 0 ? (
+                  <div className="space-y-2">
+                    {reservations.map((r: any) => (
+                      <div key={r.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                        <div>
+                          <div className="font-medium text-sm">{r.property_name}</div>
+                          <div className="text-xs text-muted-foreground">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{formatCurrency(r.montant_total)}</span>
+                          <Badge className={statutColors[r.statut] || "bg-muted text-muted-foreground"}>{r.statut}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="text-muted-foreground text-sm">Aucune réservation pour ce client</p>}
+              </div>
+            )}
+
+            {/* Transactions block */}
+            {venteEnabled && (
+              <div className="p-6 rounded-xl border border-border/50 bg-card">
+                <div className="flex items-center gap-2 mb-4">
+                  <Handshake className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Transactions ({transactions.length})</h3>
+                </div>
+                {transactions.length > 0 ? (
+                  <div className="space-y-2">
+                    {transactions.map((t: any) => (
+                      <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                        <div>
+                          <div className="font-medium text-sm">{t.properties?.nom || "—"}</div>
+                          <div className="text-xs text-muted-foreground">{formatDate(t.date_vente)}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{formatCurrency(t.montant_vente)}</span>
+                          <Badge className={statutColors[t.statut] || "bg-muted text-muted-foreground"}>{t.statut}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="text-muted-foreground text-sm">Aucune transaction pour ce client</p>}
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

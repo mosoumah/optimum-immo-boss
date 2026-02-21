@@ -16,10 +16,14 @@ import {
   Shield,
   Menu,
   X,
+  Building,
+  CalendarCheck,
+  Handshake,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAgencySettings } from "@/hooks/useAgencySettings";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -28,11 +32,15 @@ interface SidebarItem {
   label: string;
   path: string;
   roles: ("admin" | "agent" | "client")[];
+  requires?: "vente" | "location";
 }
 
 const sidebarItems: SidebarItem[] = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard", roles: ["admin", "agent"] },
   { icon: Users, label: "Clients", path: "/clients", roles: ["admin", "agent"] },
+  { icon: Building, label: "Biens", path: "/biens", roles: ["admin", "agent"] },
+  { icon: CalendarCheck, label: "Réservations", path: "/reservations", roles: ["admin", "agent"], requires: "location" },
+  { icon: Handshake, label: "Transactions", path: "/transactions", roles: ["admin", "agent"], requires: "vente" },
   { icon: FileText, label: "Devis", path: "/devis", roles: ["admin", "agent"] },
   { icon: Receipt, label: "Factures", path: "/factures", roles: ["admin", "agent"] },
   { icon: TrendingUp, label: "Revenus", path: "/revenus", roles: ["admin"] },
@@ -52,11 +60,15 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
   const { role, isAdmin } = useUserRole();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { venteEnabled, locationEnabled } = useAgencySettings();
   const [isOpen, setIsOpen] = useState(false);
 
-  const filteredItems = sidebarItems.filter(
-    (item) => role && item.roles.includes(role as "admin" | "agent" | "client")
-  );
+  const filteredItems = sidebarItems.filter((item) => {
+    if (!role || !item.roles.includes(role as "admin" | "agent" | "client")) return false;
+    if (item.requires === "vente" && !venteEnabled) return false;
+    if (item.requires === "location" && !locationEnabled) return false;
+    return true;
+  });
 
   const handleLinkClick = () => {
     if (isMobile) {

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      agency_settings: {
+        Row: {
+          created_at: string
+          entreprise_id: string
+          id: string
+          location_enabled: boolean
+          updated_at: string
+          vente_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          entreprise_id: string
+          id?: string
+          location_enabled?: boolean
+          updated_at?: string
+          vente_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          entreprise_id?: string
+          id?: string
+          location_enabled?: boolean
+          updated_at?: string
+          vente_enabled?: boolean
+        }
+        Relationships: []
+      }
       ai_generated_images: {
         Row: {
           bien_description: string
@@ -533,6 +560,57 @@ export type Database = {
           },
         ]
       }
+      properties: {
+        Row: {
+          adresse: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entreprise_id: string
+          id: string
+          images: string[] | null
+          nom: string
+          nombre_pieces: number | null
+          prix: number
+          statut: string
+          surface: number | null
+          type_bien: string
+          updated_at: string
+        }
+        Insert: {
+          adresse?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entreprise_id: string
+          id?: string
+          images?: string[] | null
+          nom: string
+          nombre_pieces?: number | null
+          prix?: number
+          statut?: string
+          surface?: number | null
+          type_bien?: string
+          updated_at?: string
+        }
+        Update: {
+          adresse?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entreprise_id?: string
+          id?: string
+          images?: string[] | null
+          nom?: string
+          nombre_pieces?: number | null
+          prix?: number
+          statut?: string
+          surface?: number | null
+          type_bien?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       redesign_requests: {
         Row: {
           created_at: string
@@ -588,6 +666,7 @@ export type Database = {
           montant_total: number
           notes: string | null
           prix_unitaire: number
+          property_id: string | null
           property_name: string
           statut: string
           type_location: string
@@ -606,6 +685,7 @@ export type Database = {
           montant_total?: number
           notes?: string | null
           prix_unitaire?: number
+          property_id?: string | null
           property_name: string
           statut?: string
           type_location: string
@@ -624,6 +704,7 @@ export type Database = {
           montant_total?: number
           notes?: string | null
           prix_unitaire?: number
+          property_id?: string | null
           property_name?: string
           statut?: string
           type_location?: string
@@ -691,6 +772,51 @@ export type Database = {
           id?: string
           permission?: Database["public"]["Enums"]["app_permission"]
           role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      sales_transactions: {
+        Row: {
+          client_id: string
+          commission: number
+          created_at: string
+          created_by: string | null
+          date_vente: string
+          entreprise_id: string
+          id: string
+          montant_vente: number
+          notes: string | null
+          property_id: string
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          commission?: number
+          created_at?: string
+          created_by?: string | null
+          date_vente?: string
+          entreprise_id: string
+          id?: string
+          montant_vente?: number
+          notes?: string | null
+          property_id: string
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          commission?: number
+          created_at?: string
+          created_by?: string | null
+          date_vente?: string
+          entreprise_id?: string
+          id?: string
+          montant_vente?: number
+          notes?: string | null
+          property_id?: string
+          statut?: string
+          updated_at?: string
         }
         Relationships: []
       }

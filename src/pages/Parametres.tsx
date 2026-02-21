@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Building2, LogOut, Save } from "lucide-react";
+import { ArrowLeft, User, Building2, LogOut, Save, ToggleLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { LogoUpload } from "@/components/LogoUpload";
+import { useAgencySettings } from "@/hooks/useAgencySettings";
 
 interface Profile {
   nom: string;
@@ -227,11 +229,14 @@ const Parametres = () => {
             </div>
           </motion.div>
 
+          {/* Agency Mode Section */}
+          <AgencyModeSection />
+
           {/* Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
             className="flex flex-col gap-3"
           >
             <Button onClick={handleSave} disabled={isSaving}>
@@ -246,6 +251,56 @@ const Parametres = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const AgencyModeSection = () => {
+  const { venteEnabled, locationEnabled, updateSettings } = useAgencySettings();
+  const { toast } = useToast();
+
+  const handleToggle = (field: "vente_enabled" | "location_enabled", value: boolean) => {
+    // At least one must remain active
+    if (field === "vente_enabled" && !value && !locationEnabled) {
+      toast({ title: "Attention", description: "Au moins un module doit rester actif", variant: "destructive" });
+      return;
+    }
+    if (field === "location_enabled" && !value && !venteEnabled) {
+      toast({ title: "Attention", description: "Au moins un module doit rester actif", variant: "destructive" });
+      return;
+    }
+    updateSettings.mutate({ [field]: value });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="p-6 rounded-xl border border-border/50 card-gradient"
+    >
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <ToggleLeft className="w-5 h-5 text-primary" />
+        </div>
+        <h2 className="text-lg font-semibold">Mode d'activité de l'agence</h2>
+      </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium">Vente immobilière</Label>
+            <p className="text-xs text-muted-foreground">Active le module Transactions</p>
+          </div>
+          <Switch checked={venteEnabled} onCheckedChange={(v) => handleToggle("vente_enabled", v)} />
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium">Location immobilière</Label>
+            <p className="text-xs text-muted-foreground">Active le module Réservations</p>
+          </div>
+          <Switch checked={locationEnabled} onCheckedChange={(v) => handleToggle("location_enabled", v)} />
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
