@@ -92,6 +92,27 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ai_generated_images_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "ai_generated_images_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "ai_generated_images_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
+          },
         ]
       }
       client_accounts: {
@@ -169,6 +190,27 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "clients_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "clients_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "clients_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
+          },
         ]
       }
       depenses: {
@@ -206,6 +248,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "depenses_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "depenses_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "depenses_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -274,6 +337,27 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "devis_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "devis_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "devis_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
+          },
         ]
       }
       direct_messages: {
@@ -311,6 +395,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "direct_messages_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "direct_messages_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
           },
           {
             foreignKeyName: "direct_messages_receiver_id_fkey"
@@ -373,6 +478,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "documents_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "documents_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -490,6 +616,27 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
+          },
         ]
       }
       notifications: {
@@ -557,6 +704,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -649,6 +817,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redesign_requests_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "redesign_requests_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "redesign_requests_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -744,6 +933,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenus_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "revenus_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "revenus_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
           },
           {
             foreignKeyName: "revenus_facture_id_fkey"
@@ -853,6 +1063,89 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "studio_ia_quotas_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "studio_ia_quotas_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "studio_ia_quotas_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          entreprise_id: string
+          id: string
+          payment_reference: string | null
+          plan: string
+          start_date: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          entreprise_id: string
+          id?: string
+          payment_reference?: string | null
+          plan?: string
+          start_date?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          entreprise_id?: string
+          id?: string
+          payment_reference?: string | null
+          plan?: string
+          start_date?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "subscriptions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "subscriptions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: true
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
+          },
         ]
       }
       tache_messages: {
@@ -939,6 +1232,27 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "taches_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_finance"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "taches_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_advanced_property"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "taches_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_simple"
+            referencedColumns: ["entreprise_id"]
+          },
         ]
       }
       user_permissions: {
@@ -991,7 +1305,53 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_dashboard_advanced_finance: {
+        Row: {
+          benefice_net: number | null
+          depenses_totales: number | null
+          entreprise_id: string | null
+          loyers_en_retard: number | null
+          revenus_court_sejour: number | null
+          revenus_mensuel: number | null
+          revenus_vente: number | null
+        }
+        Relationships: []
+      }
+      v_dashboard_advanced_property: {
+        Row: {
+          biens_disponibles: number | null
+          biens_occupes: number | null
+          biens_total: number | null
+          entreprise_id: string | null
+          reservations_en_cours: number | null
+          taux_occupation: number | null
+        }
+        Relationships: []
+      }
+      v_dashboard_alerts: {
+        Row: {
+          alert_type: string | null
+          detail: string | null
+          entreprise_id: string | null
+          id: string | null
+          label: string | null
+        }
+        Relationships: []
+      }
+      v_dashboard_simple: {
+        Row: {
+          arrivees_aujourdhui: number | null
+          benefice_estime: number | null
+          departs_aujourdhui: number | null
+          depenses_mois: number | null
+          entreprise_id: string | null
+          factures_impayees: number | null
+          paiements_attendus: number | null
+          revenus_mois: number | null
+          taches_urgentes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_create_user_in_entreprise: {
@@ -1016,6 +1376,13 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
+      }
+      get_top_properties: {
+        Args: { _entreprise_id: string }
+        Returns: {
+          property_name: string
+          total_revenue: number
+        }[]
       }
       get_user_client_id: { Args: { _user_id: string }; Returns: string }
       get_user_entreprise_id: { Args: { _user_id: string }; Returns: string }
