@@ -17,8 +17,8 @@ interface Transaction {
   date_vente: string;
   statut: string;
   notes: string | null;
-  clients?: { nom: string } | null;
-  properties?: { nom: string } | null;
+  client_id: string;
+  property_id: string;
 }
 
 const statutColors: Record<string, string> = {
@@ -39,18 +39,35 @@ const Transactions = () => {
   const { signOut } = useAuth();
   const { entrepriseId } = useEntreprise();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [clientsMap, setClientsMap] = useState<Record<string, string>>({});
+  const [propertiesMap, setPropertiesMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const fetchTransactions = useCallback(async () => {
     if (!entrepriseId) return;
-    const { data } = await supabase
-      .from("sales_transactions")
-      .select("*, clients(nom), properties(nom)")
-      .eq("entreprise_id", entrepriseId)
-      .order("date_vente", { ascending: false });
-    setTransactions((data as any[]) || []);
+
+    const [{ data: txData }, { data: clientsData }, { data: propsData }] = await Promise.all([
+      supabase
+        .from("sales_transactions")
+        .select("*")
+        .eq("entreprise_id", entrepriseId)
+        .order("date_vente", { ascending: false }),
+      supabase.from("clients").select("id, nom").eq("entreprise_id", entrepriseId),
+      supabase.from("properties").select("id, nom").eq("entreprise_id", entrepriseId),
+    ]);
+
+    setTransactions((txData as Transaction[]) || []);
+
+    const cMap: Record<string, string> = {};
+    (clientsData || []).forEach((c: any) => { cMap[c.id] = c.nom; });
+    setClientsMap(cMap);
+
+    const pMap: Record<string, string> = {};
+    (propsData || []).forEach((p: any) => { pMap[p.id] = p.nom; });
+    setPropertiesMap(pMap);
+
     setIsLoading(false);
   }, [entrepriseId]);
 
@@ -127,8 +144,8 @@ const Transactions = () => {
                       className="border-t border-border/30 hover:bg-secondary/20 cursor-pointer"
                       onClick={() => { setEditingTransaction(t); setDialogOpen(true); }}
                     >
-                      <td className="p-3 text-sm">{(t as any).clients?.nom || "—"}</td>
-                      <td className="p-3 text-sm">{(t as any).properties?.nom || "—"}</td>
+                      <td className="p-3 text-sm">{clientsMap[t.client_id] || "—"}</td>
+                      <td className="p-3 text-sm">{propertiesMap[t.property_id] || "—"}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatDate(t.date_vente)}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatCurrency(t.montant_vente)}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatCurrency(t.commission)}</td>

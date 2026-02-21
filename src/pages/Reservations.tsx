@@ -20,8 +20,7 @@ interface Reservation {
   montant_total: number;
   montant_paye: number;
   statut: string;
-  clients?: { nom: string } | null;
-  properties?: { nom: string } | null;
+  client_id: string;
 }
 
 const statutColors: Record<string, string> = {
@@ -44,18 +43,35 @@ const Reservations = () => {
   const { signOut } = useAuth();
   const { entrepriseId } = useEntreprise();
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [clientsMap, setClientsMap] = useState<Record<string, string>>({});
+  const [propertiesMap, setPropertiesMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
 
   const fetchReservations = useCallback(async () => {
     if (!entrepriseId) return;
-    const { data } = await supabase
-      .from("reservations")
-      .select("*, clients(nom), properties(nom)")
-      .eq("entreprise_id", entrepriseId)
-      .order("date_arrivee", { ascending: false });
-    setReservations((data as any[]) || []);
+
+    const [{ data: resData }, { data: clientsData }, { data: propsData }] = await Promise.all([
+      supabase
+        .from("reservations")
+        .select("*")
+        .eq("entreprise_id", entrepriseId)
+        .order("date_arrivee", { ascending: false }),
+      supabase.from("clients").select("id, nom").eq("entreprise_id", entrepriseId),
+      supabase.from("properties").select("id, nom").eq("entreprise_id", entrepriseId),
+    ]);
+
+    setReservations((resData as Reservation[]) || []);
+
+    const cMap: Record<string, string> = {};
+    (clientsData || []).forEach((c: any) => { cMap[c.id] = c.nom; });
+    setClientsMap(cMap);
+
+    const pMap: Record<string, string> = {};
+    (propsData || []).forEach((p: any) => { pMap[p.id] = p.nom; });
+    setPropertiesMap(pMap);
+
     setIsLoading(false);
   }, [entrepriseId]);
 
@@ -89,7 +105,6 @@ const Reservations = () => {
             </Button>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
               { label: "Arrivées aujourd'hui", value: arriveesToday, Icon: LogIn },
@@ -104,7 +119,6 @@ const Reservations = () => {
             ))}
           </div>
 
-          {/* List */}
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -134,8 +148,8 @@ const Reservations = () => {
                       className="border-t border-border/30 hover:bg-secondary/20 cursor-pointer"
                       onClick={() => { setEditingReservation(r); setDialogOpen(true); }}
                     >
-                      <td className="p-3 text-sm">{(r as any).clients?.nom || "—"}</td>
-                      <td className="p-3 text-sm">{(r as any).properties?.nom || r.property_name}</td>
+                      <td className="p-3 text-sm">{clientsMap[r.client_id] || "—"}</td>
+                      <td className="p-3 text-sm">{(r.property_id && propertiesMap[r.property_id]) || r.property_name}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatCurrency(r.montant_total)}</td>
                       <td className="p-3"><Badge className={statutColors[r.statut]}>{statutLabels[r.statut] || r.statut}</Badge></td>
