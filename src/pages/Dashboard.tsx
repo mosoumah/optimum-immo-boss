@@ -356,7 +356,7 @@ const Dashboard = () => {
                 </motion.div>
               </div>
             </div>
-          ) : dashboardMode === "advanced" && isPremium ? (
+          ) : dashboardMode === "advanced" && (isAdmin || isPremium) ? (
             <div className="space-y-3 flex-shrink-0">
               {/* Ligne 1 - Finances détaillées */}
               {dashboardData.advancedFinance && <AdvancedFinanceDetails data={dashboardData.advancedFinance} />}
