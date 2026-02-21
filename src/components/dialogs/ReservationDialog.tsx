@@ -1,0 +1,202 @@
+import { useState, useEffect, useMemo } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useEntreprise } from "@/hooks/useEntreprise";
+import { supabase } from "@/integrations/supabase/client";
+import { differenceInDays, differenceInWeeks, differenceInMonths } from "date-fns";
+
+interface ReservationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  reservation?: any | null;
+  onSuccess: () => void;
+}
+
+export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }: ReservationDialogProps) => {
+  const { toast } = useToast();
+  const { entrepriseId } = useEntreprise();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
+  const [properties, setProperties] = useState<{ id: string; nom: string }[]>([]);
+
+  const [form, setForm] = useState({
+    client_id: "",
+    property_id: "",
+    property_name: "",
+    type_location: "jour",
+    date_arrivee: "",
+    date_depart: "",
+    prix_unitaire: "",
+    montant_paye: "",
+    caution: "",
+    statut: "confirmee",
+    generer_facture: false,
+    notes: "",
+  });
+
+  useEffect(() => {
+    if (!entrepriseId || !open) return;
+    Promise.all([
+      supabase.from("clients").select("id, nom").eq("entreprise_id", entrepriseId).order("nom"),
+      supabase.from("properties").select("id, nom").eq("entreprise_id", entrepriseId).order("nom"),
+    ]).then(([c, p]) => {
+      setClients(c.data || []);
+      setProperties(p.data || []);
+    });
+  }, [entrepriseId, open]);
+
+  useEffect(() => {
+    if (reservation) {
+      setForm({
+        client_id: reservation.client_id || "",
+        property_id: reservation.property_id || "",
+        property_name: reservation.property_name || "",
+        type_location: reservation.type_location || "jour",
+        date_arrivee: reservation.date_arrivee || "",
+        date_depart: reservation.date_depart || "",
+        prix_unitaire: reservation.prix_unitaire?.toString() || "",
+        montant_paye: reservation.montant_paye?.toString() || "",
+        caution: reservation.caution?.toString() || "",
+        statut: reservation.statut || "confirmee",
+        generer_facture: reservation.generer_facture || false,
+        notes: reservation.notes || "",
+      });
+    } else {
+      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "confirmee", generer_facture: false, notes: "" });
+    }
+  }, [reservation, open]);
+
+  const montantTotal = useMemo(() => {
+    if (!form.date_arrivee || !form.date_depart || !form.prix_unitaire) return 0;
+    const start = new Date(form.date_arrivee);
+    const end = new Date(form.date_depart);
+    const prix = parseFloat(form.prix_unitaire) || 0;
+    let units = 0;
+    if (form.type_location === "jour") units = Math.max(differenceInDays(end, start), 1);
+    else if (form.type_location === "semaine") units = Math.max(Math.ceil(differenceInDays(end, start) / 7), 1);
+    else units = Math.max(differenceInMonths(end, start), 1);
+    return units * prix;
+  }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.type_location]);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
+
+  const handleSubmit = async () => {
+    if (!form.client_id || !entrepriseId) return;
+    setIsSubmitting(true);
+
+    const selectedProperty = properties.find((p) => p.id === form.property_id);
+    const payload = {
+      entreprise_id: entrepriseId,
+      client_id: form.client_id,
+      property_id: form.property_id || null,
+      property_name: selectedProperty?.nom || form.property_name || "—",
+      type_location: form.type_location,
+      date_arrivee: form.date_arrivee,
+      date_depart: form.date_depart,
+      prix_unitaire: parseFloat(form.prix_unitaire) || 0,
+      montant_total: montantTotal,
+      montant_paye: parseFloat(form.montant_paye) || 0,
+      caution: parseFloat(form.caution) || 0,
+      statut: form.statut,
+      generer_facture: form.generer_facture,
+      notes: form.notes || null,
+    };
+
+    const { error } = reservation
+      ? await supabase.from("reservations").update(payload).eq("id", reservation.id)
+      : await supabase.from("reservations").insert(payload);
+
+    setIsSubmitting(false);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Succès", description: reservation ? "Réservation modifiée" : "Réservation créée" });
+      onOpenChange(false);
+      onSuccess();
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{reservation ? "Modifier la réservation" : "Nouvelle réservation"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Client *</Label>
+            <Select value={form.client_id} onValueChange={(v) => setForm({ ...form, client_id: v })}>
+              <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
+              <SelectContent>
+                {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.nom}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Bien</Label>
+            <Select value={form.property_id} onValueChange={(v) => setForm({ ...form, property_id: v })}>
+              <SelectTrigger><SelectValue placeholder="Sélectionner un bien" /></SelectTrigger>
+              <SelectContent>
+                {properties.map((p) => <SelectItem key={p.id} value={p.id}>{p.nom}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Type de location</Label>
+            <Select value={form.type_location} onValueChange={(v) => setForm({ ...form, type_location: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="jour">Jour</SelectItem>
+                <SelectItem value="semaine">Semaine</SelectItem>
+                <SelectItem value="mois">Mois</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><Label>Date d'arrivée *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value })} /></div>
+            <div><Label>Date de départ *</Label><Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><Label>Prix unitaire (GNF)</Label><Input type="number" value={form.prix_unitaire} onChange={(e) => setForm({ ...form, prix_unitaire: e.target.value })} /></div>
+            <div>
+              <Label>Montant total (auto)</Label>
+              <div className="h-10 px-3 flex items-center rounded-md bg-muted text-sm font-medium">{formatCurrency(montantTotal)}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><Label>Montant payé (GNF)</Label><Input type="number" value={form.montant_paye} onChange={(e) => setForm({ ...form, montant_paye: e.target.value })} /></div>
+            <div><Label>Caution (GNF)</Label><Input type="number" value={form.caution} onChange={(e) => setForm({ ...form, caution: e.target.value })} /></div>
+          </div>
+          <div>
+            <Label>Statut</Label>
+            <Select value={form.statut} onValueChange={(v) => setForm({ ...form, statut: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en_attente">En attente</SelectItem>
+                <SelectItem value="confirmee">Confirmée</SelectItem>
+                <SelectItem value="en_cours">En cours</SelectItem>
+                <SelectItem value="terminee">Terminée</SelectItem>
+                <SelectItem value="annulee">Annulée</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
+          <div className="flex items-center gap-2">
+            <Checkbox checked={form.generer_facture} onCheckedChange={(v) => setForm({ ...form, generer_facture: !!v })} />
+            <Label className="text-sm cursor-pointer">Générer facture automatiquement</Label>
+          </div>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || !form.date_depart} className="w-full">
+            {isSubmitting ? "Enregistrement..." : reservation ? "Modifier" : "Créer la réservation"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

@@ -13,6 +13,10 @@ import ProfilEntreprise from "./pages/ProfilEntreprise";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
+import Biens from "./pages/Biens";
+import BienDetail from "./pages/BienDetail";
+import Reservations from "./pages/Reservations";
+import Transactions from "./pages/Transactions";
 import Devis from "./pages/Devis";
 import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
@@ -69,6 +73,38 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <ClientDetail />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/biens"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                  <Biens />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/biens/:id"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                  <BienDetail />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/reservations"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                  <Reservations />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                  <Transactions />
                 </RoleProtectedRoute>
               }
             />
