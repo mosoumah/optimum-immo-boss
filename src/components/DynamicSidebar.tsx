@@ -110,18 +110,18 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
               <Link
                 to={item.path}
                 onClick={handleLinkClick}
-                className={`flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-300 group ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 group ${
                   isActive
                     ? "bg-primary/10 text-primary border border-primary/20 glow-primary-sm"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-1"
                 }`}
               >
                 <item.icon
-                  className={`w-4 h-4 transition-transform duration-300 ${
+                  className={`w-[18px] h-[18px] transition-transform duration-300 ${
                     isActive ? "text-primary" : "group-hover:scale-110"
                   }`}
                 />
-                <span className="font-medium text-xs">{item.label}</span>
+                <span className="font-medium text-[13px]">{item.label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
@@ -146,16 +146,16 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
             onClick={handleLinkClick}
             className="flex items-center gap-3 px-3 py-1.5 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
           >
-            <Settings className="w-4 h-4" />
-            <span className="font-medium text-xs">Paramètres</span>
+            <Settings className="w-[18px] h-[18px]" />
+            <span className="font-medium text-[13px]">Paramètres</span>
           </Link>
         )}
         <button
           onClick={onSignOut}
           className="flex items-center gap-3 px-3 py-1.5 rounded-xl text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full"
         >
-          <LogOut className="w-4 h-4" />
-          <span className="font-medium text-xs">Déconnexion</span>
+          <LogOut className="w-[18px] h-[18px]" />
+          <span className="font-medium text-[13px]">Déconnexion</span>
         </button>
       </motion.div>
     </>
