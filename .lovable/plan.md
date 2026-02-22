@@ -1,35 +1,36 @@
 
 # Restructuration du Dashboard Avance
 
-## Probleme actuel
-Le mode Avance n'affiche que les widgets avances (Top Properties, Alertes, Graphiques, Resume IA) sans les KPI de base (resume financier, activite du jour, graphique revenus/depenses, clients recents). Le dashboard avance doit inclure **tout le contenu du mode Simple** en plus des widgets avances.
+## Ce qui change
 
-## Structure proposee pour le mode Avance
+### Dans la zone a droite du graphique (a la place de "Clients recents")
+Remplacer le bloc "Clients recents" par 3 widgets empiles :
+1. **Top 3 biens du mois** (AdvancedTopProperties)
+2. **Alertes intelligentes** (AdvancedAlerts)
+3. **Resume IA** (AdvancedAISummary)
 
-L'ordre d'affichage sera :
+### Sections supprimees
+- **Clients recents** : retire du dashboard avance (reste dans le mode simple)
+- **Analyse par type** (AdvancedFinancialChartWrapper) : supprime du dashboard avance
 
-1. **Resume financier** (SimpleFinanceSummary) -- identique au mode Simple
-2. **Activite du jour** (SimpleDailyActivity) -- identique au mode Simple
-3. **Graphique Revenus vs Depenses + Clients recents** (SimpleChart + liste clients) -- identique au mode Simple
-4. ---separateur---
-5. **Finances detaillees** (AdvancedFinanceDetails) -- widget avance existant
-6. **Indicateurs immobiliers** (AdvancedPropertyMetrics) -- widget avance existant
-7. **Top 3 biens + Alertes** (AdvancedTopProperties + AdvancedAlerts) -- widgets avances existants
-8. **Graphiques avances** (AdvancedFinancialChartWrapper) -- widget avance existant
-9. **Resume IA** (AdvancedAISummary) -- widget avance existant
+### Sections conservees (inchangees)
+- Resume financier (SimpleFinanceSummary)
+- Activite du jour (SimpleDailyActivity)
+- Graphique Revenus vs Depenses (SimpleChart, occupe 2/3 de la largeur)
+- Finances detaillees (AdvancedFinanceDetails)
+- Indicateurs immobiliers (AdvancedPropertyMetrics)
+
+## Structure finale du mode Avance
+
+1. Resume financier
+2. Activite du jour
+3. **Graphique Revenus vs Depenses (2/3)** + **Top 3 biens + Alertes + Resume IA (1/3, empiles)**
+4. Finances detaillees (6 KPI)
+5. Indicateurs immobiliers
 
 ## Modifications techniques
 
-### 1. `src/hooks/useDashboardData.tsx`
-- Modifier la query `simpleQuery` pour qu'elle se declenche aussi en mode `advanced` (pas seulement `simple`), car le mode avance a besoin des memes donnees de base.
-- Changer `enabled: !!entrepriseId && mode === "simple"` en `enabled: !!entrepriseId` pour que les donnees simples soient toujours chargees.
-
-### 2. `src/pages/Dashboard.tsx`
-- Dans le bloc `dashboardMode === "advanced"`, ajouter les 3 sections du mode Simple **avant** les widgets avances :
-  - `SimpleFinanceSummary` avec `dashboardData.simple`
-  - `SimpleDailyActivity` avec `dashboardData.simple`
-  - Grille `SimpleChart` + `Clients recents`
-- Les widgets avances existants restent apres, separes par un diviseur visuel.
-
-### Aucune autre modification
-Pas de changement de design, pas de nouveau composant, pas de modification de base de donnees.
+### `src/pages/Dashboard.tsx`
+- Lignes 372-428 (bloc advanced grid) : remplacer le panneau "Clients recents" par les 3 composants AdvancedTopProperties, AdvancedAlerts et AdvancedAISummary empiles dans la colonne droite
+- Lignes 442-456 : supprimer le grid Top 3 + Alertes, le AdvancedFinancialChartWrapper et le AdvancedAISummary (car ils sont maintenant integres dans la colonne droite)
+- Supprimer les separateurs associes aux sections retirees
