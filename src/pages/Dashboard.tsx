@@ -285,7 +285,7 @@ const Dashboard = () => {
           {dashboardMode === "simple" ? (
             <div className="flex flex-col gap-1 flex-1 min-h-0">
               {/* Ligne 1 - Résumé financier */}
-              <div className="flex-shrink-0">
+              <div>
                 {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
               </div>
 
@@ -293,7 +293,7 @@ const Dashboard = () => {
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Ligne 2 - Activité du jour */}
-              <div className="flex-shrink-0">
+              <div>
                 {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
               </div>
 
@@ -303,7 +303,7 @@ const Dashboard = () => {
               {/* Ligne 3 - Graphique + Ligne 4 - Clients */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0">
                 {entrepriseId && (
-                  <div className="lg:col-span-2">
+                  <div className="lg:col-span-2 min-h-0">
                     <SimpleChart entrepriseId={entrepriseId} />
                   </div>
                 )}
@@ -312,7 +312,7 @@ const Dashboard = () => {
                   initial={{ opacity: 0, x: 20 }} 
                   animate={{ opacity: 1, x: 0 }} 
                   transition={{ duration: 0.5, delay: 0.4 }} 
-                  className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col"
+                  className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0"
                 >
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <h2 className="section-title-premium flex items-center gap-3">
@@ -362,14 +362,14 @@ const Dashboard = () => {
           ) : dashboardMode === "advanced" && (isAdmin || isPremium) ? (
             <div className="flex flex-col gap-1 flex-1 min-h-0">
               {/* Section Simple - Résumé financier */}
-              <div className="flex-shrink-0">
+              <div>
                 {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
               </div>
 
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Section Simple - Activité du jour */}
-              <div className="flex-shrink-0">
+              <div>
                 {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
               </div>
 
@@ -378,12 +378,12 @@ const Dashboard = () => {
               {/* Section Simple - Graphique + Accordéon compact */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0">
                 {entrepriseId && (
-                  <div className="lg:col-span-2">
+                  <div className="lg:col-span-2 min-h-0">
                     <SimpleChart entrepriseId={entrepriseId} />
                   </div>
                 )}
 
-                <div className="p-2 lg:p-3 rounded-2xl card-premium">
+                <div className="p-2 lg:p-3 rounded-2xl card-premium min-h-0 overflow-hidden">
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="top-properties" className="border-border/30">
                       <AccordionTrigger className="py-2.5 text-sm font-semibold hover:no-underline">
