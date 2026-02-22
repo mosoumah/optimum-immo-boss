@@ -158,7 +158,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header: period toggle */}
-      <div className="flex items-center justify-between mb-2 flex-shrink-0">
+      <div className="flex items-center justify-between mb-1 flex-shrink-0">
         <div className="flex items-center gap-1 bg-secondary/30 rounded-lg p-0.5">
           <Button
             variant={period === "week" ? "default" : "ghost"}
@@ -192,16 +192,16 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       </div>
 
       {/* Main content: left summary + right chart */}
-      <div className="flex flex-1 min-h-0 gap-3">
+      <div className="flex flex-1 min-h-0 gap-2">
         {/* Left: Benefice summary */}
-        <div className="flex flex-col justify-center items-start w-1/4 min-w-[120px] pr-2 border-r border-border/20">
+        <div className="flex flex-col justify-center items-start w-1/4 min-w-[100px] pr-2 border-r border-border/20">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
             Bénéfice {period === "week" ? "semaine" : "mois"}
           </span>
-          <span className={`text-xl lg:text-2xl font-bold leading-tight ${totals.benefice >= 0 ? "text-success" : "text-destructive"}`}>
+          <span className={`text-lg lg:text-xl font-bold leading-tight ${totals.benefice >= 0 ? "text-success" : "text-destructive"}`}>
             {formatCurrency(totals.benefice)}
           </span>
-          <span className="text-[10px] text-muted-foreground mb-2">GNF</span>
+          <span className="text-[10px] text-muted-foreground mb-1">GNF</span>
 
           <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${isPositive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
             {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -211,7 +211,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
             vs {period === "week" ? "sem." : "mois"} préc.
           </span>
 
-          <div className="mt-3 space-y-1.5 w-full">
+          <div className="mt-2 space-y-1 w-full">
             <div>
               <span className="text-[9px] text-muted-foreground block">Revenus</span>
               <span className="text-xs font-semibold text-success">{formatCurrency(totals.revenus)} GNF</span>
