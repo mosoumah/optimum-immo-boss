@@ -202,7 +202,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-2 lg:p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
+        <div className="p-2 lg:p-4 flex-1 min-h-0 flex flex-col overflow-y-auto">
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
