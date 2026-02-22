@@ -12,9 +12,9 @@ export const SimpleChart = ({ entrepriseId }: Props) => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
-      className="p-3 lg:p-4 rounded-2xl card-premium flex flex-col flex-1 min-h-0"
+      className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col flex-1 min-h-0 h-full"
     >
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+      <div className="flex items-center justify-between mb-2 flex-shrink-0">
         <h2 className="section-title-premium flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           Revenus vs Dépenses

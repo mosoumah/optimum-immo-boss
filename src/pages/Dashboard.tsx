@@ -301,9 +301,9 @@ const Dashboard = () => {
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Ligne 3 - Graphique + Ligne 4 - Clients */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
                 {entrepriseId && (
-                  <div className="lg:col-span-2 min-h-0">
+                  <div className="lg:col-span-2 min-h-0 h-full">
                     <SimpleChart entrepriseId={entrepriseId} />
                   </div>
                 )}
@@ -312,7 +312,7 @@ const Dashboard = () => {
                   initial={{ opacity: 0, x: 20 }} 
                   animate={{ opacity: 1, x: 0 }} 
                   transition={{ duration: 0.5, delay: 0.4 }} 
-                  className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0"
+                  className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0 h-full overflow-hidden"
                 >
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <h2 className="section-title-premium flex items-center gap-3">
@@ -376,9 +376,9 @@ const Dashboard = () => {
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Section Simple - Graphique + Accordéon compact */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
                 {entrepriseId && (
-                  <div className="lg:col-span-2 min-h-0">
+                  <div className="lg:col-span-2 min-h-0 h-full">
                     <SimpleChart entrepriseId={entrepriseId} />
                   </div>
                 )}
