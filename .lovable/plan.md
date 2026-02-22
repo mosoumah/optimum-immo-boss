@@ -1,28 +1,29 @@
 
-
-# Corriger la structure des textes dans "Revenus vs Dépenses"
+# Corriger les textes superposes dans "Revenus vs Depenses"
 
 ## Probleme
-La colonne gauche du graphique (benefice, variation, revenus/depenses) utilise des tailles de texte et espacements trop grands pour l'espace comprime du dashboard. Le texte "5.0M" en `text-xl lg:text-2xl` est disproportionne, les marges (`mb-2`, `mt-3`, `space-y-1.5`) prennent trop de place, et le tout donne un rendu encombre.
+La colonne gauche du graphique a ses textes superposes les uns sur les autres. Le label "BENEFICE MOIS", le montant "5.0M", "GNF", la variation, et les lignes Revenus/Depenses se chevauchent car le conteneur est trop petit verticalement avec `justify-center`. "Depenses" deborde meme en bas du carreau.
+
+## Cause racine
+La colonne gauche utilise `justify-center` ce qui essaye de centrer verticalement tous les elements, mais l'espace vertical est insuffisant. Les textes s'empilent sans pouvoir defiler car le parent a `overflow-hidden`.
 
 ## Corrections dans `src/components/FinancialChart.tsx`
 
-### 1. Reduire l'espacement du header (ligne 161)
-- `mb-2` -> `mb-1` pour le header avec les boutons Semaine/Mois
+### 1. Changer le comportement vertical de la colonne gauche (ligne 197)
+- Remplacer `justify-center` par `justify-start` pour aligner les textes en haut
+- Ajouter `overflow-hidden` pour eviter tout debordement visible
 
-### 2. Reduire la colonne gauche benefice (lignes 197-224)
-- Reduire la largeur minimale : `min-w-[120px]` -> `min-w-[100px]`
-- Benefice montant : `text-xl lg:text-2xl` -> `text-lg lg:text-xl` (ligne 201)
-- Supprimer le `mb-2` apres "GNF" -> `mb-1` (ligne 204)
-- Reduire l'espace avant revenus/depenses : `mt-3` -> `mt-2` (ligne 214)
-- Reduire l'espacement des items : `space-y-1.5` -> `space-y-1` (ligne 214)
-
-### 3. Reduire le gap entre les colonnes (ligne 195)
-- `gap-3` -> `gap-2` pour rapprocher la colonne gauche et le graphique
+### 2. Reduire davantage les tailles et espacements pour tout faire tenir
+- Le label "Benefice" : garder `text-[10px]` mais supprimer `mb-1` -> `mb-0`
+- Le montant : reduire de `text-lg lg:text-xl` a `text-base lg:text-lg`
+- "GNF" : supprimer `mb-1` -> `mb-0.5`
+- La variation badge : reduire le padding `py-0.5` a `py-0`
+- "vs mois prec." : supprimer `mt-0.5` -> rien
+- Section Revenus/Depenses : reduire `mt-2` a `mt-1`, `space-y-1` a `space-y-0.5`
+- Les montants Revenus/Depenses : reduire `text-xs` a `text-[10px]`
 
 ## Fichier modifie
-- `src/components/FinancialChart.tsx` uniquement
+- `src/components/FinancialChart.tsx` uniquement (aucune modification du pied de page ni d'autres fichiers)
 
 ## Resultat attendu
-Les textes dans la colonne gauche sont plus compacts et proportionnes a l'espace disponible. Le graphique a droite gagne un peu plus de place. L'ensemble reste lisible sans encombrement.
-
+Tous les textes de la colonne gauche sont visibles, bien espaces sans superposition, et restent a l'interieur du carreau sans debordement.
