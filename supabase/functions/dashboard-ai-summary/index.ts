@@ -60,23 +60,34 @@ Deno.serve(async (req) => {
 
     const entrepriseId = profile.entreprise_id;
 
-    // 3. Verify Premium subscription
-    const { data: subscription } = await adminClient
-      .from("subscriptions")
-      .select("plan, status, end_date")
-      .eq("entreprise_id", entrepriseId)
+    // 3. Check if user is admin (bypass premium check)
+    const { data: userRole } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
       .maybeSingle();
 
-    const isPremium =
-      subscription?.plan === "premium" &&
-      subscription?.status === "active" &&
-      (!subscription?.end_date || new Date(subscription.end_date) > new Date());
+    const isAdmin = userRole?.role === "admin";
 
-    if (!isPremium) {
-      return new Response(
-        JSON.stringify({ error: "Plan Premium requis" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // 4. Verify Premium subscription (skip for admin)
+    if (!isAdmin) {
+      const { data: subscription } = await adminClient
+        .from("subscriptions")
+        .select("plan, status, end_date")
+        .eq("entreprise_id", entrepriseId)
+        .maybeSingle();
+
+      const isPremium =
+        subscription?.plan === "premium" &&
+        subscription?.status === "active" &&
+        (!subscription?.end_date || new Date(subscription.end_date) > new Date());
+
+      if (!isPremium) {
+        return new Response(
+          JSON.stringify({ error: "Plan Premium requis" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // 4. Rate limiting (1 call per hour per entreprise)
