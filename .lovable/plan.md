@@ -1,48 +1,39 @@
 
+# Redesign du graphique Revenus vs Depenses
 
-# Restructuration de la colonne droite du Dashboard Avance
+## Inspiration de l'image de reference
+L'image montre une structure en deux parties :
+- **Gauche** : Un gros montant total avec un pourcentage de variation par rapport a la periode precedente
+- **Droite** : Un graphique en courbes (line chart) avec tooltip detaille comparant mois actuel vs mois precedent
 
-## Objectif
-Remplacer le panneau "Clients recents" par 3 widgets compacts sous forme d'accordeon (cliquables pour voir le contenu), et rendre le dashboard non-defilant.
+## Adaptation a notre thematique
 
-## Ce qui change
+Le composant `FinancialChart` sera transforme pour adopter cette structure tout en gardant la charte graphique dark/lime :
 
-### 1. Colonne droite : Accordeon compact
-Les 3 widgets (Top 3 biens, Alertes, Resume IA) seront affiches dans un **accordeon Radix** (deja installe dans le projet). Chaque widget affiche uniquement son titre avec une icone. Au clic, il s'ouvre pour reveler son contenu, et les autres se referment automatiquement.
+### Layout
+- **Colonne gauche (1/3)** : Benefice total du mois (Revenus - Depenses), affiche en gros avec variation en % vs mois precedent (fleche verte/rouge)
+- **Colonne droite (2/3)** : Graphique en **courbes** (LineChart) avec deux lignes : Revenus (vert/success) et Depenses (rouge/destructive), remplacant le BarChart actuel
 
-Visuellement, cela ressemble a :
-- **[icone] Top 3 biens du mois** (cliquer pour ouvrir)
-- **[icone] Alertes intelligentes** (cliquer pour ouvrir)
-- **[icone] Resume IA du mois** (cliquer pour ouvrir)
+### Donnees supplementaires
+- Calcul du benefice = totalRevenus - totalDepenses
+- Recuperation des donnees du mois precedent pour calculer la variation en %
+- Affichage du tooltip style reference : date + montant revenus ce mois + montant mois precedent
 
-Tout tient dans l'espace du panneau "Clients recents" actuel, sans debordement.
+### Elements visuels
+- Courbes fluides avec `type="monotone"` et traits en pointilles pour le mois precedent (si disponible)
+- Gros chiffre du benefice formate (ex: "12.5M GNF")
+- Badge de variation avec icone TrendingUp/TrendingDown et pourcentage colore
+- Suppression de la legende en bas (remplacee par les indicateurs dans le tooltip et la colonne gauche)
+- Conservation des boutons Semaine/Mois
 
-### 2. Suppression des sections en dessous du graphique
-Pour que le dashboard ne defile pas, les sections "Finances detaillees" (AdvancedFinanceDetails) et "Indicateurs immobiliers" (AdvancedPropertyMetrics) seront retirees du mode avance. Ces donnees restent accessibles via les pages dediees (Revenus, Depenses, Biens).
+## Modifications techniques
 
-### 3. Dashboard non-defilant
-Le conteneur principal utilisera `overflow-hidden` au lieu de `overflow-y-auto` pour le mode avance, garantissant zero defilement.
+### Fichier unique : `src/components/FinancialChart.tsx`
+1. Remplacer `BarChart` + `Bar` par `LineChart` + `Line` (imports recharts)
+2. Ajouter une requete pour les donnees du mois precedent dans le useEffect
+3. Restructurer le JSX : layout en flex row avec colonne gauche (benefice + variation) et colonne droite (LineChart)
+4. Mettre a jour le CustomTooltip pour afficher "ce mois" vs "mois precedent"
+5. Supprimer le footer avec la legende TrendingUp/TrendingDown
 
-## Structure finale du mode Avance
-
-1. Resume financier (4 KPI en ligne)
-2. Activite du jour (3 indicateurs)
-3. Graphique Revenus vs Depenses (2/3) + Accordeon compact (1/3)
-
-Tout visible sans aucun defilement.
-
-## Details techniques
-
-### Fichier : `src/pages/Dashboard.tsx`
-- Lignes 379-383 : remplacer les 3 composants empiles par un unique composant `Accordion` de Radix avec 3 `AccordionItem`
-- Chaque item integre le contenu de `AdvancedTopProperties`, `AdvancedAlerts` et `AdvancedAISummary` respectivement
-- Lignes 386-394 : supprimer les separateurs et les sections `AdvancedFinanceDetails` et `AdvancedPropertyMetrics`
-- Le mode avance se termine apres la grille graphique+accordeon
-
-### Imports a ajouter
-- `Accordion, AccordionItem, AccordionTrigger, AccordionContent` depuis `@/components/ui/accordion`
-- `ChevronDown` depuis `lucide-react` (deja gere par le composant accordion)
-
-### Aucune modification de base de donnees
-Pas de nouveau composant, pas de migration SQL.
-
+### Aucun autre fichier modifie
+`SimpleChart.tsx` et `Dashboard.tsx` restent inchanges.
