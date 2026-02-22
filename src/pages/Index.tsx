@@ -81,7 +81,7 @@ const benefits = [
 
 const Index = () => {
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="min-h-screen overflow-x-hidden">
       <Navbar />
       
       {/* Hero Section */}
