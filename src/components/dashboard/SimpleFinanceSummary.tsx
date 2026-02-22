@@ -25,7 +25,7 @@ export const SimpleFinanceSummary = ({ data }: Props) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 + index * 0.05 }}
-          className="card-kpi p-3 lg:p-4 rounded-xl"
+          className="card-kpi p-2 lg:p-3 rounded-xl"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label text-xs">{stat.label}</span>
