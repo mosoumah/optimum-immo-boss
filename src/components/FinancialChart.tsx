@@ -194,31 +194,31 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       {/* Main content: left summary + right chart */}
       <div className="flex flex-1 min-h-0 gap-2">
         {/* Left: Benefice summary */}
-        <div className="flex flex-col justify-start items-start w-1/4 min-w-[100px] pr-2 border-r border-border/20 overflow-hidden">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-col justify-start items-start w-1/4 min-w-[100px] pr-2 border-r border-border/20 overflow-hidden gap-0.5">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground leading-none">
             Bénéfice {period === "week" ? "semaine" : "mois"}
           </span>
-          <span className={`text-base lg:text-lg font-bold leading-tight ${totals.benefice >= 0 ? "text-success" : "text-destructive"}`}>
-            {formatCurrency(totals.benefice)}
-          </span>
-          <span className="text-[10px] text-muted-foreground mb-0.5">GNF</span>
-
-          <div className={`flex items-center gap-1 px-1.5 py-0 rounded-md text-[10px] font-semibold ${isPositive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-            {isPositive ? "+" : ""}{totals.variation.toFixed(1)}%
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-sm lg:text-base font-bold leading-tight ${totals.benefice >= 0 ? "text-success" : "text-destructive"}`}>
+              {formatCurrency(totals.benefice)} <span className="text-[9px] font-normal text-muted-foreground">GNF</span>
+            </span>
+            <div className={`flex items-center gap-0.5 px-1 rounded text-[9px] font-semibold ${isPositive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+              {isPositive ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+              {isPositive ? "+" : ""}{totals.variation.toFixed(1)}%
+            </div>
           </div>
-          <span className="text-[9px] text-muted-foreground">
+          <span className="text-[8px] text-muted-foreground leading-none">
             vs {period === "week" ? "sem." : "mois"} préc.
           </span>
 
-          <div className="mt-1 space-y-0.5 w-full">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-0 w-full mt-1 pt-1 border-t border-border/20">
             <div>
-              <span className="text-[9px] text-muted-foreground block">Revenus</span>
-              <span className="text-[10px] font-semibold text-success">{formatCurrency(totals.revenus)} GNF</span>
+              <span className="text-[8px] text-muted-foreground block leading-tight">Revenus</span>
+              <span className="text-[9px] font-semibold text-success leading-tight">{formatCurrency(totals.revenus)} GNF</span>
             </div>
             <div>
-              <span className="text-[9px] text-muted-foreground block">Dépenses</span>
-              <span className="text-[10px] font-semibold text-destructive">{formatCurrency(totals.depenses)} GNF</span>
+              <span className="text-[8px] text-muted-foreground block leading-tight">Dépenses</span>
+              <span className="text-[9px] font-semibold text-destructive leading-tight">{formatCurrency(totals.depenses)} GNF</span>
             </div>
           </div>
         </div>
