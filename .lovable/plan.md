@@ -1,39 +1,29 @@
 
-# Redesign du graphique Revenus vs Depenses
 
-## Inspiration de l'image de reference
-L'image montre une structure en deux parties :
-- **Gauche** : Un gros montant total avec un pourcentage de variation par rapport a la periode precedente
-- **Droite** : Un graphique en courbes (line chart) avec tooltip detaille comparant mois actuel vs mois precedent
+# Rendre le Dashboard et la Sidebar non-scrollables et responsifs
 
-## Adaptation a notre thematique
+## Probleme identifie
+- Le Dashboard a actuellement `overflow-y-auto` ce qui le rend defilant
+- La sidebar a `overflow-y-auto` sur le `<nav>` ce qui la rend defilante
 
-Le composant `FinancialChart` sera transforme pour adopter cette structure tout en gardant la charte graphique dark/lime :
+## Corrections
 
-### Layout
-- **Colonne gauche (1/3)** : Benefice total du mois (Revenus - Depenses), affiche en gros avec variation en % vs mois precedent (fleche verte/rouge)
-- **Colonne droite (2/3)** : Graphique en **courbes** (LineChart) avec deux lignes : Revenus (vert/success) et Depenses (rouge/destructive), remplacant le BarChart actuel
+### 1. Sidebar (`src/components/DynamicSidebar.tsx`)
+- Remettre `overflow-hidden` sur le `<nav>` (ligne 100)
+- Reduire le padding vertical des liens de `py-2` a `py-1.5` (ligne 113) pour que tous les elements tiennent sans defilement
+- Reduire le padding du logo de `p-3` a `p-2` (ligne 85)
 
-### Donnees supplementaires
-- Calcul du benefice = totalRevenus - totalDepenses
-- Recuperation des donnees du mois precedent pour calculer la variation en %
-- Affichage du tooltip style reference : date + montant revenus ce mois + montant mois precedent
+### 2. Dashboard (`src/pages/Dashboard.tsx`)
+- Remettre `overflow-hidden` sur le conteneur principal (ligne 205) pour interdire le defilement
+- Utiliser `flex-1 min-h-0` sur la zone de contenu du dashboard pour que les sections se compriment automatiquement dans l'espace disponible au lieu de deborder
+- Le footer (`Footer.tsx`) n'est pas utilise dans le Dashboard (il est sur la page Index publique), donc pas de pied de page cache -- le probleme etait simplement le contenu qui debordait
 
-### Elements visuels
-- Courbes fluides avec `type="monotone"` et traits en pointilles pour le mois precedent (si disponible)
-- Gros chiffre du benefice formate (ex: "12.5M GNF")
-- Badge de variation avec icone TrendingUp/TrendingDown et pourcentage colore
-- Suppression de la legende en bas (remplacee par les indicateurs dans le tooltip et la colonne gauche)
-- Conservation des boutons Semaine/Mois
+### 3. Responsivite
+- Les grilles existantes (`grid-cols-1 lg:grid-cols-3`) restent en place pour le mobile
+- L'accordeon du mode avance s'adapte deja en pleine largeur sur mobile
+- Aucun changement structurel supplementaire necessaire
 
-## Modifications techniques
+## Fichiers modifies
+- `src/components/DynamicSidebar.tsx` : overflow-hidden + padding reduit
+- `src/pages/Dashboard.tsx` : overflow-hidden + flex layout adaptatif
 
-### Fichier unique : `src/components/FinancialChart.tsx`
-1. Remplacer `BarChart` + `Bar` par `LineChart` + `Line` (imports recharts)
-2. Ajouter une requete pour les donnees du mois precedent dans le useEffect
-3. Restructurer le JSX : layout en flex row avec colonne gauche (benefice + variation) et colonne droite (LineChart)
-4. Mettre a jour le CustomTooltip pour afficher "ce mois" vs "mois precedent"
-5. Supprimer le footer avec la legende TrendingUp/TrendingDown
-
-### Aucun autre fichier modifie
-`SimpleChart.tsx` et `Dashboard.tsx` restent inchanges.
