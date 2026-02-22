@@ -58,7 +58,7 @@ export const useDashboardData = (
       if (error) throw error;
       return data as unknown as SimpleDashboardData | null;
     },
-    enabled: !!entrepriseId && mode === "simple",
+    enabled: !!entrepriseId,
     staleTime: 2 * 60 * 1000,
   });
 

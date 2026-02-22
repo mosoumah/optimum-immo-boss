@@ -358,7 +358,78 @@ const Dashboard = () => {
             </div>
           ) : dashboardMode === "advanced" && (isAdmin || isPremium) ? (
             <div className="space-y-3 flex-shrink-0">
-              {/* Ligne 1 - Finances détaillées */}
+              {/* Section Simple - Résumé financier */}
+              {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Section Simple - Activité du jour */}
+              {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Section Simple - Graphique + Clients */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3">
+                {entrepriseId && (
+                  <div className="lg:col-span-2">
+                    <SimpleChart entrepriseId={entrepriseId} />
+                  </div>
+                )}
+
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  transition={{ duration: 0.5, delay: 0.4 }} 
+                  className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col"
+                >
+                  <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                    <h2 className="section-title-premium flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      Clients récents
+                    </h2>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-xl h-9 w-9">
+                        <Plus className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    {clients.length > 0 ? (
+                      clients.map((client, index) => (
+                        <motion.div 
+                          key={client.id} 
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
+                            <Users className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{client.nom}</div>
+                            <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
+                          </div>
+                          <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs hover:bg-primary/10 hover:text-primary rounded-lg">
+                              Voir
+                            </Button>
+                          </Link>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                        <p className="text-xs">Aucun client</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+              {/* Section Avancée - Finances détaillées */}
               {dashboardData.advancedFinance && <AdvancedFinanceDetails data={dashboardData.advancedFinance} />}
 
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
