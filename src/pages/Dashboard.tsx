@@ -202,7 +202,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-2 lg:p-4 flex flex-col overflow-y-auto" style={{ height: 'calc(100vh - 57px)' }}>
+        <div className="p-2 lg:p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
@@ -283,7 +283,7 @@ const Dashboard = () => {
 
           {/* Dashboard Content */}
           {dashboardMode === "simple" ? (
-            <div className="space-y-3 flex-shrink-0">
+            <div className="space-y-3 flex-1 min-h-0">
               {/* Ligne 1 - Résumé financier */}
               {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
 
@@ -356,7 +356,7 @@ const Dashboard = () => {
               </div>
             </div>
           ) : dashboardMode === "advanced" && (isAdmin || isPremium) ? (
-            <div className="space-y-3 flex-shrink-0">
+            <div className="space-y-3 flex-1 min-h-0">
               {/* Section Simple - Résumé financier */}
               {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
 

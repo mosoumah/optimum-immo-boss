@@ -82,7 +82,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="p-3 flex items-center justify-between"
+        className="p-2 flex items-center justify-between"
       >
         <Logo size="sm" animated={false} />
         {isMobile && (
@@ -97,7 +97,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         )}
       </motion.div>
 
-      <nav className="flex-1 px-3 space-y-0 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-0 overflow-hidden">
         {filteredItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           return (
@@ -110,7 +110,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
               <Link
                 to={item.path}
                 onClick={handleLinkClick}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 group ${
+                className={`flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-300 group ${
                   isActive
                     ? "bg-primary/10 text-primary border border-primary/20 glow-primary-sm"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-1"
