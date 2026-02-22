@@ -194,32 +194,32 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       {/* Main content: left summary + right chart */}
       <div className="flex flex-1 min-h-0 gap-2">
         {/* Left: Benefice summary */}
-        <div className="flex flex-col justify-start items-start w-1/4 min-w-[110px] pr-3 border-r border-border/30 overflow-hidden gap-1">
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/80 font-medium leading-none">
+        <div className="flex flex-col justify-start items-start w-1/4 min-w-[120px] pr-3 border-r border-border/30 overflow-hidden gap-1">
+          <span className="text-[11px] uppercase tracking-widest text-muted-foreground/80 font-medium leading-none">
             Bénéfice {period === "week" ? "semaine" : "mois"}
           </span>
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={`text-base lg:text-lg font-bold leading-tight ${totals.benefice >= 0 ? "text-success" : "text-destructive"}`}>
               {formatCurrency(totals.benefice)}
             </span>
-            <span className="text-[10px] font-normal text-muted-foreground/70">GNF</span>
-            <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+            <span className="text-[11px] font-normal text-muted-foreground/80">GNF</span>
+            <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold ${isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
               {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {isPositive ? "+" : ""}{totals.variation.toFixed(1)}%
             </div>
           </div>
-          <span className="text-[9px] text-muted-foreground/60 leading-none">
+          <span className="text-[10px] text-muted-foreground/70 leading-none">
             vs {period === "week" ? "sem." : "mois"} préc.
           </span>
 
           <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 w-full mt-1.5 pt-1.5 border-t border-border/20">
             <div>
-              <span className="text-[9px] text-muted-foreground/70 block leading-tight">Revenus</span>
-              <span className="text-[11px] font-semibold text-success leading-tight">{formatCurrency(totals.revenus)} GNF</span>
+              <span className="text-[10px] text-muted-foreground/80 block leading-tight">Revenus</span>
+              <span className="text-xs font-semibold text-success leading-tight">{formatCurrency(totals.revenus)} GNF</span>
             </div>
             <div>
-              <span className="text-[9px] text-muted-foreground/70 block leading-tight">Dépenses</span>
-              <span className="text-[11px] font-semibold text-destructive leading-tight">{formatCurrency(totals.depenses)} GNF</span>
+              <span className="text-[10px] text-muted-foreground/80 block leading-tight">Dépenses</span>
+              <span className="text-xs font-semibold text-destructive leading-tight">{formatCurrency(totals.depenses)} GNF</span>
             </div>
           </div>
         </div>
