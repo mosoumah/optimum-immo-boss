@@ -36,13 +36,12 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummary";
 import { SimpleDailyActivity } from "@/components/dashboard/SimpleDailyActivity";
 import { SimpleChart } from "@/components/dashboard/SimpleChart";
-import { AdvancedFinanceDetails } from "@/components/dashboard/AdvancedFinanceDetails";
-import { AdvancedPropertyMetrics } from "@/components/dashboard/AdvancedPropertyMetrics";
 import { AdvancedTopProperties } from "@/components/dashboard/AdvancedTopProperties";
 import { AdvancedAlerts } from "@/components/dashboard/AdvancedAlerts";
-import { AdvancedFinancialChartWrapper } from "@/components/dashboard/AdvancedFinancialChartWrapper";
 import { AdvancedAISummary } from "@/components/dashboard/AdvancedAISummary";
 import { PremiumUpgradeCard } from "@/components/dashboard/PremiumUpgradeCard";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { Building2, AlertTriangle, Brain } from "lucide-react";
 
 interface Profile {
   nom: string;
@@ -203,7 +202,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-2 lg:p-4 flex flex-col overflow-y-auto" style={{ height: 'calc(100vh - 57px)' }}>
+        <div className={`p-2 lg:p-4 flex flex-col ${dashboardMode === "advanced" ? "overflow-hidden" : "overflow-y-auto"}`} style={{ height: 'calc(100vh - 57px)' }}>
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
@@ -368,7 +367,7 @@ const Dashboard = () => {
 
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
-              {/* Section Simple - Graphique + Clients */}
+              {/* Section Simple - Graphique + Accordéon compact */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3">
                 {entrepriseId && (
                   <div className="lg:col-span-2">
@@ -376,22 +375,44 @@ const Dashboard = () => {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2 lg:gap-3">
-                  <AdvancedTopProperties data={dashboardData.topProperties} />
-                  <AdvancedAlerts data={dashboardData.alerts} />
-                  {entrepriseId && <AdvancedAISummary entrepriseId={entrepriseId} />}
+                <div className="p-2 lg:p-3 rounded-2xl card-premium">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="top-properties" className="border-border/30">
+                      <AccordionTrigger className="py-2.5 text-sm font-semibold hover:no-underline">
+                        <span className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-primary" />
+                          Top 3 biens du mois
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <AdvancedTopProperties data={dashboardData.topProperties} />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="alerts" className="border-border/30">
+                      <AccordionTrigger className="py-2.5 text-sm font-semibold hover:no-underline">
+                        <span className="flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-destructive" />
+                          Alertes intelligentes
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <AdvancedAlerts data={dashboardData.alerts} />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="ai-summary" className="border-b-0">
+                      <AccordionTrigger className="py-2.5 text-sm font-semibold hover:no-underline">
+                        <span className="flex items-center gap-2">
+                          <Brain className="w-4 h-4 text-primary" />
+                          Résumé IA du mois
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {entrepriseId && <AdvancedAISummary entrepriseId={entrepriseId} />}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </div>
-
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-              {/* Section Avancée - Finances détaillées */}
-              {dashboardData.advancedFinance && <AdvancedFinanceDetails data={dashboardData.advancedFinance} />}
-
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-              {/* Indicateurs immobiliers */}
-              {dashboardData.advancedProperty && <AdvancedPropertyMetrics data={dashboardData.advancedProperty} />}
             </div>
           ) : (
             <PremiumUpgradeCard />
