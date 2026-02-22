@@ -25,7 +25,7 @@ export const SimpleDailyActivity = ({ data }: Props) => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.15 + index * 0.05 }}
-          className="card-kpi p-3 lg:p-4 rounded-xl"
+          className="card-kpi p-2 lg:p-3 rounded-xl"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label text-xs">{item.label}</span>

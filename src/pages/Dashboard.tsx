@@ -202,13 +202,13 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-2 lg:p-4 flex-1 min-h-0 flex flex-col overflow-y-auto">
+        <div className="p-2 lg:p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* Header Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-2 flex-shrink-0"
+            className="mb-1 flex-shrink-0"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -256,7 +256,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 15 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.4, delay: 0.1 }} 
-            className="flex flex-wrap gap-1.5 mb-2 flex-shrink-0"
+            className="flex flex-wrap gap-1.5 mb-1 flex-shrink-0"
           >
             {quickActions.map((action, index) => (
               <motion.div
@@ -283,21 +283,25 @@ const Dashboard = () => {
 
           {/* Dashboard Content */}
           {dashboardMode === "simple" ? (
-            <div className="space-y-3 flex-1 min-h-0">
+            <div className="flex flex-col gap-1 flex-1 min-h-0">
               {/* Ligne 1 - Résumé financier */}
-              {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
+              <div className="flex-shrink-0">
+                {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
+              </div>
 
               {/* Separator */}
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Ligne 2 - Activité du jour */}
-              {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
+              <div className="flex-shrink-0">
+                {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
+              </div>
 
               {/* Separator */}
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Ligne 3 - Graphique + Ligne 4 - Clients */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0">
                 {entrepriseId && (
                   <div className="lg:col-span-2">
                     <SimpleChart entrepriseId={entrepriseId} />
@@ -356,19 +360,23 @@ const Dashboard = () => {
               </div>
             </div>
           ) : dashboardMode === "advanced" && (isAdmin || isPremium) ? (
-            <div className="space-y-3 flex-1 min-h-0">
+            <div className="flex flex-col gap-1 flex-1 min-h-0">
               {/* Section Simple - Résumé financier */}
-              {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
+              <div className="flex-shrink-0">
+                {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
+              </div>
 
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Section Simple - Activité du jour */}
-              {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
+              <div className="flex-shrink-0">
+                {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
+              </div>
 
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
               {/* Section Simple - Graphique + Accordéon compact */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0">
                 {entrepriseId && (
                   <div className="lg:col-span-2">
                     <SimpleChart entrepriseId={entrepriseId} />
