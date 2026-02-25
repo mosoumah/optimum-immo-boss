@@ -55,6 +55,8 @@ export const NotificationBell = () => {
         return "📄";
       case "facture":
         return "💰";
+      case "alerte":
+        return "⚠️";
       default:
         return "🔔";
     }
