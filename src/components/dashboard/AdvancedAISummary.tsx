@@ -34,7 +34,7 @@ export const AdvancedAISummary = ({ entrepriseId }: Props) => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.35 }}
-      className="p-3 lg:p-4 rounded-2xl card-premium"
+      className="p-3 lg:p-4 rounded-2xl card-premium h-full flex flex-col"
     >
       <div className="flex items-center justify-between mb-3">
         <h2 className="section-title-premium flex items-center gap-3">
@@ -57,7 +57,9 @@ export const AdvancedAISummary = ({ entrepriseId }: Props) => {
           <span className="text-sm text-muted-foreground">Génération du résumé...</span>
         </div>
       ) : (
-        <p className="text-sm text-foreground/90 leading-relaxed">{summary}</p>
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+          <p className="text-xs text-foreground/90 leading-relaxed">{summary}</p>
+        </div>
       )}
     </motion.div>
   );
