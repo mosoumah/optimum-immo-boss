@@ -18,7 +18,6 @@ import {
   X,
   Building,
   CalendarCheck,
-  Handshake,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -40,7 +39,7 @@ const sidebarItems: SidebarItem[] = [
   { icon: Users, label: "Clients", path: "/clients", roles: ["admin", "agent"] },
   { icon: Building, label: "Biens", path: "/biens", roles: ["admin", "agent"] },
   { icon: CalendarCheck, label: "Réservations", path: "/reservations", roles: ["admin", "agent"], requires: "location" },
-  { icon: Handshake, label: "Transactions", path: "/transactions", roles: ["admin", "agent"], requires: "vente" },
+  
   { icon: FileText, label: "Devis", path: "/devis", roles: ["admin", "agent"] },
   { icon: Receipt, label: "Factures", path: "/factures", roles: ["admin", "agent"] },
   { icon: TrendingUp, label: "Revenus", path: "/revenus", roles: ["admin"] },

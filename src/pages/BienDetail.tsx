@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building, ArrowLeft, MapPin, Maximize2, CalendarCheck, Handshake } from "lucide-react";
+import { Building, ArrowLeft, MapPin, Maximize2, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,21 +26,19 @@ const BienDetail = () => {
   const { venteEnabled, locationEnabled } = useAgencySettings();
   const [property, setProperty] = useState<any>(null);
   const [reservations, setReservations] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     if (!entrepriseId || !id) return;
 
-    const [propRes, resRes, transRes] = await Promise.all([
+    const [propRes, resRes] = await Promise.all([
       supabase.from("properties").select("*").eq("id", id).eq("entreprise_id", entrepriseId).maybeSingle(),
       supabase.from("reservations").select("*, clients(nom)").eq("property_id", id).order("date_arrivee", { ascending: false }),
-      supabase.from("sales_transactions").select("*, clients(nom)").eq("property_id", id).order("date_vente", { ascending: false }),
     ]);
 
     setProperty(propRes.data);
     setReservations(resRes.data || []);
-    setTransactions(transRes.data || []);
     setIsLoading(false);
   }, [entrepriseId, id]);
 
@@ -112,27 +110,6 @@ const BienDetail = () => {
               </div>
             )}
 
-            {venteEnabled && (
-              <div className="p-6 rounded-xl border border-border/50 bg-card">
-                <div className="flex items-center gap-2 mb-4">
-                  <Handshake className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-semibold">Transactions ({transactions.length})</h3>
-                </div>
-                {transactions.length > 0 ? (
-                  <div className="space-y-2">
-                    {transactions.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                        <div>
-                          <div className="font-medium text-sm">{(t as any).clients?.nom || "Client"}</div>
-                          <div className="text-xs text-muted-foreground">{formatDate(t.date_vente)}</div>
-                        </div>
-                        <span className="font-medium">{formatCurrency(t.montant_vente)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="text-muted-foreground text-sm">Aucune transaction</p>}
-              </div>
-            )}
           </motion.div>
         </div>
       </div>
