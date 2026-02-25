@@ -415,7 +415,7 @@ const Dashboard = () => {
                   </div>
                 )}
 
-                <div className="min-h-0 overflow-hidden">
+                <div className="min-h-0 overflow-hidden h-full">
                   {entrepriseId && <AdvancedAISummary entrepriseId={entrepriseId} />}
                 </div>
               </div>
