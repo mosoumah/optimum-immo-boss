@@ -1,27 +1,29 @@
 
 
-# Ameliorer la lisibilite des textes dans "Revenus vs Depenses"
+# Supprimer le module Transactions du projet
 
-## Constat
-Les textes dans la colonne gauche sont trop petits pour etre lus confortablement. Les tailles actuelles vont de `text-[9px]` a `text-[11px]` pour la plupart des elements, ce qui rend la lecture difficile.
+## Fichiers a supprimer
+1. `src/pages/Transactions.tsx` - la page principale
+2. `src/components/dialogs/TransactionDialog.tsx` - le dialogue de creation/edition
 
-## Ajustements prevus dans `src/components/FinancialChart.tsx`
+## Fichiers a modifier
 
-### Augmentation des tailles de texte (lignes 197-224)
-- **Label "Benefice mois/semaine"** (ligne 198) : `text-[10px]` vers `text-[11px]`
-- **Montant benefice** (ligne 202) : conserver `text-base lg:text-lg` (deja bien)
-- **"GNF"** (ligne 205) : `text-[10px]` vers `text-[11px]`
-- **Variation pourcentage** (ligne 206) : `text-[10px]` vers `text-[11px]`
-- **"vs mois prec."** (ligne 211) : `text-[9px]` vers `text-[10px]`
-- **Labels "Revenus" / "Depenses"** (lignes 217, 221) : `text-[9px]` vers `text-[10px]`
-- **Montants revenus/depenses** (lignes 218, 222) : `text-[11px]` vers `text-xs` (12px)
+### 1. `src/App.tsx`
+- Supprimer l'import de `Transactions` (ligne 20)
+- Supprimer la route `/transactions` (lignes 96-102)
 
-### Ajustements de design subtils
-- Augmenter legerement la largeur minimale : `min-w-[110px]` vers `min-w-[120px]` pour donner plus de place aux textes agrandis
-- Augmenter l'opacite des couleurs de texte secondaires : `text-muted-foreground/60` vers `/70` et `/70` vers `/80` pour un meilleur contraste
+### 2. `src/components/DynamicSidebar.tsx`
+- Supprimer l'entree `Transactions` du menu lateral (ligne 43)
+- Supprimer l'import de l'icone `Handshake` si elle n'est plus utilisee ailleurs dans ce fichier
 
-## Fichier modifie
-- `src/components/FinancialChart.tsx` uniquement
+### 3. `src/pages/BienDetail.tsx`
+- Supprimer le state `transactions` et le fetch `sales_transactions` (lignes 29, 38, 43)
+- Supprimer la section d'affichage des transactions dans le JSX (lignes 117-134)
+- Supprimer l'import de `Handshake` si plus utilise
 
-## Resultat attendu
-Tous les textes gagnent 1-2px de taille, ce qui ameliore nettement la lisibilite tout en restant dans les limites du carreau. Les couleurs plus opaques renforcent le contraste.
+## Ce qui ne sera PAS modifie
+- La table `sales_transactions` dans la base de donnees (elle restera en place)
+- La page `Parametres.tsx` (le toggle "Vente" y restera car il peut servir a d'autres fonctionnalites)
+- La page `Index.tsx` (la mention "transactions" dans la description est generique)
+- Le dashboard, les graphiques, le footer, et tout le reste du projet
+
