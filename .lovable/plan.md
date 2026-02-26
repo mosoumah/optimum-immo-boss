@@ -1,16 +1,11 @@
 
-
-# Rendre la scrollbar du Résumé IA plus petite et discrète
+# Agrandir la scrollbar au survol du bloc Résumé IA
 
 ## Fichier modifié
-- `src/components/dashboard/AdvancedAISummary.tsx`
+- `src/components/dashboard/AdvancedAISummary.tsx` (ligne 60)
 
 ## Changement
-Dans le div scrollable (qui contient le texte du résumé), remplacer les classes `scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent` par un style CSS personnalisé inline ou via des classes Tailwind plus fines :
-- Largeur de la scrollbar réduite à 3px (au lieu de la taille par défaut de `scrollbar-thin`)
-- Thumb (poignée) semi-transparent avec coins arrondis
-- Track complètement invisible
-- La scrollbar n'apparaît qu'au survol du conteneur (hover)
-
-Cela se fera via une balise `style` dans le JSX ou des classes CSS utilitaires avec `[&::-webkit-scrollbar]` de Tailwind.
-
+Ajouter une transition sur la largeur de la scrollbar et passer de 3px a 6px au survol du conteneur :
+- Ajouter `[&::-webkit-scrollbar]:transition-all` pour une transition fluide
+- Ajouter `hover:[&::-webkit-scrollbar]:w-[6px]` pour agrandir la scrollbar au survol du bloc
+- La scrollbar revient a 3px quand la souris quitte le bloc
