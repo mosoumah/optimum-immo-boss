@@ -26,6 +26,7 @@ interface Property {
   statut: string;
   nombre_pieces: number | null;
   created_at: string;
+  cover_image_url: string | null;
 }
 
 const statutColors: Record<string, string> = {
@@ -79,7 +80,7 @@ const Biens = () => {
     if (!entrepriseId) return;
     const { data } = await supabase
       .from("properties")
-      .select("id, nom, adresse, type_bien, surface, prix, statut, nombre_pieces, created_at")
+      .select("id, nom, adresse, type_bien, surface, prix, statut, nombre_pieces, created_at, cover_image_url")
       .eq("entreprise_id", entrepriseId)
       .order("created_at", { ascending: false });
     setProperties(data || []);
@@ -175,8 +176,21 @@ const Biens = () => {
                 >
                   <Link
                     to={`/biens/${p.id}`}
-                    className="block p-5 rounded-xl border border-border/50 bg-card hover:border-primary/30 transition-all"
+                    className="block rounded-xl border border-border/50 bg-card hover:border-primary/30 transition-all overflow-hidden"
                   >
+                    {p.cover_image_url ? (
+                      <img
+                        src={p.cover_image_url}
+                        alt={p.nom}
+                        className="w-full h-40 object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-muted flex items-center justify-center">
+                        <Building className="w-10 h-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="font-semibold">{p.nom}</h3>
@@ -197,6 +211,7 @@ const Biens = () => {
                         {p.surface && <span className="flex items-center gap-1"><Maximize2 className="w-3 h-3" />{p.surface} m²</span>}
                         {p.nombre_pieces && <span>{p.nombre_pieces} pcs</span>}
                       </div>
+                    </div>
                     </div>
                   </Link>
                 </motion.div>
