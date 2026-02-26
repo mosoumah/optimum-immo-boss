@@ -21,12 +21,23 @@ export const AdvancedAISummary = ({ entrepriseId }: Props) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle rate limit gracefully
+        if (typeof data === "object" && data?.error?.includes?.("Rate limit")) {
+          const minutes = Math.ceil((data.retry_after || 3600) / 60);
+          return `⏳ Le résumé IA a déjà été généré récemment. Prochain rafraîchissement disponible dans ~${minutes} min.`;
+        }
+        throw error;
+      }
       return data?.summary as string || "Résumé indisponible.";
     },
     enabled: !!entrepriseId,
     staleTime: 60 * 60 * 1000, // 1h
-    retry: 1,
+    retry: (failureCount, error) => {
+      // Don't retry on rate limit
+      if (error?.message?.includes?.("429") || error?.message?.includes?.("Rate limit")) return false;
+      return failureCount < 1;
+    },
   });
 
   return (
