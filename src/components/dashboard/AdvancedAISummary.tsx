@@ -57,7 +57,7 @@ export const AdvancedAISummary = ({ entrepriseId }: Props) => {
           <span className="text-sm text-muted-foreground">Génération du résumé...</span>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/15 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-primary/30">
+        <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar]:transition-all [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:transition-all hover:[&::-webkit-scrollbar]:w-[6px] hover:[&::-webkit-scrollbar-thumb]:bg-primary/30">
           <p className="text-xs text-foreground/90 leading-relaxed">{summary}</p>
         </div>
       )}
