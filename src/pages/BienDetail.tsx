@@ -74,9 +74,13 @@ const BienDetail = () => {
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1 p-6 rounded-xl border border-border/50 bg-card">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Building className="w-8 h-8 text-primary" />
-            </div>
+            {property.cover_image_url ? (
+              <img src={property.cover_image_url} alt={property.nom} className="w-full h-48 object-cover rounded-lg mx-auto mb-4" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Building className="w-8 h-8 text-primary" />
+              </div>
+            )}
             <h2 className="text-xl font-semibold text-center mb-4">{property.nom}</h2>
             <div className="space-y-3 text-sm">
               {property.adresse && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground" />{property.adresse}</div>}

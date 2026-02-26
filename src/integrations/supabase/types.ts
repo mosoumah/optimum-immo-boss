@@ -731,6 +731,7 @@ export type Database = {
       properties: {
         Row: {
           adresse: string | null
+          cover_image_url: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -747,6 +748,7 @@ export type Database = {
         }
         Insert: {
           adresse?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -763,6 +765,7 @@ export type Database = {
         }
         Update: {
           adresse?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
