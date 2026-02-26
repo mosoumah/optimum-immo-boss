@@ -57,8 +57,11 @@ export const AdvancedAISummary = ({ entrepriseId }: Props) => {
           <span className="text-sm text-muted-foreground">Génération du résumé...</span>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar]:transition-all [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:transition-all hover:[&::-webkit-scrollbar]:w-[6px] hover:[&::-webkit-scrollbar-thumb]:bg-primary/30">
-          <p className="text-xs text-foreground/90 leading-relaxed">{summary}</p>
+        <div className="relative flex-1 min-h-0">
+          <div className="h-full overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar]:transition-all [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:transition-all hover:[&::-webkit-scrollbar]:w-[6px] hover:[&::-webkit-scrollbar-thumb]:bg-primary/30">
+            <p className="text-xs text-foreground/90 leading-relaxed pb-6">{summary}</p>
+          </div>
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent rounded-b-2xl" />
         </div>
       )}
     </motion.div>
