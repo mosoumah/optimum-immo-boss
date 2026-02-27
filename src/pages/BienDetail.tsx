@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building, ArrowLeft, MapPin, Maximize2, CalendarCheck } from "lucide-react";
+import { Building, ArrowLeft, MapPin, Maximize2, CalendarCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAgencySettings } from "@/hooks/useAgencySettings";
+import { useToast } from "@/hooks/use-toast";
 
 const statutColors: Record<string, string> = {
   disponible: "bg-success/20 text-success",
@@ -22,11 +24,13 @@ const formatDate = (date: string) => new Date(date).toLocaleDateString("fr-FR");
 
 const BienDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const { venteEnabled, locationEnabled } = useAgencySettings();
   const [property, setProperty] = useState<any>(null);
   const [reservations, setReservations] = useState<any[]>([]);
-  
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -70,6 +74,41 @@ const BienDetail = () => {
             <p className="text-muted-foreground">Fiche bien</p>
           </div>
           <Badge className={statutColors[property.statut] || "bg-muted"}>{property.statut}</Badge>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={isDeleting}>
+                <Trash2 className="w-4 h-4 mr-1" /> Supprimer
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer ce bien ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. Le bien « {property.nom} » et son image seront définitivement supprimés.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={async () => {
+                  setIsDeleting(true);
+                  // Delete cover image from storage if exists
+                  if (property.cover_image_url && entrepriseId) {
+                    await supabase.storage.from("property-covers").remove([`${entrepriseId}/${id}.jpg`]);
+                  }
+                  const { error } = await supabase.from("properties").delete().eq("id", id!);
+                  setIsDeleting(false);
+                  if (error) {
+                    toast({ title: "Erreur", description: error.message, variant: "destructive" });
+                  } else {
+                    toast({ title: "Succès", description: "Bien supprimé" });
+                    navigate("/biens");
+                  }
+                }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
