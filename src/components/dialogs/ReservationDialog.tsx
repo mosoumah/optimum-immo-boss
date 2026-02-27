@@ -109,18 +109,41 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       notes: form.notes || null,
     };
 
-    const { error } = reservation
-      ? await supabase.from("reservations").update(payload).eq("id", reservation.id)
-      : await supabase.from("reservations").insert(payload);
+    let result;
+    if (reservation) {
+      result = await supabase.from("reservations").update(payload).eq("id", reservation.id);
+    } else {
+      result = await supabase.from("reservations").insert(payload).select().single();
+    }
 
-    setIsSubmitting(false);
-    if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    if (result.error) {
+      setIsSubmitting(false);
+      toast({ title: "Erreur", description: result.error.message, variant: "destructive" });
+      return;
+    }
+
+    // Générer la facture automatiquement si coché (nouvelle réservation uniquement)
+    if (form.generer_facture && !reservation && result.data) {
+      const propertyName = selectedProperty?.nom || form.property_name || "—";
+      const { error: factureError } = await supabase.from("factures").insert({
+        client_id: form.client_id,
+        entreprise_id: entrepriseId,
+        montant: montantTotal,
+        description: `Location ${propertyName} du ${form.date_arrivee} au ${form.date_depart}`,
+        date: new Date().toISOString().split("T")[0],
+      });
+      if (factureError) {
+        toast({ title: "Attention", description: "Réservation créée mais erreur lors de la génération de la facture : " + factureError.message, variant: "destructive" });
+      } else {
+        toast({ title: "Succès", description: "Réservation créée et facture générée" });
+      }
     } else {
       toast({ title: "Succès", description: reservation ? "Réservation modifiée" : "Réservation créée" });
-      onOpenChange(false);
-      onSuccess();
     }
+
+    setIsSubmitting(false);
+    onOpenChange(false);
+    onSuccess();
   };
 
   return (
