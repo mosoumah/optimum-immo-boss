@@ -1,28 +1,24 @@
 
 
-# Ajout de la suppression des biens
+# Amelioration de l'affichage du montant total dans le formulaire de reservation
 
-## Objectif
-Permettre de supprimer un bien depuis la page de detail (`BienDetail.tsx`), avec confirmation et nettoyage de l'image associee dans le storage.
+## Constat
 
-## Fichier modifie
+Le calcul automatique du montant total est deja en place dans le code. Il fonctionne quand les **trois champs** (date d'arrivee, date de depart, prix unitaire) sont remplis. Si l'un des trois manque, le total affiche "0 GNF", ce qui peut donner l'impression que rien ne se passe.
 
-**`src/pages/BienDetail.tsx`**
+## Ameliorations prevues
 
-### Changements
+**Fichier** : `src/components/dialogs/ReservationDialog.tsx`
 
-1. Ajouter un bouton "Supprimer" (rouge) dans l'en-tete de la page, a cote du badge de statut
-2. Ajouter un `AlertDialog` de confirmation avant suppression ("Etes-vous sur de vouloir supprimer ce bien ?")
-3. Logique de suppression :
-   - Si le bien a une `cover_image_url`, supprimer le fichier du bucket `property-covers` (`{entreprise_id}/{property_id}.jpg`)
-   - Supprimer le bien de la table `properties`
-   - Afficher un toast de succes
-   - Rediriger vers `/biens`
-4. Importer `useNavigate` de react-router-dom, `Trash2` de lucide-react, `AlertDialog` des composants UI, et le hook `useToast`
+1. **Affichage dynamique du montant total** : Au lieu d'afficher "0 GNF" quand les champs ne sont pas encore tous remplis, afficher un message explicatif comme "Remplir dates et prix" pour guider l'utilisateur.
 
-### Ce qui ne sera PAS modifie
-- Aucune autre page
-- Aucune migration de base
-- La sidebar reste inchangee
-- Les RLS existantes supportent deja le DELETE pour admin/agent
+2. **Mise en evidence visuelle** : Quand le montant total est calcule (superieur a 0), l'afficher en gras avec une couleur distincte (vert/primary) pour bien montrer que le calcul a ete effectue.
 
+3. **Affichage du detail du calcul** : Ajouter une petite ligne de detail sous le montant total montrant le calcul (ex: "3 jours x 600 000 GNF") pour que l'utilisateur comprenne comment le total est obtenu.
+
+## Detail technique
+
+- Modifier l'affichage du `montantTotal` (ligne 192-194) pour inclure un texte conditionnel
+- Ajouter un calcul du nombre d'unites (jours/semaines/mois) pour l'afficher dans le detail
+- Aucune modification de la logique de calcul elle-meme (deja correcte)
+- Aucune autre page modifiee
