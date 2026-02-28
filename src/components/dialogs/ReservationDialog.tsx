@@ -72,8 +72,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     }
   }, [reservation, open]);
 
-  const montantTotal = useMemo(() => {
-    if (!form.date_arrivee || !form.date_depart || !form.prix_unitaire) return 0;
+  const { montantTotal, unites } = useMemo(() => {
+    if (!form.date_arrivee || !form.date_depart || !form.prix_unitaire) return { montantTotal: 0, unites: 0 };
     const start = new Date(form.date_arrivee);
     const end = new Date(form.date_depart);
     const prix = parseFloat(form.prix_unitaire) || 0;
@@ -81,8 +81,11 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     if (form.type_location === "jour") units = Math.max(differenceInDays(end, start), 1);
     else if (form.type_location === "semaine") units = Math.max(Math.ceil(differenceInDays(end, start) / 7), 1);
     else units = Math.max(differenceInMonths(end, start), 1);
-    return units * prix;
+    return { montantTotal: units * prix, unites: units };
   }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.type_location]);
+
+  const typeLabel = form.type_location === "jour" ? "jour" : form.type_location === "semaine" ? "semaine" : "mois";
+  const canCalculate = form.date_arrivee && form.date_depart && form.prix_unitaire;
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
@@ -190,7 +193,12 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <div><Label>Prix unitaire (GNF)</Label><Input type="number" value={form.prix_unitaire} onChange={(e) => setForm({ ...form, prix_unitaire: e.target.value })} /></div>
             <div>
               <Label>Montant total (auto)</Label>
-              <div className="h-10 px-3 flex items-center rounded-md bg-muted text-sm font-medium">{formatCurrency(montantTotal)}</div>
+              <div className={`h-10 px-3 flex items-center rounded-md text-sm font-medium ${canCalculate && montantTotal > 0 ? "bg-primary/10 text-primary font-bold" : "bg-muted text-muted-foreground"}`}>
+                {canCalculate ? formatCurrency(montantTotal) : "Remplir dates et prix"}
+              </div>
+              {canCalculate && montantTotal > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">{unites} {typeLabel}{unites > 1 ? "s" : ""} × {formatCurrency(parseFloat(form.prix_unitaire))}</p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
