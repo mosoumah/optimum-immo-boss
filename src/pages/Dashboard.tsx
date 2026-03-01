@@ -13,6 +13,7 @@ import {
   BarChart3,
   LayoutDashboard,
   Zap,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAgencySettings } from "@/hooks/useAgencySettings";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
@@ -28,6 +30,7 @@ import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
+import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -57,6 +60,7 @@ const Dashboard = () => {
   const { isAdmin, isAgent, loading: roleLoading } = useUserRole();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const { isPremium, isLoading: subLoading } = useSubscription();
+  const { locationEnabled } = useAgencySettings();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
@@ -83,6 +87,7 @@ const Dashboard = () => {
   const [depenseDialogOpen, setDepenseDialogOpen] = useState(false);
   const [tacheDialogOpen, setTacheDialogOpen] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
 
   const fetchProfileAndClients = async () => {
     if (!user) return;
@@ -169,6 +174,10 @@ const Dashboard = () => {
       { label: "Nouvelle facture", icon: Receipt, onClick: () => setFactureDialogOpen(true) },
       { label: "Document IA", icon: Sparkles, onClick: () => setDocumentDialogOpen(true) },
     ];
+
+    if (locationEnabled) {
+      actions.unshift({ label: "Nouvelle réservation", icon: CalendarCheck, onClick: () => setReservationDialogOpen(true) });
+    }
 
     if (isAdmin) {
       return [
@@ -463,6 +472,12 @@ const Dashboard = () => {
             open={documentDialogOpen}
             onOpenChange={setDocumentDialogOpen}
             entrepriseId={profile.entreprise_id}
+            onSuccess={fetchProfileAndClients}
+          />
+          <ReservationDialog
+            open={reservationDialogOpen}
+            onOpenChange={setReservationDialogOpen}
+            reservation={null}
             onSuccess={fetchProfileAndClients}
           />
         </>
