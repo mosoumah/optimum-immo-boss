@@ -21,12 +21,6 @@ export const Navbar = () => {
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
               Fonctionnalités
             </a>
-            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
-              Tarifs
-            </a>
-            <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
-              À propos
-            </a>
           </div>
 
           <div className="flex items-center gap-3">

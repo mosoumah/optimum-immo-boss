@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Building2, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -24,10 +24,11 @@ const Inscription = () => {
   });
 
   // Redirect if already logged in
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +111,7 @@ const Inscription = () => {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © 2024 Optimum Immo. Tous droits réservés.
+            © {new Date().getFullYear()} Optimum Immo. Tous droits réservés.
           </p>
         </div>
       </div>
