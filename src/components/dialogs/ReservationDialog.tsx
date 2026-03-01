@@ -128,7 +128,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     }
 
     // Générer la facture automatiquement si coché (nouvelle réservation uniquement)
-    if (form.generer_facture && !reservation && result.data) {
+    if (form.generer_facture && !reservation && !result.error) {
       const propertyName = selectedProperty?.nom || form.property_name || "—";
       const { error: factureError } = await supabase.from("factures").insert({
         client_id: form.client_id,
