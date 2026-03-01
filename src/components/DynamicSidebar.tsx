@@ -38,7 +38,7 @@ const sidebarItems: SidebarItem[] = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard", roles: ["admin", "agent"] },
   { icon: Users, label: "Clients", path: "/clients", roles: ["admin", "agent"] },
   { icon: Building, label: "Biens", path: "/biens", roles: ["admin", "agent"] },
-  { icon: CalendarCheck, label: "Réservations", path: "/reservations", roles: ["admin", "agent"], requires: "location" },
+  { icon: CalendarCheck, label: "Réservations", path: "/reservations", roles: ["admin", "agent"] },
   
   { icon: FileText, label: "Devis", path: "/devis", roles: ["admin", "agent"] },
   { icon: Receipt, label: "Factures", path: "/factures", roles: ["admin", "agent"] },
