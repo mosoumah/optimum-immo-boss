@@ -1,32 +1,42 @@
 
+# Correction du calcul automatique du montant total
 
-# Afficher "Reservations" dans la sidebar
+## Probleme
 
-## Constat
-
-L'element "Reservations" existe deja dans la sidebar (ligne 41 de `DynamicSidebar.tsx`), place entre "Biens" et "Devis". Cependant, il est conditionne par l'activation du module Location (`requires: "location"`). Si ce module n'est pas active dans les parametres, l'element ne s'affiche pas.
+Quand la date de depart est anterieure a la date d'arrivee (dates inversees), `differenceInDays` retourne un nombre negatif. Le `Math.max(..., 1)` ramene alors le nombre de jours a 1, ce qui donne un montant total incorrect (prix unitaire x 1 au lieu du vrai nombre de jours).
 
 ## Solution
 
-Retirer la condition `requires: "location"` de l'entree "Reservations" dans la sidebar pour qu'elle soit toujours visible, comme Clients, Biens, Devis, etc.
+**Fichier** : `src/components/dialogs/ReservationDialog.tsx`
 
-## Fichier modifie
+1. **Utiliser la valeur absolue** dans le calcul : remplacer `differenceInDays(end, start)` par `Math.abs(differenceInDays(end, start))` (idem pour semaines et mois) afin que le calcul fonctionne meme si l'utilisateur inverse les dates.
 
-**`src/components/DynamicSidebar.tsx`** - ligne 41
+2. **Afficher un avertissement** sous les champs de date quand la date de depart est anterieure a la date d'arrivee, pour que l'utilisateur puisse corriger si necessaire (texte orange : "La date de depart est avant la date d'arrivee").
 
-### Changement
+3. **Garantir un minimum de 1 unite** : conserver le `Math.max(..., 1)` apres le `Math.abs` pour eviter un total a 0 si les dates sont identiques.
 
-Supprimer `requires: "location"` de la definition de l'item Reservations :
+## Detail technique
+
+Dans le `useMemo` (environ ligne 80-88), modifier les calculs :
 
 ```text
 // Avant :
-{ icon: CalendarCheck, label: "Reservations", path: "/reservations", roles: ["admin", "agent"], requires: "location" },
+if (form.type_location === "jour") units = Math.max(differenceInDays(end, start), 1);
+else if (form.type_location === "semaine") units = Math.max(Math.ceil(differenceInDays(end, start) / 7), 1);
+else units = Math.max(differenceInMonths(end, start), 1);
 
 // Apres :
-{ icon: CalendarCheck, label: "Reservations", path: "/reservations", roles: ["admin", "agent"] },
+const totalDays = Math.abs(differenceInDays(end, start));
+if (form.type_location === "jour") units = Math.max(totalDays, 1);
+else if (form.type_location === "semaine") units = Math.max(Math.ceil(totalDays / 7), 1);
+else units = Math.max(Math.abs(differenceInMonths(end, start)), 1);
 ```
 
-### Ce qui ne sera PAS modifie
-- Aucune autre page ou composant
-- Aucune migration
-- La logique du formulaire de reservation reste inchangee
+Ajouter un indicateur `datesInversees` :
+
+```text
+const datesInversees = form.date_arrivee && form.date_depart &&
+  new Date(form.date_depart) < new Date(form.date_arrivee);
+```
+
+Afficher un message d'avertissement orange sous les champs de dates quand `datesInversees` est vrai.
