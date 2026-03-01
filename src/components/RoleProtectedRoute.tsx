@@ -135,9 +135,7 @@ export const RoleProtectedRoute = ({
 
   // Role exists but not allowed for this route
   if (!allowedRoles.includes(role)) {
-    // Redirect clients to their portal, others to the specified redirect
-    const redirect = role === "client" ? "/portail-client" : redirectTo;
-    return <Navigate to={redirect} replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <>{children}</>;

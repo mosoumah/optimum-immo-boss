@@ -30,7 +30,7 @@ interface SidebarItem {
   icon: typeof LayoutDashboard;
   label: string;
   path: string;
-  roles: ("admin" | "agent" | "client")[];
+  roles: ("admin" | "agent")[];
   requires?: "vente" | "location";
 }
 
@@ -63,7 +63,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const filteredItems = sidebarItems.filter((item) => {
-    if (!role || !item.roles.includes(role as "admin" | "agent" | "client")) return false;
+    if (!role || !item.roles.includes(role as "admin" | "agent")) return false;
     if (item.requires === "vente" && !venteEnabled) return false;
     if (item.requires === "location" && !locationEnabled) return false;
     return true;

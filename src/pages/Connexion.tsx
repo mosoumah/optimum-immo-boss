@@ -25,16 +25,21 @@ const Connexion = () => {
     password: "",
   });
 
-  // Redirect if already logged in - check role
+  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       const checkRoleAndRedirect = async () => {
         const { data } = await supabase.rpc("get_user_role", { _user_id: user.id });
         if (data === "client") {
-          navigate("/portail-client");
-        } else {
-          navigate("/dashboard");
+          await supabase.auth.signOut();
+          toast({
+            title: "Accès refusé",
+            description: "Votre compte n'a pas accès à cette application.",
+            variant: "destructive",
+          });
+          return;
         }
+        navigate("/dashboard");
       };
       checkRoleAndRedirect();
     }
@@ -64,13 +69,22 @@ const Connexion = () => {
     });
 
     setIsLoading(false);
-    // Role-based redirect
-    const { data: role } = await supabase.rpc("get_user_role", { _user_id: (await supabase.auth.getUser()).data.user?.id ?? "" });
-    if (role === "client") {
-      navigate("/portail-client");
-    } else {
-      navigate("/dashboard");
+    // Role-based redirect - block clients
+    const currentUser = (await supabase.auth.getUser()).data.user;
+    if (currentUser) {
+      const { data: role } = await supabase.rpc("get_user_role", { _user_id: currentUser.id });
+      if (role === "client") {
+        await supabase.auth.signOut();
+        toast({
+          title: "Accès refusé",
+          description: "Votre compte n'a pas accès à cette application.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
     }
+    navigate("/dashboard");
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {

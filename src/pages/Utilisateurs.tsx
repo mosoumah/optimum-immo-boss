@@ -6,7 +6,6 @@ import {
   Users,
   Shield,
   User,
-  UserCheck,
   MoreVertical,
   Search,
   Bell,
@@ -63,11 +62,6 @@ interface UserWithRole {
   created_at: string;
 }
 
-interface Client {
-  id: string;
-  nom: string;
-  email: string | null;
-}
 
 const Utilisateurs = () => {
   const { user, signOut } = useAuth();
@@ -75,7 +69,6 @@ const Utilisateurs = () => {
   const { toast } = useToast();
 
   const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,7 +77,6 @@ const Utilisateurs = () => {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserNom, setNewUserNom] = useState("");
   const [newUserRole, setNewUserRole] = useState<AppRole>("agent");
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
 
   // Delete confirmation state
@@ -128,14 +120,6 @@ const Utilisateurs = () => {
         }
         setUsers(usersWithRoles);
       }
-
-      // Fetch clients for client account creation
-      const { data: clientsData } = await supabase
-        .from("clients")
-        .select("id, nom, email")
-        .eq("entreprise_id", profileData.entreprise_id);
-
-      setClients(clientsData || []);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -162,15 +146,6 @@ const Utilisateurs = () => {
       return;
     }
 
-    if (newUserRole === "client" && !selectedClientId) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner un client pour ce compte",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsCreating(true);
 
     try {
@@ -190,7 +165,7 @@ const Utilisateurs = () => {
           nom: newUserNom,
           role: newUserRole,
           entreprise_id: profileData.entreprise_id,
-          client_id: newUserRole === "client" ? selectedClientId : null,
+          client_id: null,
         },
       });
 
@@ -212,7 +187,6 @@ const Utilisateurs = () => {
       setNewUserEmail("");
       setNewUserNom("");
       setNewUserRole("agent");
-      setSelectedClientId("");
       fetchData();
     } catch (error: any) {
       console.error("Error creating user:", error);
@@ -285,8 +259,6 @@ const Utilisateurs = () => {
         return <Shield className="w-4 h-4 text-primary" />;
       case "agent":
         return <User className="w-4 h-4 text-success" />;
-      case "client":
-        return <UserCheck className="w-4 h-4 text-warning" />;
       default:
         return <User className="w-4 h-4" />;
     }
@@ -297,9 +269,7 @@ const Utilisateurs = () => {
       case "admin":
         return "Administrateur";
       case "agent":
-        return "Agent";
-      case "client":
-        return "Client";
+        return "Utilisateur";
       default:
         return role;
     }
@@ -311,8 +281,6 @@ const Utilisateurs = () => {
         return "bg-primary/10 text-primary";
       case "agent":
         return "bg-success/10 text-success";
-      case "client":
-        return "bg-warning/10 text-warning";
       default:
         return "bg-muted text-muted-foreground";
     }
@@ -433,31 +401,10 @@ const Utilisateurs = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">Administrateur</SelectItem>
-                        <SelectItem value="agent">Agent</SelectItem>
-                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="agent">Utilisateur</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  {newUserRole === "client" && (
-                    <div className="space-y-2">
-                      <Label>Lier au client *</Label>
-                      <Select
-                        value={selectedClientId}
-                        onValueChange={setSelectedClientId}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un client" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {clients.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.nom} {c.email ? `(${c.email})` : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
                   <Button
                     className="w-full"
                     onClick={handleCreateUser}
@@ -475,7 +422,7 @@ const Utilisateurs = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8"
+            className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8"
           >
             <div className="card-stat p-6 rounded-2xl border border-border/30">
               <div className="flex items-center gap-3">
@@ -499,20 +446,7 @@ const Utilisateurs = () => {
                   <p className="text-2xl font-bold">
                     {users.filter((u) => u.role === "agent").length}
                   </p>
-                  <p className="text-sm text-muted-foreground">Agents</p>
-                </div>
-              </div>
-            </div>
-            <div className="card-stat p-6 rounded-2xl border border-border/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-warning/10">
-                  <UserCheck className="w-5 h-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {users.filter((u) => u.role === "client").length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Clients</p>
+                  <p className="text-sm text-muted-foreground">Utilisateurs</p>
                 </div>
               </div>
             </div>
