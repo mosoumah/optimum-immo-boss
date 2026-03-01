@@ -118,7 +118,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     if (reservation) {
       result = await supabase.from("reservations").update(payload).eq("id", reservation.id);
     } else {
-      result = await supabase.from("reservations").insert(payload).select().single();
+      result = await supabase.from("reservations").insert(payload);
     }
 
     if (result.error) {
