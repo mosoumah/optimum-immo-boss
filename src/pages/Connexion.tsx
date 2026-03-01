@@ -8,10 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Connexion = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
@@ -21,10 +25,18 @@ const Connexion = () => {
     password: "",
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in - check role
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      const checkRoleAndRedirect = async () => {
+        const { data } = await supabase.rpc("get_user_role", { _user_id: user.id });
+        if (data === "client") {
+          navigate("/portail-client");
+        } else {
+          navigate("/dashboard");
+        }
+      };
+      checkRoleAndRedirect();
     }
   }, [user, navigate]);
 
@@ -52,7 +64,37 @@ const Connexion = () => {
     });
 
     setIsLoading(false);
-    navigate("/dashboard");
+    // Role-based redirect
+    const { data: role } = await supabase.rpc("get_user_role", { _user_id: (await supabase.auth.getUser()).data.user?.id ?? "" });
+    if (role === "client") {
+      navigate("/portail-client");
+    } else {
+      navigate("/dashboard");
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Email envoyé",
+        description: "Vérifiez votre boîte mail pour réinitialiser votre mot de passe.",
+      });
+      setForgotPasswordMode(false);
+    }
+    setResetLoading(false);
   };
 
   return (
@@ -99,9 +141,13 @@ const Connexion = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Mot de passe</Label>
-                <span className="text-sm text-primary hover:underline cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => { setForgotPasswordMode(true); setResetEmail(formData.email); }}
+                  className="text-sm text-primary hover:underline cursor-pointer"
+                >
                   Mot de passe oublié?
-                </span>
+                </button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -151,6 +197,61 @@ const Connexion = () => {
             </p>
           </div>
         </div>
+
+        {/* Forgot Password Modal */}
+        {forgotPasswordMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            onClick={() => setForgotPasswordMode(false)}
+          >
+            <div
+              className="glass-strong rounded-2xl p-8 w-full max-w-md mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-bold mb-2">Réinitialiser le mot de passe</h2>
+              <p className="text-muted-foreground text-sm mb-6">
+                Entrez votre adresse email pour recevoir un lien de réinitialisation.
+              </p>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="votre@email.com"
+                    className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setForgotPasswordMode(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    className="flex-1"
+                    disabled={resetLoading}
+                  >
+                    {resetLoading ? (
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    ) : (
+                      "Envoyer"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

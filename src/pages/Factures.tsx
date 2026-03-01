@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { checkPermission } from "@/lib/checkPermission";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { escapeHtml } from "@/lib/escapeHtml";
 import {
   Dialog,
   DialogContent,
@@ -278,26 +279,26 @@ const Factures = () => {
         <body>
           <div class="header">
             <div class="logo-section">
-              ${logoSrc ? `<img src="${logoSrc}" class="logo" />` : ''}
+              ${logoSrc ? `<img src="${escapeHtml(logoSrc)}" class="logo" />` : ''}
               <div class="company-info">
-                <h1>${entreprise?.nom || ''}</h1>
-                ${entreprise?.adresse ? `<p>${entreprise.adresse}</p>` : ''}
-                ${entreprise?.telephone ? `<p>Tél: ${entreprise.telephone}</p>` : ''}
-                ${entreprise?.email ? `<p>${entreprise.email}</p>` : ''}
+                <h1>${escapeHtml(entreprise?.nom)}</h1>
+                ${entreprise?.adresse ? `<p>${escapeHtml(entreprise.adresse)}</p>` : ''}
+                ${entreprise?.telephone ? `<p>Tél: ${escapeHtml(entreprise.telephone)}</p>` : ''}
+                ${entreprise?.email ? `<p>${escapeHtml(entreprise.email)}</p>` : ''}
               </div>
             </div>
             <div class="invoice-title">
               <h2>FACTURE</h2>
-              <p>N°: FAC-${previewFacture?.id.substring(0, 8).toUpperCase()}</p>
+              <p>N°: FAC-${escapeHtml(previewFacture?.id.substring(0, 8).toUpperCase())}</p>
               <p>Date: ${previewFacture ? new Date(previewFacture.date).toLocaleDateString("fr-FR") : ''}</p>
             </div>
           </div>
           <div class="client-section">
             <h3>Facturé à:</h3>
             <div class="client-box">
-              <p class="name">${previewFacture?.clients?.nom || 'Client'}</p>
-              ${previewFacture?.clients?.telephone ? `<p>Tél: ${previewFacture.clients.telephone}</p>` : ''}
-              ${previewFacture?.clients?.email ? `<p>${previewFacture.clients.email}</p>` : ''}
+              <p class="name">${escapeHtml(previewFacture?.clients?.nom) || 'Client'}</p>
+              ${previewFacture?.clients?.telephone ? `<p>Tél: ${escapeHtml(previewFacture.clients.telephone)}</p>` : ''}
+              ${previewFacture?.clients?.email ? `<p>${escapeHtml(previewFacture.clients.email)}</p>` : ''}
             </div>
           </div>
           <table>
@@ -306,7 +307,7 @@ const Factures = () => {
             </thead>
             <tbody>
               <tr>
-                <td>${previewFacture?.description || 'Prestation de service'}</td>
+                <td>${escapeHtml(previewFacture?.description) || 'Prestation de service'}</td>
                 <td>${previewFacture ? new Intl.NumberFormat("fr-GN").format(previewFacture.montant) + ' GNF' : ''}</td>
               </tr>
             </tbody>
@@ -320,7 +321,7 @@ const Factures = () => {
           ${previewContent ? `
           <div class="details">
             <h3>Détails:</h3>
-            <div class="details-content">${previewContent}</div>
+            <div class="details-content">${escapeHtml(previewContent)}</div>
           </div>
           ` : ''}
           <div class="footer">
@@ -395,17 +396,17 @@ const Factures = () => {
 <body>
   <div class="header">
     <div class="logo-section">
-      ${logoSrc ? `<img src="${logoSrc}" class="logo" alt="Logo" />` : ''}
+      ${logoSrc ? `<img src="${escapeHtml(logoSrc)}" class="logo" alt="Logo" />` : ''}
       <div class="company-info">
-        <h1>${entreprise.nom}</h1>
-        ${entreprise.adresse ? `<p>${entreprise.adresse}</p>` : ''}
-        ${entreprise.telephone ? `<p>Tél: ${entreprise.telephone}</p>` : ''}
-        ${entreprise.email ? `<p>${entreprise.email}</p>` : ''}
+        <h1>${escapeHtml(entreprise.nom)}</h1>
+        ${entreprise.adresse ? `<p>${escapeHtml(entreprise.adresse)}</p>` : ''}
+        ${entreprise.telephone ? `<p>Tél: ${escapeHtml(entreprise.telephone)}</p>` : ''}
+        ${entreprise.email ? `<p>${escapeHtml(entreprise.email)}</p>` : ''}
       </div>
     </div>
     <div class="invoice-title">
       <h2>FACTURE</h2>
-      <p>N°: FAC-${previewFacture.id.substring(0, 8).toUpperCase()}</p>
+      <p>N°: FAC-${escapeHtml(previewFacture.id.substring(0, 8).toUpperCase())}</p>
       <p>Date: ${new Date(previewFacture.date).toLocaleDateString("fr-FR")}</p>
     </div>
   </div>
@@ -413,9 +414,9 @@ const Factures = () => {
   <div class="client-section">
     <h3>Facturé à:</h3>
     <div class="client-box">
-      <p class="name">${previewFacture.clients?.nom || 'Client'}</p>
-      ${previewFacture.clients?.telephone ? `<p>Tél: ${previewFacture.clients.telephone}</p>` : ''}
-      ${previewFacture.clients?.email ? `<p>${previewFacture.clients.email}</p>` : ''}
+      <p class="name">${escapeHtml(previewFacture.clients?.nom) || 'Client'}</p>
+      ${previewFacture.clients?.telephone ? `<p>Tél: ${escapeHtml(previewFacture.clients.telephone)}</p>` : ''}
+      ${previewFacture.clients?.email ? `<p>${escapeHtml(previewFacture.clients.email)}</p>` : ''}
     </div>
   </div>
   
@@ -425,7 +426,7 @@ const Factures = () => {
     </thead>
     <tbody>
       <tr>
-        <td>${previewFacture.description || 'Prestation de service'}</td>
+        <td>${escapeHtml(previewFacture.description) || 'Prestation de service'}</td>
         <td>${new Intl.NumberFormat("fr-GN").format(previewFacture.montant)} GNF</td>
       </tr>
     </tbody>
@@ -440,7 +441,7 @@ const Factures = () => {
   ${previewContent ? `
   <div class="details">
     <h3>Détails:</h3>
-    <div class="details-content">${previewContent}</div>
+    <div class="details-content">${escapeHtml(previewContent)}</div>
   </div>
   ` : ''}
   

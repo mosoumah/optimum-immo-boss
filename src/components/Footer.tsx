@@ -8,14 +8,8 @@ export const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <Logo size="sm" animated={false} />
             
-            <div className="flex items-center gap-8 text-sm text-muted-foreground">
-              <span className="hover:text-primary transition-colors cursor-pointer">Mentions légales</span>
-              <span className="hover:text-primary transition-colors cursor-pointer">Confidentialité</span>
-              <span className="hover:text-primary transition-colors cursor-pointer">CGU</span>
-            </div>
-            
             <p className="text-sm text-muted-foreground">
-              © 2024 Optimum Immo. Tous droits réservés.
+              © {new Date().getFullYear()} Optimum Immo. Tous droits réservés.
             </p>
           </div>
         </div>

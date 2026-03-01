@@ -28,6 +28,7 @@ import Parametres from "./pages/Parametres";
 import Utilisateurs from "./pages/Utilisateurs";
 import GestionPermissions from "./pages/GestionPermissions";
 import PortailClient from "./pages/PortailClient";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/inscription" element={<Inscription />} />
             <Route path="/connexion" element={<Connexion />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/profil-entreprise"
               element={

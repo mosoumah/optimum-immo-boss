@@ -344,7 +344,7 @@ const Utilisateurs = () => {
       <FloatingParticles count={35} />
       <DynamicSidebar onSignOut={handleSignOut} />
 
-      <main className="flex-1 ml-64 mesh-gradient min-h-screen">
+      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen">
         <header className="sticky top-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
           <div className="flex items-center justify-between px-8 py-4">
             <motion.div

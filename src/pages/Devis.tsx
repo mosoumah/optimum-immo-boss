@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { checkPermission } from "@/lib/checkPermission";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { escapeHtml } from "@/lib/escapeHtml";
 import {
   Dialog,
   DialogContent,
@@ -303,26 +304,26 @@ const Devis = () => {
         <body>
           <div class="header">
             <div class="logo-section">
-              ${logoSrc ? `<img src="${logoSrc}" class="logo" />` : ''}
+              ${logoSrc ? `<img src="${escapeHtml(logoSrc)}" class="logo" />` : ''}
               <div class="company-info">
-                <h1>${entreprise?.nom || ''}</h1>
-                ${entreprise?.adresse ? `<p>${entreprise.adresse}</p>` : ''}
-                ${entreprise?.telephone ? `<p>Tél: ${entreprise.telephone}</p>` : ''}
-                ${entreprise?.email ? `<p>${entreprise.email}</p>` : ''}
+                <h1>${escapeHtml(entreprise?.nom)}</h1>
+                ${entreprise?.adresse ? `<p>${escapeHtml(entreprise.adresse)}</p>` : ''}
+                ${entreprise?.telephone ? `<p>Tél: ${escapeHtml(entreprise.telephone)}</p>` : ''}
+                ${entreprise?.email ? `<p>${escapeHtml(entreprise.email)}</p>` : ''}
               </div>
             </div>
             <div class="quote-title">
               <h2>DEVIS</h2>
-              <p>N°: ${previewDevis?.numero_devis || `DEV-${previewDevis?.id.substring(0, 8).toUpperCase()}`}</p>
+              <p>N°: ${escapeHtml(previewDevis?.numero_devis) || `DEV-${escapeHtml(previewDevis?.id.substring(0, 8).toUpperCase())}`}</p>
               <p>Date: ${previewDevis ? new Date(previewDevis.date).toLocaleDateString("fr-FR") : ''}</p>
             </div>
           </div>
           <div class="client-section">
             <h3>Proposé à:</h3>
             <div class="client-box">
-              <p class="name">${previewDevis?.clients?.nom || 'Client'}</p>
-              ${previewDevis?.clients?.telephone ? `<p>Tél: ${previewDevis.clients.telephone}</p>` : ''}
-              ${previewDevis?.clients?.email ? `<p>${previewDevis.clients.email}</p>` : ''}
+              <p class="name">${escapeHtml(previewDevis?.clients?.nom) || 'Client'}</p>
+              ${previewDevis?.clients?.telephone ? `<p>Tél: ${escapeHtml(previewDevis.clients.telephone)}</p>` : ''}
+              ${previewDevis?.clients?.email ? `<p>${escapeHtml(previewDevis.clients.email)}</p>` : ''}
             </div>
           </div>
           <table>
@@ -331,7 +332,7 @@ const Devis = () => {
             </thead>
             <tbody>
               <tr>
-                <td>${previewDevis?.description || 'Prestation de service'}</td>
+                <td>${escapeHtml(previewDevis?.description) || 'Prestation de service'}</td>
                 <td>${previewDevis ? new Intl.NumberFormat("fr-GN").format(previewDevis.montant) + ' GNF' : ''}</td>
               </tr>
             </tbody>
@@ -345,7 +346,7 @@ const Devis = () => {
           ${previewContent ? `
           <div class="details">
             <h3>Détails:</h3>
-            <div class="details-content">${previewContent}</div>
+            <div class="details-content">${escapeHtml(previewContent)}</div>
           </div>
           ` : ''}
           <div class="footer">
@@ -420,17 +421,17 @@ const Devis = () => {
 <body>
   <div class="header">
     <div class="logo-section">
-      ${logoSrc ? `<img src="${logoSrc}" class="logo" alt="Logo" />` : ''}
+      ${logoSrc ? `<img src="${escapeHtml(logoSrc)}" class="logo" alt="Logo" />` : ''}
       <div class="company-info">
-        <h1>${entreprise.nom}</h1>
-        ${entreprise.adresse ? `<p>${entreprise.adresse}</p>` : ''}
-        ${entreprise.telephone ? `<p>Tél: ${entreprise.telephone}</p>` : ''}
-        ${entreprise.email ? `<p>${entreprise.email}</p>` : ''}
+        <h1>${escapeHtml(entreprise.nom)}</h1>
+        ${entreprise.adresse ? `<p>${escapeHtml(entreprise.adresse)}</p>` : ''}
+        ${entreprise.telephone ? `<p>Tél: ${escapeHtml(entreprise.telephone)}</p>` : ''}
+        ${entreprise.email ? `<p>${escapeHtml(entreprise.email)}</p>` : ''}
       </div>
     </div>
     <div class="quote-title">
       <h2>DEVIS</h2>
-      <p>N°: ${previewDevis.numero_devis || `DEV-${previewDevis.id.substring(0, 8).toUpperCase()}`}</p>
+      <p>N°: ${escapeHtml(previewDevis.numero_devis) || `DEV-${escapeHtml(previewDevis.id.substring(0, 8).toUpperCase())}`}</p>
       <p>Date: ${new Date(previewDevis.date).toLocaleDateString("fr-FR")}</p>
     </div>
   </div>
@@ -438,9 +439,9 @@ const Devis = () => {
   <div class="client-section">
     <h3>Proposé à:</h3>
     <div class="client-box">
-      <p class="name">${previewDevis.clients?.nom || 'Client'}</p>
-      ${previewDevis.clients?.telephone ? `<p>Tél: ${previewDevis.clients.telephone}</p>` : ''}
-      ${previewDevis.clients?.email ? `<p>${previewDevis.clients.email}</p>` : ''}
+      <p class="name">${escapeHtml(previewDevis.clients?.nom) || 'Client'}</p>
+      ${previewDevis.clients?.telephone ? `<p>Tél: ${escapeHtml(previewDevis.clients.telephone)}</p>` : ''}
+      ${previewDevis.clients?.email ? `<p>${escapeHtml(previewDevis.clients.email)}</p>` : ''}
     </div>
   </div>
   
@@ -450,7 +451,7 @@ const Devis = () => {
     </thead>
     <tbody>
       <tr>
-        <td>${previewDevis.description || 'Prestation de service'}</td>
+        <td>${escapeHtml(previewDevis.description) || 'Prestation de service'}</td>
         <td>${new Intl.NumberFormat("fr-GN").format(previewDevis.montant)} GNF</td>
       </tr>
     </tbody>
@@ -465,7 +466,7 @@ const Devis = () => {
   ${previewContent ? `
   <div class="details">
     <h3>Détails:</h3>
-    <div class="details-content">${previewContent}</div>
+    <div class="details-content">${escapeHtml(previewContent)}</div>
   </div>
   ` : ''}
   
