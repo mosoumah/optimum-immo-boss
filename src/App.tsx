@@ -27,7 +27,7 @@ import StudioIA from "./pages/StudioIA";
 import Parametres from "./pages/Parametres";
 import Utilisateurs from "./pages/Utilisateurs";
 import GestionPermissions from "./pages/GestionPermissions";
-import PortailClient from "./pages/PortailClient";
+
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -180,15 +180,6 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin"]}>
                   <GestionPermissions />
-                </RoleProtectedRoute>
-              }
-            />
-            {/* Client portal */}
-            <Route
-              path="/portail-client"
-              element={
-                <RoleProtectedRoute allowedRoles={["client"]}>
-                  <PortailClient />
                 </RoleProtectedRoute>
               }
             />
