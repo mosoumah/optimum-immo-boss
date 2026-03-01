@@ -1,22 +1,46 @@
 
+## Objectif
+Corriger définitivement la non-génération de facture automatique depuis le formulaire de réservation, sans modifier autre chose.
 
-# Fix: Invoice auto-generation from reservation form
+## Cause racine identifiée
+Le flux actuel de création de réservation fait :
+- `insert(payload).select().single()` sur `reservations`
+- puis un contrôle global `if (result.error) return`
 
-## Problem
-In `ReservationDialog.tsx` line 131, the condition `form.generer_facture && !reservation && result.data` requires `result.data` to be truthy. However, the `.select().single()` call after insert depends on the RLS SELECT policy for `reservations`, which may not return the row (e.g., for agents whose clients aren't assigned to them). When `result.data` is `null`, the invoice generation is silently skipped even though the reservation was created.
+Dans certains cas de règles d’accès (RLS), l’insertion peut réussir **mais** la partie `select().single()` ne retourne pas la ligne (ou retourne une erreur “no rows / single”), ce qui met `result.error`.
+Résultat :
+- la réservation est bien créée en base,
+- mais le code sort trop tôt (`return`) et n’exécute jamais l’insertion de facture.
 
-## Fix
-**File**: `src/components/dialogs/ReservationDialog.tsx`
+C’est pour cela que le problème persiste même après le changement précédent sur `result.data`.
 
-Change the condition on line 131 from:
-```
-if (form.generer_facture && !reservation && result.data)
-```
-to:
-```
-if (form.generer_facture && !reservation && !result.error)
-```
+## Correctif ciblé (un seul fichier)
+**Fichier :** `src/components/dialogs/ReservationDialog.tsx`
 
-This ensures that as long as the reservation insert didn't fail, the invoice will be generated -- regardless of whether the SELECT after insert returned data.
+### 1) Sécuriser l’insert réservation
+Remplacer la création de réservation :
+- **Avant** : `insert(payload).select().single()`
+- **Après** : `insert(payload)` (sans `select`, sans `single`)
 
-No other files or logic will be modified.
+But : ne plus dépendre d’un retour de lecture pour considérer la création comme réussie.
+
+### 2) Conserver la logique d’erreur réelle
+Garder le bloc :
+- `if (result.error) { ... return; }`
+Mais après le point 1, cette erreur reflètera uniquement un vrai échec d’insertion (et non un faux négatif lié à la lecture post-insert).
+
+### 3) Déclenchement facture automatique
+Conserver la condition de facture pour nouvelle réservation :
+- `if (form.generer_facture && !reservation && !result.error) { ... }`
+Elle fonctionnera correctement une fois le faux `result.error` éliminé.
+
+## Pourquoi ce fix est le bon
+- Il corrige précisément le point de rupture du flux.
+- Il ne touche ni les pages factures, ni les permissions, ni le schéma base de données.
+- Il respecte ta demande : **ne rien modifier d’autre**.
+
+## Vérification après implémentation
+1. Créer une nouvelle réservation avec “Générer facture automatiquement” coché.
+2. Vérifier qu’aucun toast d’erreur de réservation n’apparaît.
+3. Vérifier qu’une ligne est bien insérée dans `factures`.
+4. Vérifier que le message succès “réservation créée et facture générée” s’affiche.
