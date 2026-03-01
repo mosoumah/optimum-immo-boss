@@ -77,13 +77,15 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     const start = new Date(form.date_arrivee);
     const end = new Date(form.date_depart);
     const prix = parseFloat(form.prix_unitaire) || 0;
+    const totalDays = Math.abs(differenceInDays(end, start));
     let units = 0;
-    if (form.type_location === "jour") units = Math.max(differenceInDays(end, start), 1);
-    else if (form.type_location === "semaine") units = Math.max(Math.ceil(differenceInDays(end, start) / 7), 1);
-    else units = Math.max(differenceInMonths(end, start), 1);
+    if (form.type_location === "jour") units = Math.max(totalDays, 1);
+    else if (form.type_location === "semaine") units = Math.max(Math.ceil(totalDays / 7), 1);
+    else units = Math.max(Math.abs(differenceInMonths(end, start)), 1);
     return { montantTotal: units * prix, unites: units };
   }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.type_location]);
 
+  const datesInversees = form.date_arrivee && form.date_depart && new Date(form.date_depart) < new Date(form.date_arrivee);
   const typeLabel = form.type_location === "jour" ? "jour" : form.type_location === "semaine" ? "semaine" : "mois";
   const canCalculate = form.date_arrivee && form.date_depart && form.prix_unitaire;
 
@@ -189,6 +191,9 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <div><Label>Date d'arrivée *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value })} /></div>
             <div><Label>Date de départ *</Label><Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} /></div>
           </div>
+          {datesInversees && (
+            <p className="text-sm text-orange-500 -mt-2">⚠ La date de départ est avant la date d'arrivée</p>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Prix unitaire (GNF)</Label><Input type="number" value={form.prix_unitaire} onChange={(e) => setForm({ ...form, prix_unitaire: e.target.value })} /></div>
             <div>
