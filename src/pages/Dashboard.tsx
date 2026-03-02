@@ -11,8 +11,6 @@ import {
   Plus,
   Search,
   BarChart3,
-  LayoutDashboard,
-  Zap,
   CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useEntreprise } from "@/hooks/useEntreprise";
-import { useSubscription } from "@/hooks/useSubscription";
+
 import { useAgencySettings } from "@/hooks/useAgencySettings";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,8 +37,6 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummary";
 import { SimpleDailyActivity } from "@/components/dashboard/SimpleDailyActivity";
 import { SimpleChart } from "@/components/dashboard/SimpleChart";
-import { AdvancedAISummary } from "@/components/dashboard/AdvancedAISummary";
-import { PremiumUpgradeCard } from "@/components/dashboard/PremiumUpgradeCard";
 
 interface Profile {
   nom: string;
@@ -53,32 +49,18 @@ interface Client {
   email: string | null;
 }
 
-type DashboardMode = "simple" | "advanced";
-
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { isAdmin, isAgent, loading: roleLoading } = useUserRole();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
-  const { isPremium, isLoading: subLoading } = useSubscription();
   const { locationEnabled } = useAgencySettings();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Dashboard mode with localStorage persistence
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(() => {
-    const saved = localStorage.getItem("dashboard-mode");
-    return (saved === "advanced" ? "advanced" : "simple") as DashboardMode;
-  });
-
-  const handleModeChange = (mode: DashboardMode) => {
-    setDashboardMode(mode);
-    localStorage.setItem("dashboard-mode", mode);
-  };
-
   // Fetch dashboard data from views
-  const dashboardData = useDashboardData(entrepriseId, dashboardMode, isPremium);
+  const dashboardData = useDashboardData(entrepriseId, "simple", false);
 
   // Dialog states
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
@@ -126,41 +108,6 @@ const Dashboard = () => {
     }
   }, [user, roleLoading]);
 
-  // Convert dashboard alerts to notifications
-  useEffect(() => {
-    const syncAlerts = async () => {
-      if (!user || !entrepriseId || dashboardMode !== "advanced" || !(isAdmin || isPremium)) return;
-      if (!dashboardData.alerts || dashboardData.alerts.length === 0) return;
-
-      const alertConfig: Record<string, string> = {
-        depart_imminent: "Départ imminent",
-        paiement_retard: "Paiement en retard",
-        bien_bientot_disponible: "Bientôt disponible",
-      };
-
-      for (const alert of dashboardData.alerts) {
-        if (!alert.id) continue;
-        // Check if notification already exists
-        const { data: existing } = await supabase
-          .from("notifications")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("reference_id", alert.id)
-          .maybeSingle();
-
-        if (!existing) {
-          await supabase.from("notifications").insert({
-            user_id: user.id,
-            type: "alerte",
-            titre: alertConfig[alert.alert_type] || "Alerte",
-            message: `${alert.label || ""} — ${alert.detail || ""}`.trim(),
-            reference_id: alert.id,
-          });
-        }
-      }
-    };
-    syncAlerts();
-  }, [user, entrepriseId, dashboardMode, isAdmin, isPremium, dashboardData.alerts]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -191,7 +138,7 @@ const Dashboard = () => {
     return actions;
   };
 
-  if (isLoading || roleLoading || entrepriseLoading || subLoading) {
+  if (isLoading || roleLoading || entrepriseLoading) {
     return (
       <div className="h-screen flex items-center justify-center mesh-gradient overflow-hidden">
         <motion.div
@@ -258,37 +205,6 @@ const Dashboard = () => {
                 </h1>
                 <p className="text-muted-foreground text-xs">Voici un aperçu de votre activité aujourd'hui</p>
               </div>
-              {/* Mode Toggle */}
-              {isAdmin && (
-                <div className="flex items-center gap-1 bg-secondary/30 rounded-lg p-1">
-                  <Button
-                    variant={dashboardMode === "simple" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => handleModeChange("simple")}
-                    className={`rounded-md h-8 px-3 text-xs ${
-                      dashboardMode === "simple"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-secondary/50"
-                    }`}
-                  >
-                    <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />
-                    Simple
-                  </Button>
-                  <Button
-                    variant={dashboardMode === "advanced" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => handleModeChange("advanced")}
-                    className={`rounded-md h-8 px-3 text-xs ${
-                      dashboardMode === "advanced"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-secondary/50"
-                    }`}
-                  >
-                    <Zap className="w-3.5 h-3.5 mr-1.5" />
-                    Avancé
-                  </Button>
-                </div>
-              )}
             </div>
           </motion.div>
 
@@ -323,115 +239,82 @@ const Dashboard = () => {
           <div className="flex-shrink-0 h-px w-full my-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* Dashboard Content */}
-          {dashboardMode === "simple" ? (
-            <div className="flex flex-col gap-1 flex-1 min-h-0">
-              {/* Ligne 1 - Résumé financier */}
-              <div>
-                {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
-              </div>
-
-              {/* Separator */}
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
-
-              {/* Ligne 2 - Activité du jour */}
-              <div>
-                {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
-              </div>
-
-              {/* Separator */}
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
-
-              {/* Ligne 3 - Graphique + Ligne 4 - Clients */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
-                {entrepriseId && (
-                  <div className="lg:col-span-2 min-h-0 h-full">
-                    <SimpleChart entrepriseId={entrepriseId} />
-                  </div>
-                )}
-
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }} 
-                  animate={{ opacity: 1, x: 0 }} 
-                  transition={{ duration: 0.5, delay: 0.4 }} 
-                  className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0 h-full overflow-hidden"
-                >
-                  <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                    <h2 className="section-title-premium flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      Clients récents
-                    </h2>
-                    {isAdmin && (
-                      <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-xl h-9 w-9">
-                        <Plus className="w-5 h-5" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="space-y-2 flex-1">
-                    {clients.length > 0 ? (
-                      clients.map((client, index) => (
-                        <motion.div 
-                          key={client.id} 
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
-                          className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
-                        >
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
-                            <Users className="w-4 h-4 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm truncate">{client.nom}</div>
-                            <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
-                          </div>
-                          <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs hover:bg-primary/10 hover:text-primary rounded-lg">
-                              Voir
-                            </Button>
-                          </Link>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="text-center py-4 text-muted-foreground">
-                        <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                        <p className="text-xs">Aucun client</p>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              </div>
+          <div className="flex flex-col gap-1 flex-1 min-h-0">
+            {/* Ligne 1 - Résumé financier */}
+            <div>
+              {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
             </div>
-          ) : dashboardMode === "advanced" && (isAdmin || isPremium) ? (
-            <div className="flex flex-col gap-1 flex-1 min-h-0">
-              {/* Section Simple - Résumé financier */}
-              <div>
-                {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
-              </div>
 
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
+            {/* Separator */}
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
-              {/* Section Simple - Activité du jour */}
-              <div>
-                {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
-              </div>
+            {/* Ligne 2 - Activité du jour */}
+            <div>
+              {dashboardData.simple && <SimpleDailyActivity data={dashboardData.simple} />}
+            </div>
 
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
+            {/* Separator */}
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
 
-              {/* Section Simple - Graphique + Accordéon compact */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
-                {entrepriseId && (
-                  <div className="lg:col-span-2 min-h-0 h-full">
-                    <SimpleChart entrepriseId={entrepriseId} />
-                  </div>
-                )}
-
-                <div className="min-h-0 overflow-hidden h-full">
-                  {entrepriseId && <AdvancedAISummary entrepriseId={entrepriseId} />}
+            {/* Ligne 3 - Graphique + Clients */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
+              {entrepriseId && (
+                <div className="lg:col-span-2 min-h-0 h-full">
+                  <SimpleChart entrepriseId={entrepriseId} />
                 </div>
-              </div>
+              )}
+
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                transition={{ duration: 0.5, delay: 0.4 }} 
+                className="p-2 lg:p-3 rounded-2xl card-premium flex flex-col min-h-0 h-full overflow-hidden"
+              >
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                  <h2 className="section-title-premium flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    Clients récents
+                  </h2>
+                  {isAdmin && (
+                    <Button variant="ghost" size="icon" onClick={() => setClientDialogOpen(true)} className="hover:bg-primary/10 hover:text-primary transition-colors duration-300 rounded-xl h-9 w-9">
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2 flex-1">
+                  {clients.length > 0 ? (
+                    clients.map((client, index) => (
+                      <motion.div 
+                        key={client.id} 
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
+                          <Users className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm truncate">{client.nom}</div>
+                          <div className="text-xs text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
+                        </div>
+                        <Link to={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs hover:bg-primary/10 hover:text-primary rounded-lg">
+                            Voir
+                          </Button>
+                        </Link>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                      <p className="text-xs">Aucun client</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             </div>
-          ) : (
-            <PremiumUpgradeCard />
-          )}
+          </div>
         </div>
       </main>
 
