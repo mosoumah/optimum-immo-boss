@@ -1,32 +1,27 @@
 
 
-# Simplification du Dashboard
+# Reorganisation du header du Dashboard
 
 ## Objectif
-Supprimer le mode Avance (toggle Simple/Avance), supprimer le composant "Resume IA du mois", et ne garder que le dashboard Simple avec le panneau "Clients recents" a la place du Resume IA. Rien d'autre ne sera modifie.
+Supprimer la barre de recherche du header et deplacer les icones (notification + avatar) dans la ligne du titre "Bonjour, Mohamed", a droite. Cela libere de l'espace vertical en supprimant le header entierement.
 
-## Modifications
+## Modifications (fichier unique : `src/pages/Dashboard.tsx`)
 
-### Fichier : `src/pages/Dashboard.tsx`
+### 1. Supprimer le header complet (lignes 164-191)
+Retirer tout le bloc `<header>` qui contient la barre de recherche, le NotificationBell et l'avatar. Cela supprime la barre de recherche et les icones de leur position actuelle.
 
-1. **Supprimer les imports inutiles** : `AdvancedAISummary`, `PremiumUpgradeCard`, `LayoutDashboard`, `Zap`, `useSubscription`
-2. **Supprimer le state `dashboardMode`** et la fonction `handleModeChange` (lignes 70-78)
-3. **Supprimer le toggle Simple/Avance** dans le header (lignes 262-291)
-4. **Supprimer le `useEffect` de synchronisation d'alertes** (lignes 130-163) qui depend du mode avance
-5. **Simplifier l'appel `useDashboardData`** : passer toujours `"simple"` comme mode, et `false` pour isPremium (plus besoin)
-6. **Supprimer tout le bloc conditionnel avance** (lignes 403-434) : le bloc `else if (advanced)` et le `else` (PremiumUpgradeCard)
-7. **Garder uniquement le bloc Simple** (lignes 326-402) qui contient deja les "Clients recents" — ce bloc devient le seul rendu du dashboard, sans condition
+### 2. Deplacer les icones dans la ligne du titre (lignes 195-209)
+Dans le bloc "Header Section" qui affiche "Bonjour, Mohamed", ajouter les icones NotificationBell et avatar a droite du titre, dans le `flex items-center justify-between` existant (ligne 201).
 
-### Fichiers a ne PAS supprimer (mais qui ne seront plus utilises depuis le Dashboard)
-- `src/components/dashboard/AdvancedAISummary.tsx` — reste dans le projet au cas ou, mais n'est plus importe
-- `src/components/dashboard/PremiumUpgradeCard.tsx` — idem
-- `supabase/functions/dashboard-ai-summary/index.ts` — l'edge function reste deployee mais n'est plus appelee
+Le resultat sera :
+- A gauche : "Bonjour, Mohamed" + sous-titre
+- A droite : icone notification + avatar initiales
+
+### 3. Nettoyer les imports inutiles
+Retirer `Search` de lucide-react et `Input` des imports (plus utilises nulle part dans ce fichier).
 
 ### Ce qui ne change PAS
-- Le panneau "Clients recents" (deja present en mode Simple)
-- Les KPI financiers et l'activite du jour
-- Le graphique
-- Les actions rapides
-- La sidebar, le header, les dialogs
+- Les quick actions, KPI, graphique, clients recents
+- La sidebar, les dialogs
 - Toutes les autres pages
 
