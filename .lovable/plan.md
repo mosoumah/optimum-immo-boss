@@ -1,55 +1,32 @@
 
 
-# Suppression de l'acces client a l'application
+# Simplification du Dashboard
 
 ## Objectif
-Retirer completement la possibilite pour les utilisateurs avec le role "client" de se connecter et d'acceder a l'application. Seuls les roles **Administrateur** et **Utilisateur (agent)** pourront se connecter. La gestion des clients (ajout, modification, suppression dans le tableau de bord) reste intacte.
+Supprimer le mode Avance (toggle Simple/Avance), supprimer le composant "Resume IA du mois", et ne garder que le dashboard Simple avec le panneau "Clients recents" a la place du Resume IA. Rien d'autre ne sera modifie.
 
-## Modifications prevues
+## Modifications
 
-### 1. Bloquer la connexion des clients
-**Fichier** : `src/pages/Connexion.tsx`
-- Apres authentification, si le role est "client", afficher un message d'erreur "Acces refuse" et deconnecter l'utilisateur automatiquement.
-- Supprimer la redirection vers `/portail-client`.
-- Meme chose dans le `useEffect` de redirection automatique.
+### Fichier : `src/pages/Dashboard.tsx`
 
-### 2. Bloquer dans RoleProtectedRoute
-**Fichier** : `src/components/RoleProtectedRoute.tsx`
-- Supprimer la logique de redirection vers `/portail-client` pour les clients (ligne qui redirige les clients vers leur portail).
+1. **Supprimer les imports inutiles** : `AdvancedAISummary`, `PremiumUpgradeCard`, `LayoutDashboard`, `Zap`, `useSubscription`
+2. **Supprimer le state `dashboardMode`** et la fonction `handleModeChange` (lignes 70-78)
+3. **Supprimer le toggle Simple/Avance** dans le header (lignes 262-291)
+4. **Supprimer le `useEffect` de synchronisation d'alertes** (lignes 130-163) qui depend du mode avance
+5. **Simplifier l'appel `useDashboardData`** : passer toujours `"simple"` comme mode, et `false` pour isPremium (plus besoin)
+6. **Supprimer tout le bloc conditionnel avance** (lignes 403-434) : le bloc `else if (advanced)` et le `else` (PremiumUpgradeCard)
+7. **Garder uniquement le bloc Simple** (lignes 326-402) qui contient deja les "Clients recents" — ce bloc devient le seul rendu du dashboard, sans condition
 
-### 3. Supprimer la route du portail client
-**Fichier** : `src/App.tsx`
-- Retirer la route `/portail-client` et son import.
+### Fichiers a ne PAS supprimer (mais qui ne seront plus utilises depuis le Dashboard)
+- `src/components/dashboard/AdvancedAISummary.tsx` — reste dans le projet au cas ou, mais n'est plus importe
+- `src/components/dashboard/PremiumUpgradeCard.tsx` — idem
+- `supabase/functions/dashboard-ai-summary/index.ts` — l'edge function reste deployee mais n'est plus appelee
 
-### 4. Supprimer la page PortailClient
-**Fichier** : `src/pages/PortailClient.tsx`
-- Supprimer ce fichier (il ne sera plus utilise).
-
-### 5. Nettoyer la page Utilisateurs
-**Fichier** : `src/pages/Utilisateurs.tsx`
-- Retirer l'option "Client" du selecteur de role lors de la creation d'un utilisateur.
-- Retirer la carte de statistiques "Clients" (le compteur de comptes client).
-- Retirer la logique de selection de client (`selectedClientId`, validation client, champs de liaison client).
-- Renommer "Agent" en "Utilisateur" dans les labels affiches.
-
-### 6. Nettoyer le hook useUserRole
-**Fichier** : `src/hooks/useUserRole.tsx`
-- Retirer la logique `clientId` et `client_accounts` (plus besoin de recuperer le client_id).
-- Retirer `isClient` du retour.
-
-### 7. Nettoyer la sidebar
-**Fichier** : `src/components/DynamicSidebar.tsx`
-- Retirer "client" des tableaux `roles` de chaque item de navigation (nettoyage).
-
-### 8. Renommer les labels de role
-Dans tous les fichiers concernes, renommer :
-- "Agent" → "Utilisateur"
-- "admin" reste "Administrateur"
-- Supprimer toute reference au role "client" dans l'UI
-
-## Ce qui ne change PAS
-- La table `clients` dans la base de donnees (gestion des clients CRUD).
-- Les pages Clients, ClientDetail dans le dashboard.
-- Les RLS policies existantes (elles resteront mais le role "client" ne pourra plus se connecter).
-- L'enum `app_role` en base de donnees (pas de migration necessaire, le blocage est cote applicatif).
+### Ce qui ne change PAS
+- Le panneau "Clients recents" (deja present en mode Simple)
+- Les KPI financiers et l'activite du jour
+- Le graphique
+- Les actions rapides
+- La sidebar, le header, les dialogs
+- Toutes les autres pages
 
