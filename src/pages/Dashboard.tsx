@@ -9,12 +9,10 @@ import {
   CheckSquare,
   Sparkles,
   Plus,
-  Search,
   BarChart3,
   CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useEntreprise } from "@/hooks/useEntreprise";
@@ -161,35 +159,6 @@ const Dashboard = () => {
       <DynamicSidebar onSignOut={handleSignOut} />
 
       <main className="flex-1 lg:ml-64 mesh-gradient h-screen flex flex-col overflow-hidden">
-        <header className="flex-shrink-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
-          <div className="flex items-center justify-between px-4 lg:px-6 py-3">
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative w-40 lg:w-64 ml-12 lg:ml-0"
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Rechercher..." 
-                className="pl-9 h-9 bg-secondary/30 border-border/30 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all duration-300 text-sm" 
-              />
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center gap-2 lg:gap-4"
-            >
-              <NotificationBell />
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50">
-                <span className="text-xs font-bold text-primary">
-                  {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
-                </span>
-              </div>
-            </motion.div>
-          </div>
-        </header>
-
         <div className="p-2 lg:p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* Header Section */}
           <motion.div 
@@ -204,6 +173,14 @@ const Dashboard = () => {
                   Bonjour, <span className="text-gradient">{profile?.nom?.split(" ")[0] || "Utilisateur"}</span> 👋
                 </h1>
                 <p className="text-muted-foreground text-xs">Voici un aperçu de votre activité aujourd'hui</p>
+              </div>
+              <div className="flex items-center gap-2 lg:gap-4">
+                <NotificationBell />
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50">
+                  <span className="text-xs font-bold text-primary">
+                    {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
