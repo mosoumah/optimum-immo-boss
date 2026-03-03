@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
+import { PermissionGate } from "@/components/PermissionGate";
 
 interface Reservation {
   id: string;
@@ -101,9 +102,11 @@ const Reservations = () => {
               <h1 className="text-3xl font-bold">Réservations</h1>
               <p className="text-muted-foreground">Gestion des locations</p>
             </div>
-            <Button onClick={() => { setEditingReservation(null); setDialogOpen(true); }}>
-              <Plus className="w-4 h-4 mr-2" />Nouvelle réservation
-            </Button>
+            <PermissionGate permission="creer_reservation">
+              <Button onClick={() => { setEditingReservation(null); setDialogOpen(true); }}>
+                <Plus className="w-4 h-4 mr-2" />Nouvelle réservation
+              </Button>
+            </PermissionGate>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

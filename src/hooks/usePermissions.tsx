@@ -14,6 +14,12 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "modifier_client",
   "supprimer_client",
   
+  // Biens
+  "creer_bien",
+  "voir_bien",
+  "modifier_bien",
+  "supprimer_bien",
+  
   // Devis
   "creer_devis",
   "voir_devis",
@@ -36,10 +42,21 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "voir_depenses",
   "ajouter_depense",
   
+  // Réservations
+  "creer_reservation",
+  "voir_reservation",
+  "modifier_reservation",
+  "supprimer_reservation",
+  
   // Documents IA
   "creer_document_ia",
   "voir_document_ia",
   "telecharger_document_ia",
+  
+  // Studio IA
+  "generer_image_ia",
+  "voir_image_ia",
+  "redesigner_bien_ia",
   
   // Tâches
   "creer_tache",
@@ -52,6 +69,9 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "voir_statistiques_globales",
   "voir_statistiques_personnelles",
   
+  // Messagerie
+  "envoyer_message",
+  
   // Utilisateurs
   "gerer_utilisateurs",
   "gerer_parametres",
@@ -62,6 +82,10 @@ export const PERMISSION_CATEGORIES = {
   clients: {
     label: "Clients",
     permissions: ["creer_client", "voir_client", "modifier_client", "supprimer_client"] as AppPermission[],
+  },
+  biens: {
+    label: "Biens",
+    permissions: ["creer_bien", "voir_bien", "modifier_bien", "supprimer_bien"] as AppPermission[],
   },
   devis: {
     label: "Devis",
@@ -79,9 +103,17 @@ export const PERMISSION_CATEGORIES = {
     label: "Dépenses",
     permissions: ["voir_depenses", "ajouter_depense"] as AppPermission[],
   },
+  reservations: {
+    label: "Réservations",
+    permissions: ["creer_reservation", "voir_reservation", "modifier_reservation", "supprimer_reservation"] as AppPermission[],
+  },
   documents: {
     label: "Documents IA",
     permissions: ["creer_document_ia", "voir_document_ia", "telecharger_document_ia"] as AppPermission[],
+  },
+  studio_ia: {
+    label: "Studio IA",
+    permissions: ["generer_image_ia", "voir_image_ia", "redesigner_bien_ia"] as AppPermission[],
   },
   taches: {
     label: "Tâches",
@@ -90,6 +122,10 @@ export const PERMISSION_CATEGORIES = {
   statistiques: {
     label: "Statistiques",
     permissions: ["voir_statistiques_globales", "voir_statistiques_personnelles"] as AppPermission[],
+  },
+  messagerie: {
+    label: "Messagerie",
+    permissions: ["envoyer_message"] as AppPermission[],
   },
   administration: {
     label: "Administration",
@@ -103,6 +139,10 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   voir_client: "Voir les clients",
   modifier_client: "Modifier un client",
   supprimer_client: "Supprimer un client",
+  creer_bien: "Créer un bien",
+  voir_bien: "Voir les biens",
+  modifier_bien: "Modifier un bien",
+  supprimer_bien: "Supprimer un bien",
   creer_devis: "Créer un devis",
   voir_devis: "Voir les devis",
   modifier_devis: "Modifier un devis",
@@ -117,9 +157,16 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   ajouter_revenu: "Ajouter un revenu",
   voir_depenses: "Voir les dépenses",
   ajouter_depense: "Ajouter une dépense",
+  creer_reservation: "Créer une réservation",
+  voir_reservation: "Voir les réservations",
+  modifier_reservation: "Modifier une réservation",
+  supprimer_reservation: "Supprimer une réservation",
   creer_document_ia: "Créer un document IA",
   voir_document_ia: "Voir les documents IA",
   telecharger_document_ia: "Télécharger document IA",
+  generer_image_ia: "Générer une image IA",
+  voir_image_ia: "Voir les images IA",
+  redesigner_bien_ia: "Redesigner un bien (IA)",
   creer_tache: "Créer une tâche",
   assigner_tache: "Assigner une tâche",
   voir_tache: "Voir les tâches",
@@ -127,6 +174,7 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   cloturer_tache: "Clôturer une tâche",
   voir_statistiques_globales: "Voir statistiques globales",
   voir_statistiques_personnelles: "Voir statistiques personnelles",
+  envoyer_message: "Envoyer des messages",
   gerer_utilisateurs: "Gérer les utilisateurs",
   gerer_parametres: "Gérer les paramètres",
 };

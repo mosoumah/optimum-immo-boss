@@ -16,6 +16,7 @@ import {
 import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { QuickTaskDialog } from "@/components/dialogs/QuickTaskDialog";
+import { PermissionGate } from "@/components/PermissionGate";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -342,30 +343,36 @@ export const DirectMessagePanel = ({
                   </ScrollArea>
 
                   {/* Input with green accent */}
-                  <div className="p-3 border-t border-primary/20 bg-black/30">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Écrire un message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        disabled={isSending}
-                        className="flex-1 bg-[hsl(220,15%,12%)] border-primary/20 focus:border-primary focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
-                      />
-                      <Button
-                        size="icon"
-                        onClick={handleSend}
-                        disabled={isSending || !newMessage.trim()}
-                        className="bg-primary hover:bg-primary/90 shadow-[0_0_15px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all"
-                      >
-                        {isSending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Send className="w-4 h-4" />
-                        )}
-                      </Button>
+                  <PermissionGate permission="envoyer_message" fallback={
+                    <div className="p-3 border-t border-primary/20 bg-black/30 text-center">
+                      <p className="text-sm text-muted-foreground">Vous n'avez pas la permission d'envoyer des messages.</p>
                     </div>
-                  </div>
+                  }>
+                    <div className="p-3 border-t border-primary/20 bg-black/30">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Écrire un message..."
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          disabled={isSending}
+                          className="flex-1 bg-[hsl(220,15%,12%)] border-primary/20 focus:border-primary focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
+                        />
+                        <Button
+                          size="icon"
+                          onClick={handleSend}
+                          disabled={isSending || !newMessage.trim()}
+                          className="bg-primary hover:bg-primary/90 shadow-[0_0_15px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all"
+                        >
+                          {isSending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </PermissionGate>
                 </>
               )}
             </div>

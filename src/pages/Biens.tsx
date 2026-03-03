@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { BienDialog } from "@/components/dialogs/BienDialog";
+import { PermissionGate } from "@/components/PermissionGate";
 
 interface Property {
   id: string;
@@ -93,9 +94,11 @@ const Biens = () => {
               <h1 className="text-3xl font-bold">Biens</h1>
               <p className="text-muted-foreground">Catalogue de vos biens immobiliers</p>
             </div>
-            <Button onClick={() => { setEditingProperty(null); setDialogOpen(true); }}>
-              <Plus className="w-4 h-4 mr-2" />Nouveau bien
-            </Button>
+            <PermissionGate permission="creer_bien">
+              <Button onClick={() => { setEditingProperty(null); setDialogOpen(true); }}>
+                <Plus className="w-4 h-4 mr-2" />Nouveau bien
+              </Button>
+            </PermissionGate>
           </div>
 
           {/* Filters */}
