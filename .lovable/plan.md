@@ -1,26 +1,37 @@
 
 
-# Mise à jour du système de permissions — DONE
+# Ajout d'une icone Messagerie dans la barre supérieure
 
-## Résumé
-42 permissions au total (30 existantes + 12 nouvelles) réparties en 13 catégories.
+## Objectif
+Ajouter une icone de messagerie (MessageCircle) à côté de la cloche de notifications dans le header, qui ouvre directement le panneau `DirectMessagePanel` existant. L'icone affiche un badge avec le nombre de messages non lus.
 
-## Nouvelles permissions ajoutées
-| Catégorie | Permissions |
-|-----------|------------|
-| **Biens** | `creer_bien`, `voir_bien`, `modifier_bien`, `supprimer_bien` |
-| **Réservations** | `creer_reservation`, `voir_reservation`, `modifier_reservation`, `supprimer_reservation` |
-| **Studio IA** | `generer_image_ia`, `voir_image_ia`, `redesigner_bien_ia` |
-| **Messagerie** | `envoyer_message` |
+## Fichiers à modifier
 
-## Permissions par défaut
-- **Admin** : toutes les 12 nouvelles permissions
-- **Agent** : créer/voir/modifier biens, créer/voir/modifier réservations, générer/voir images IA, envoyer messages (pas supprimer, pas redesign)
+### 1. Nouveau composant : `src/components/MessageBell.tsx`
+- Icone `MessageCircle` avec un badge compteur de messages non lus (style identique au `NotificationBell`)
+- Au clic, ouvre le `DirectMessagePanel` (Sheet existant)
+- Utilise un hook pour compter les messages non lus (`direct_messages` where `receiver_id = user.id AND read = false`)
+- Souscription Realtime sur `direct_messages` pour mettre à jour le compteur en temps réel
 
-## Fichiers modifiés
-1. Migration SQL — ALTER TYPE + INSERT role_permissions
-2. `src/hooks/usePermissions.tsx` — constantes mises à jour
-3. `src/pages/Biens.tsx` — PermissionGate sur bouton "Nouveau bien"
-4. `src/pages/Reservations.tsx` — PermissionGate sur bouton "Nouvelle réservation"
-5. `src/pages/StudioIA.tsx` — PermissionGate sur boutons génération et redesign
-6. `src/components/DirectMessagePanel.tsx` — PermissionGate sur zone d'envoi de message
+### 2. `src/hooks/useUnreadMessages.tsx` (nouveau)
+- Hook léger qui retourne `unreadCount` (nombre de messages directs non lus pour l'utilisateur courant)
+- Query : `supabase.from('direct_messages').select('id', { count: 'exact' }).eq('receiver_id', user.id).eq('read', false)`
+- Souscription Realtime sur INSERT/UPDATE de `direct_messages` pour rafraîchir le compteur
+
+### 3. Pages à modifier (ajouter `<MessageBell />` à côté de `<NotificationBell />`)
+- `src/pages/Dashboard.tsx` — ligne 185, ajouter `<MessageBell />` avant ou après `<NotificationBell />`
+- `src/pages/StudioIA.tsx` — ligne 249, idem
+- Toute autre page ayant le `NotificationBell` dans le header
+
+### 4. `src/hooks/useDirectMessages.tsx`
+- Ajouter une fonction `markConversationAsRead(userId)` qui met à jour `read = true` pour tous les messages reçus de cet utilisateur
+- Appeler cette fonction quand on sélectionne un utilisateur dans le panneau
+
+### 5. Migration SQL
+- Activer Realtime sur `direct_messages` : `ALTER PUBLICATION supabase_realtime ADD TABLE public.direct_messages;`
+
+## Ce qui ne change pas
+- Le `DirectMessagePanel` existant (design, fonctionnement)
+- La page Tâches garde son bouton Messagerie
+- Aucun changement de design ou de routes
+
