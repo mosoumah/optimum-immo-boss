@@ -75,12 +75,31 @@ export const ViewDocumentDialog = ({
 
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(previewRef.current, {
+      // Clone the element to remove CSS transform that breaks html2canvas
+      const clone = previewRef.current.cloneNode(true) as HTMLElement;
+      clone.style.transform = "none";
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.top = "0";
+      globalThis.document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: "#ffffff",
+        logging: false,
+        imageTimeout: 15000,
+        onclone: (clonedDoc) => {
+          // Ensure all images use crossOrigin
+          const imgs = clonedDoc.querySelectorAll("img");
+          imgs.forEach((img) => {
+            img.crossOrigin = "anonymous";
+          });
+        },
       });
+
+      clone.remove();
 
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
