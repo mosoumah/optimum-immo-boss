@@ -35,7 +35,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     prix_unitaire: "",
     montant_paye: "",
     caution: "",
-    statut: "confirmee",
+    statut: "en_attente",
     generer_facture: false,
     notes: "",
   });
@@ -63,12 +63,12 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         prix_unitaire: reservation.prix_unitaire?.toString() || "",
         montant_paye: reservation.montant_paye?.toString() || "",
         caution: reservation.caution?.toString() || "",
-        statut: reservation.statut || "confirmee",
+        statut: reservation.statut || "en_attente",
         generer_facture: reservation.generer_facture || false,
         notes: reservation.notes || "",
       });
     } else {
-      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "confirmee", generer_facture: false, notes: "" });
+      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "en_attente", generer_facture: false, notes: "" });
     }
   }, [reservation, open]);
 
@@ -128,11 +128,15 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     // Générer la facture automatiquement si coché (nouvelle réservation uniquement)
     if (form.generer_facture && !reservation && !result.error) {
       const propertyName = selectedProperty?.nom || form.property_name || "—";
+      const paye = parseFloat(form.montant_paye) || 0;
+      const resteDesc = paye > 0 && paye < montantTotal
+        ? ` | Payé: ${formatCurrency(paye)} — Reste: ${formatCurrency(montantTotal - paye)}`
+        : "";
       const { error: factureError } = await supabase.from("factures").insert({
         client_id: form.client_id,
         entreprise_id: entrepriseId,
         montant: montantTotal,
-        description: `Location ${propertyName} du ${form.date_arrivee} au ${form.date_depart}`,
+        description: `Location ${propertyName} du ${form.date_arrivee} au ${form.date_depart}${resteDesc}`,
         date: new Date().toISOString().split("T")[0],
       });
       if (factureError) {
@@ -208,7 +212,6 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="en_attente">En attente</SelectItem>
-                <SelectItem value="confirmee">Confirmée</SelectItem>
                 <SelectItem value="en_cours">En cours</SelectItem>
                 <SelectItem value="terminee">Terminée</SelectItem>
                 <SelectItem value="annulee">Annulée</SelectItem>
