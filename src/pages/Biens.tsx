@@ -12,9 +12,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { BienDialog } from "@/components/dialogs/BienDialog";
-import { AdvancedTopProperties } from "@/components/dashboard/AdvancedTopProperties";
-import { useQuery } from "@tanstack/react-query";
-import type { TopPropertyData } from "@/hooks/useDashboardData";
 
 interface Property {
   id: string;
@@ -58,19 +55,6 @@ const Biens = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
-  const { data: topProperties } = useQuery({
-    queryKey: ["top-properties-biens", entrepriseId],
-    queryFn: async () => {
-      if (!entrepriseId) return [];
-      const { data, error } = await supabase.rpc("get_top_properties", {
-        _entreprise_id: entrepriseId,
-      });
-      if (error) throw error;
-      return (data as unknown as TopPropertyData[]) || [];
-    },
-    enabled: !!entrepriseId,
-    staleTime: 2 * 60 * 1000,
-  });
 
   const fetchProperties = useCallback(async () => {
     if (!entrepriseId) return;
@@ -113,13 +97,6 @@ const Biens = () => {
               <Plus className="w-4 h-4 mr-2" />Nouveau bien
             </Button>
           </div>
-
-          {/* Top 3 biens du mois */}
-          {topProperties && topProperties.length > 0 && (
-            <div className="mb-6">
-              <AdvancedTopProperties data={topProperties} />
-            </div>
-          )}
 
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-3 mb-6">
