@@ -80,26 +80,30 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
           const text = headerMatch[2].replace(/\*\*/g, '');
           const Tag = level <= 2 ? 'h2' : 'h3';
           return (
-            <Tag
-              key={idx}
-              className={`font-bold uppercase tracking-wide ${level <= 2 ? 'text-lg mt-8 mb-4' : 'text-base mt-6 mb-3'}`}
-              style={{ color: primaryColor }}
-            >
-              {text}
-            </Tag>
+            <div key={idx} className={level <= 2 ? 'mt-8 mb-4' : 'mt-6 mb-3'}>
+              <Tag
+                className={`font-bold uppercase tracking-wide ${level <= 2 ? 'text-lg' : 'text-base'}`}
+                style={{ color: primaryColor }}
+              >
+                {text}
+              </Tag>
+              <div className="w-16 h-0.5 mt-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
+            </div>
           );
         }
 
         // Detect ALL CAPS lines as section headers
         if (trimmed.length > 3 && trimmed === trimmed.toUpperCase() && /[A-ZÀ-Ü]/.test(trimmed) && !/^\d/.test(trimmed)) {
           return (
-            <h3
-              key={idx}
-              className="font-bold uppercase tracking-wide text-base mt-6 mb-3"
-              style={{ color: primaryColor }}
-            >
-              {trimmed.replace(/\*\*/g, '')}
-            </h3>
+            <div key={idx} className="mt-7 mb-4">
+              <h3
+                className="font-bold uppercase tracking-wide text-base"
+                style={{ color: primaryColor }}
+              >
+                {trimmed.replace(/\*\*/g, '')}
+              </h3>
+              <div className="w-16 h-0.5 mt-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
+            </div>
           );
         }
 
@@ -119,8 +123,8 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
         const labelMatch = trimmed.match(/^([^:]{2,40})\s*:\s*(.*)$/);
         if (labelMatch && labelMatch[1] && !trimmed.startsWith('http')) {
           return (
-            <p key={idx} className="mb-3 last:mb-0 text-base leading-loose" style={{ color: '#333' }}>
-              <strong style={{ color: '#222' }}>{labelMatch[1].replace(/\*\*/g, '')} :</strong>{' '}
+            <p key={idx} className="mb-3 last:mb-0" style={{ color: '#2a2a2a', fontSize: '15px', lineHeight: '2' }}>
+              <span style={{ fontWeight: 600, color: '#1a1a2e' }}>{labelMatch[1].replace(/\*\*/g, '')} :</span>{' '}
               {labelMatch[2] ? renderInlineBold(labelMatch[2]) : ''}
             </p>
           );
@@ -132,7 +136,7 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
           return (
             <div key={idx} className="flex items-start gap-3 mb-2 ml-4">
               <span className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: primaryColor }} />
-              <p className="text-base leading-loose" style={{ color: '#333' }}>{cleanLine}</p>
+              <p style={{ color: '#2a2a2a', fontSize: '17px', lineHeight: '2' }}>{cleanLine}</p>
             </div>
           );
         }
@@ -141,8 +145,8 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
         return (
           <p
             key={idx}
-            className="mb-5 last:mb-0 text-base leading-loose"
-            style={{ textAlign: "justify", color: '#333' }}
+            className="mb-5 last:mb-0"
+            style={{ textAlign: "justify", color: '#2a2a2a', fontSize: '17px', lineHeight: '2', letterSpacing: '0.01em' }}
           >
             {renderInlineBold(trimmed)}
           </p>
@@ -399,10 +403,13 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
                 style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}
               />
               <div 
-                className="text-base leading-loose relative z-10"
+                className="relative z-10"
                 style={{ 
-                  color: "#444",
-                  fontFamily: "'Georgia', serif"
+                  color: "#2a2a2a",
+                  fontFamily: "'Georgia', serif",
+                  fontSize: "17px",
+                  lineHeight: "2",
+                  letterSpacing: "0.01em"
                 }}
               >
                 {document.contenu 
