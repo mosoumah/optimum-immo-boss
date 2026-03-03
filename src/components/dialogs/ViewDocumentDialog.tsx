@@ -70,6 +70,35 @@ export const ViewDocumentDialog = ({
     }
   }, [open, entreprise?.logo]);
 
+  // Find the best row to break at (scan for mostly-white rows to avoid cutting text)
+  const findSafeBreakPoint = (
+    canvas: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D,
+    idealY: number,
+    searchRange: number
+  ): number => {
+    const width = canvas.width;
+    // Search upward from idealY to find a row that's mostly white/background
+    for (let y = idealY; y > idealY - searchRange && y > 0; y--) {
+      const rowData = ctx.getImageData(0, y, width, 1).data;
+      let isWhiteRow = true;
+      // Sample every 4th pixel for performance
+      for (let x = 0; x < width * 4; x += 16) {
+        const r = rowData[x];
+        const g = rowData[x + 1];
+        const b = rowData[x + 2];
+        // Check if pixel is near-white (background)
+        if (r < 240 || g < 240 || b < 240) {
+          isWhiteRow = false;
+          break;
+        }
+      }
+      if (isWhiteRow) return y;
+    }
+    // If no safe break found, use the ideal position
+    return idealY;
+  };
+
   const handleDownloadPDF = async () => {
     if (!previewRef.current || !document || !entreprise) return;
 
@@ -107,22 +136,78 @@ export const ViewDocumentDialog = ({
         format: "a4",
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const ratio = pdfWidth / canvas.width;
-      const scaledHeight = canvas.height * ratio;
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+      const margin = 5; // mm margin for page numbers
+      const contentHeight = pdfHeight - margin; // leave space for page number at bottom
 
-      // Multi-page: slice canvas into A4-height chunks
-      const totalPages = Math.ceil(scaledHeight / pdfHeight);
+      // Calculate the pixel height of one A4 page based on canvas width
+      const pageHeightPx = Math.floor((contentHeight / pdfWidth) * canvas.width);
+      const searchRange = Math.floor(pageHeightPx * 0.15); // search 15% of page height for safe breaks
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas context unavailable");
+
+      // Calculate all page break points using smart breaks
+      const breakPoints: number[] = [0];
+      let currentY = 0;
+      while (currentY + pageHeightPx < canvas.height) {
+        const idealBreak = currentY + pageHeightPx;
+        const safeBreak = findSafeBreakPoint(canvas, ctx, idealBreak, searchRange);
+        breakPoints.push(safeBreak);
+        currentY = safeBreak;
+      }
+      // Last page goes to the end
+      if (breakPoints[breakPoints.length - 1] < canvas.height) {
+        breakPoints.push(canvas.height);
+      }
+
+      const totalPages = breakPoints.length - 1;
+
       for (let page = 0; page < totalPages; page++) {
         if (page > 0) pdf.addPage();
+
+        const sliceY = breakPoints[page];
+        const sliceHeight = breakPoints[page + 1] - sliceY;
+
+        // Create a cropped canvas for this page
+        const pageCanvas = globalThis.document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sliceHeight;
+        const pageCtx = pageCanvas.getContext("2d");
+        if (!pageCtx) continue;
+
+        // Fill with white background first
+        pageCtx.fillStyle = "#ffffff";
+        pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        // Draw the slice from the main canvas
+        pageCtx.drawImage(
+          canvas,
+          0, sliceY, canvas.width, sliceHeight,
+          0, 0, canvas.width, sliceHeight
+        );
+
+        const sliceRatio = pdfWidth / pageCanvas.width;
+        const renderedHeight = pageCanvas.height * sliceRatio;
+
         pdf.addImage(
-          canvas.toDataURL("image/png"),
+          pageCanvas.toDataURL("image/png"),
           "PNG",
           0,
-          -(page * pdfHeight),
+          0,
           pdfWidth,
-          scaledHeight
+          renderedHeight
+        );
+
+        // Add page number
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Page ${page + 1} / ${totalPages}`,
+          pdfWidth / 2,
+          pdfHeight - 2,
+          { align: "center" }
         );
       }
 
