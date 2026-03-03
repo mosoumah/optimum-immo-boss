@@ -1,34 +1,47 @@
 
-Objectif: corriger définitivement les coupures de texte entre pages dans le PDF, sans toucher au design/structure visuelle du document.
 
-1) Diagnostic précis du bug actuel
-- Le découpage “safe break” scanne une ligne sur toute la largeur du canvas.
-- Or `DocumentPreview` contient des éléments décoratifs non blancs sur toute la hauteur (barres latérales, dégradés), donc la détection “ligne blanche” échoue souvent.
-- Résultat: fallback sur la position idéale brute => coupure possible au milieu d’une ligne de texte.
+# Mise à jour du système de permissions
 
-2) Correctif ciblé dans `src/components/dialogs/ViewDocumentDialog.tsx` (seul fichier)
-- Remplacer `findSafeBreakPoint` par un algorithme de “faible densité d’encre” plus robuste:
-  - Scanner uniquement la zone centrale utile du contenu (exclure marges/décors latéraux, ex: 8–10% à gauche/droite).
-  - Évaluer une bande de plusieurs pixels (pas 1 seule ligne) pour lisser l’anti-aliasing.
-  - Chercher le meilleur point autour de la coupure idéale en priorité vers le haut, puis vers le bas (fenêtre ±searchRange), et choisir la bande avec la plus faible densité.
-- Ajouter des garde-fous de pagination:
-  - `minSliceHeightPx` pour éviter des pages trop petites si un break “safe” est trop proche.
-  - Si aucun bon break n’est trouvé, fallback contrôlé (position idéale mais contrainte par min/max) pour garantir la progression et éviter toute boucle/duplication.
-- Conserver tout le reste tel quel:
-  - largeur A4, capture html2canvas, CORS, rendu par page, numérotation, marges, styles.
+## Constat
+Le système actuel couvre 30 permissions réparties en 9 catégories. Mais plusieurs modules ajoutés depuis n'ont aucune permission associée, ce qui signifie que tout utilisateur avec le rôle "agent/utilisateur" peut y accéder sans contrôle de l'admin.
 
-3) Critères “ultra-professionnels” visés (sans changer le design)
-- Aucune ligne/phrase coupée en deux à la jonction des pages dans les cas normaux.
-- Continuité visuelle propre (pas de saut, pas de chevauchement, pas de duplication de bande).
-- Pagination stable sur documents courts et longs.
+## Modules sans permissions actuellement
+| Module | Actions manquantes |
+|--------|-------------------|
+| **Biens** | Créer, voir, modifier, supprimer un bien |
+| **Réservations** | Créer, voir, modifier, supprimer une réservation |
+| **Studio IA** | Générer une image, voir les images, redesigner un bien |
+| **Messagerie** | Envoyer des messages directs |
 
-4) Validation après implémentation
-- Tester au moins 3 contenus:
-  - texte dense sans interlignes,
-  - texte avec sections/titres/listes,
-  - texte très long (plusieurs pages).
-- Vérifier manuellement les jonctions de chaque page et l’intégrité complète du texte exporté.
+## Plan d'implémentation
 
-5) Portée garantie
-- Modification uniquement de la logique de découpage PDF dans `ViewDocumentDialog.tsx`.
-- Aucun changement du design, de la structure React, ni du rendu visuel du `DocumentPreview`.
+### 1. Migration SQL — Ajouter les nouvelles permissions à l'enum
+Ajouter 12 nouvelles valeurs à l'enum `app_permission` :
+- `creer_bien`, `voir_bien`, `modifier_bien`, `supprimer_bien`
+- `creer_reservation`, `voir_reservation`, `modifier_reservation`, `supprimer_reservation`
+- `generer_image_ia`, `voir_image_ia`, `redesigner_bien_ia`
+- `envoyer_message`
+
+Puis insérer les permissions par défaut dans `role_permissions` pour les rôles `admin` (toutes) et `agent` (un sous-ensemble raisonnable : voir/créer mais pas supprimer, pas redesign, etc.).
+
+### 2. Mettre à jour `usePermissions.tsx`
+- Ajouter les 12 nouvelles permissions à `ALL_PERMISSIONS`
+- Ajouter 4 nouvelles catégories dans `PERMISSION_CATEGORIES` : Biens, Réservations, Studio IA, Messagerie
+- Ajouter les labels français dans `PERMISSION_LABELS`
+
+### 3. Appliquer les `PermissionGate` dans les pages concernées
+- **`Biens.tsx`** : gater le bouton "Ajouter un bien" avec `creer_bien`, etc.
+- **`Reservations.tsx`** : gater le bouton "Nouvelle réservation" avec `creer_reservation`, etc.
+- **`StudioIA.tsx`** : gater la génération avec `generer_image_ia`, le redesign avec `redesigner_bien_ia`
+- **`DirectMessagePanel.tsx`** : gater l'envoi avec `envoyer_message`
+
+### 4. Fichiers modifiés
+1. **Migration SQL** — nouvel ALTER TYPE + INSERT role_permissions
+2. **`src/hooks/usePermissions.tsx`** — nouvelles constantes
+3. **`src/pages/Biens.tsx`** — PermissionGate
+4. **`src/pages/Reservations.tsx`** — PermissionGate
+5. **`src/pages/StudioIA.tsx`** — PermissionGate
+6. **`src/components/DirectMessagePanel.tsx`** — PermissionGate
+
+Aucun changement de design, de structure de routes, ni de logique existante.
+
