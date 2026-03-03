@@ -1,47 +1,48 @@
 
 
-# Ajustement Premium du Dashboard
+# Corrections et nouvelles fonctionnalites pour Documents IA
 
-## Objectif
-Apporter des micro-ajustements visuels pour rehausser le rendu premium, sans modifier la structure ni les fonctionnalites existantes.
+## Probleme 1 : Textes non visibles dans le document
 
-## Modifications prevues
+Le `ViewDocumentDialog` applique un `scale-[0.6]` sur le preview, ce qui reduit drastiquement la taille du texte. De plus, la fonction `renderContent` dans `DocumentPreview.tsx` supprime les marqueurs de formatage (gras, titres) sans les rendre visuellement, et la couleur `#444` manque de contraste.
 
-### 1. Header -- avatar avec glow et salutation amelioree (`Dashboard.tsx`)
-- Ajouter un subtil `shadow-glow-sm` sur l'avatar en haut a droite
-- Ajouter un badge de role discret sous le nom (Admin/Agent) avec un style gradient
+### Correction
 
-### 2. Cartes KPI financieres -- micro-glow au survol (`SimpleFinanceSummary.tsx`)
-- Ajouter un leger `ring-1 ring-primary/10` au repos et `hover:ring-primary/30` au survol sur chaque carte
-- Ajouter une barre superieure coloree de 2px (gradient primary) visible au survol, avec transition douce
+**`ViewDocumentDialog.tsx`** :
+- Remplacer `scale-[0.6]` par `scale-[0.75]` pour un meilleur equilibre lisibilite/apercu
+- Ajouter une largeur max pour eviter le debordement
 
-### 3. Cartes Activite quotidienne -- icone plus vivante (`SimpleDailyActivity.tsx`)
-- Remplacer le fond d'icone `bg-secondary/50` par un fond teinte selon la couleur du KPI (ex. `bg-info/10 ring-1 ring-info/20` pour les arrivees)
-- Ajouter un leger effet pulse sur la valeur numerique quand elle est superieure a 0
+**`DocumentPreview.tsx`** - Ameliorer `renderContent` pour parser correctement le contenu :
+- Les lignes en MAJUSCULES ou avec `**texte**` sont rendues en `<strong>` avec une taille plus grande et la couleur primaire
+- Les lignes commencant par `:` ou contenant des labels (ex: `Nom et Prenoms :`) utilisent un style semi-bold
+- Le texte de base utilise `color: #333` (plus fonce) au lieu de `#444`
+- Espacement entre paragraphes `mb-5` au lieu de `mb-4` pour plus de respiration
+- Cela reproduit le meme rendu que la section AI content de `InvoicePreview`
 
-### 4. Panneau Clients recents -- separateurs subtils (`Dashboard.tsx`)
-- Ajouter un fin separateur gradient (`bg-gradient-to-r from-transparent via-border/30 to-transparent`) entre chaque client
-- Ajouter un petit indicateur vert clignotant a cote du titre "Clients recents" (deja present, verifier la coherence)
+## Probleme 2 : Ajouter edition et suppression de documents
 
-### 5. Boutons d'actions rapides -- accent primaire ameliore (`Dashboard.tsx`)
-- Ajouter un subtil `bg-primary/5` comme fond par defaut des boutons d'action rapide
-- Au survol, un fond `bg-primary/10` avec une transition plus fluide
+### Suppression
 
-### 6. Separateurs entre sections (`Dashboard.tsx`)
-- Remplacer les separateurs simples `via-primary/20` par `via-primary/25` pour un contraste legerement plus prononce
-- Ajouter une ombre douce `shadow-sm` type glow sous les separateurs via un pseudo-element CSS
+**`DocumentsIA.tsx`** :
+- Ajouter un bouton Supprimer (icone Trash) sur chaque ligne de document
+- Confirmation via `AlertDialog` avant suppression
+- Appel `supabase.from("documents").delete().eq("id", doc.id)` puis rafraichissement de la liste
 
-## Details techniques
+### Edition
+
+**Nouveau composant `EditDocumentDialog.tsx`** :
+- Dialog avec un `Textarea` pre-rempli avec le contenu actuel du document
+- L'utilisateur peut modifier/effacer/remplacer du texte librement
+- Bouton Enregistrer qui fait un `supabase.from("documents").update({ contenu }).eq("id", doc.id)`
+- Possibilite de changer le type de document via un Select
+
+**`DocumentsIA.tsx`** :
+- Ajouter un bouton Editer (icone Pencil) sur chaque ligne
+- Ouvre le `EditDocumentDialog` avec le document selectionne
 
 ### Fichiers modifies
-- `src/pages/Dashboard.tsx` : header avatar glow, boutons actions, separateurs, panneau clients
-- `src/components/dashboard/SimpleFinanceSummary.tsx` : ring + barre superieure hover
-- `src/components/dashboard/SimpleDailyActivity.tsx` : fonds d'icones teintes + pulse conditionnel
-- `src/index.css` : ajouter une classe `.separator-glow` pour les separateurs ameliores
-
-### Aucun changement sur
-- La structure / layout du dashboard
-- Les donnees affichees
-- Les fonctionnalites (dialogs, navigation, etc.)
-- Les composants `SimpleChart`, `FinancialChart`, `DynamicSidebar`
+- `src/components/DocumentPreview.tsx` : ameliorer `renderContent`
+- `src/components/dialogs/ViewDocumentDialog.tsx` : ajuster le scale
+- `src/pages/DocumentsIA.tsx` : ajouter boutons edit/delete + dialogs
+- `src/components/dialogs/EditDocumentDialog.tsx` : nouveau composant
 
