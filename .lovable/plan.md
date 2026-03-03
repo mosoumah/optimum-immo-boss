@@ -1,38 +1,36 @@
 
 
-# Aligner la comptabilite du dashboard avec les donnees reelles
+# Limiter les statuts des biens a "Disponible" et "Reserve"
 
-## Probleme identifie
+## Ce qui change
 
-La vue SQL `v_dashboard_simple` qui alimente le dashboard a des filtres incorrects :
+### 1. Formulaire de creation/modification de bien (`BienDialog.tsx`)
+- Supprimer les options "Vendu" et "Loue" du selecteur de statut (lignes 260-261)
+- Garder uniquement "Disponible" et "Reserve"
 
-1. **Arrivees aujourd'hui** : filtre sur `statut = 'confirmee'` uniquement. Mais quand un client arrive, le statut passe a `'en_cours'`, donc l'arrivee disparait du compteur. Resultat : 0 au lieu de 2.
-2. **Departs aujourd'hui** : aucun filtre sur le statut, ce qui peut compter des reservations annulees.
-3. **Sejours en cours** : inclut les reservations `confirmee` dont la date d'arrivee est passee sans que le statut ait change, ce qui peut gonfler le chiffre.
+### 2. Page liste des biens (`Biens.tsx`)
+- Supprimer les options "Vendu" et "Loue" du filtre de statut (lignes 131-132)
+- Supprimer les entrees correspondantes dans `statutColors` et `statutLabels` (lignes vendu/loue)
 
-Les stats de la page Reservations (calculees cote client) utilisent une logique legerement differente de la vue SQL du dashboard, creant des incoherences.
+### 3. Page detail du bien (`BienDetail.tsx`)
+- Supprimer les entrees "vendu" et "loue" de `statutColors` (lignes 16-17)
 
-## Solution
+### 4. Formulaire de reservation (`ReservationDialog.tsx`)
+- Le filtrage des biens reserves est deja en place (filtre `statut !== 'reserve'`). Aucun changement necessaire.
 
-### 1. Migration SQL : corriger la vue `v_dashboard_simple`
+### 5. Trigger existant (aucun changement)
+- Le trigger `handle_reservation_property_status` gere deja la bascule entre "reserve" (quand reservation en_cours) et "disponible" (quand terminee/annulee). Rien a modifier.
 
-Recreer la vue avec les filtres corriges :
-
-- **Arrivees aujourd'hui** : `date_arrivee = CURRENT_DATE AND statut IN ('confirmee', 'en_cours')` -- inclure les arrivees meme si le statut a deja change
-- **Departs aujourd'hui** : `date_depart = CURRENT_DATE AND statut IN ('en_cours', 'confirmee')` -- exclure les annulees et terminees
-- **Sejours en cours** : `statut IN ('en_cours', 'confirmee') AND date_arrivee <= CURRENT_DATE AND date_depart >= CURRENT_DATE` -- deja correct, pas de changement
-
-### 2. Aligner la page Reservations avec la meme logique
-
-Fichier : `src/pages/Reservations.tsx`
-
-Corriger les calculs cote client (lignes 86-89) pour utiliser exactement la meme logique que la vue SQL :
-- `departsToday` : ajouter le filtre `statut IN ('en_cours', 'confirmee')`
-- `enCours` : filtrer sur `statut IN ('en_cours', 'confirmee') AND date_arrivee <= today AND date_depart >= today` au lieu de juste `statut === 'en_cours'`
-
-### Ce qui ne change PAS
-- Le hook `useDashboardData.tsx` (il lit deja la vue)
-- Le composant `SimpleDailyActivity.tsx` (il affiche deja les bons champs)
-- Les triggers existants
+## Ce qui ne change PAS
+- La base de donnees (pas de migration SQL)
+- Le trigger de statut automatique
 - Les RLS policies
+- Tout autre composant ou page
+
+## Details techniques
+
+Fichiers modifies :
+- `src/components/dialogs/BienDialog.tsx` : retirer 2 SelectItem (vendu, loue)
+- `src/pages/Biens.tsx` : retirer 2 SelectItem du filtre + nettoyer statutColors/statutLabels
+- `src/pages/BienDetail.tsx` : nettoyer statutColors
 
