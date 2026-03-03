@@ -93,6 +93,8 @@ const BienDetail = () => {
                   if (property.cover_image_url && entrepriseId) {
                     await supabase.storage.from("property-covers").remove([`${entrepriseId}/${id}.jpg`]);
                   }
+                  // Delete reservations linked to this property
+                  await supabase.from("reservations").delete().eq("property_id", id!);
                   const { error } = await supabase.from("properties").delete().eq("id", id!);
                   setIsDeleting(false);
                   if (error) {
