@@ -13,8 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 const statutColors: Record<string, string> = {
   disponible: "bg-success/20 text-success",
   reserve: "bg-warning/20 text-warning",
-  vendu: "bg-blue-500/20 text-blue-400",
-  loue: "bg-purple-500/20 text-purple-400",
 };
 
 const formatCurrency = (amount: number) =>
