@@ -1366,6 +1366,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      auto_complete_reservations: {
+        Args: { _entreprise_id: string }
+        Returns: undefined
+      }
       bootstrap_current_user: { Args: never; Returns: Json }
       can_access_tache_messages: {
         Args: { _tache_id: string }
