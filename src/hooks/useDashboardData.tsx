@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SimpleDashboardData {
@@ -122,6 +123,38 @@ export const useDashboardData = (
     enabled: !!entrepriseId && mode === "advanced" && isPremium,
     staleTime: 2 * 60 * 1000,
   });
+
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!entrepriseId) return;
+
+    const channel = supabase
+      .channel("dashboard-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "factures" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-finance", entrepriseId] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "revenus" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-finance", entrepriseId] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-top-properties", entrepriseId] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "depenses" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-finance", entrepriseId] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-property", entrepriseId] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-alerts", entrepriseId] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [entrepriseId, queryClient]);
 
   return {
     simple: simpleQuery.data || null,
