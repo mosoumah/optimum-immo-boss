@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { NotificationBell } from "@/components/NotificationBell";
+import { MessageBell } from "@/components/MessageBell";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
@@ -246,6 +247,7 @@ const StudioIA = () => {
             </div>
             <div className="flex items-center gap-3">
               {quotaDisplay}
+              <MessageBell />
               <NotificationBell />
             </div>
           </div>

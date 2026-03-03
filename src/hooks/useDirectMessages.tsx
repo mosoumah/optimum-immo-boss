@@ -149,10 +149,24 @@ export const useDirectMessages = () => {
     fetchUsers();
   }, [fetchUsers]);
 
+  // Mark conversation as read
+  const markConversationAsRead = useCallback(async (userId: string) => {
+    if (!user) return;
+    await supabase
+      .from("direct_messages")
+      .update({ read: true })
+      .eq("receiver_id", user.id)
+      .eq("sender_id", userId)
+      .eq("read", false);
+  }, [user]);
+
   // Fetch messages when selected user changes
   useEffect(() => {
     fetchMessages();
-  }, [fetchMessages]);
+    if (selectedUserId) {
+      markConversationAsRead(selectedUserId);
+    }
+  }, [fetchMessages, selectedUserId, markConversationAsRead]);
 
   // Realtime subscription
   useEffect(() => {
@@ -205,6 +219,7 @@ export const useDirectMessages = () => {
     selectedUserId,
     setSelectedUserId,
     sendMessage,
+    markConversationAsRead,
     currentUserId: user?.id,
   };
 };
