@@ -32,6 +32,26 @@ const Inscription = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Client-side validation
+    if (formData.nom.trim().length < 2 || formData.nom.length > 100) {
+      toast({ title: "Nom invalide", description: "Le nom doit contenir entre 2 et 100 caractères.", variant: "destructive" });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({ title: "Email invalide", description: "Veuillez entrer une adresse email valide.", variant: "destructive" });
+      return;
+    }
+    if (formData.password.length < 8) {
+      toast({ title: "Mot de passe trop court", description: "Le mot de passe doit contenir au moins 8 caractères.", variant: "destructive" });
+      return;
+    }
+    if (formData.entreprise.trim().length < 2 || formData.entreprise.length > 100) {
+      toast({ title: "Nom d'entreprise invalide", description: "Le nom d'entreprise doit contenir entre 2 et 100 caractères.", variant: "destructive" });
+      return;
+    }
+
     setIsLoading(true);
 
     const { error } = await signUp(
@@ -185,7 +205,7 @@ const Inscription = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <button
                   type="button"
