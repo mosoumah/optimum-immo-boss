@@ -1,48 +1,64 @@
 
 
-# Corrections et nouvelles fonctionnalites pour Documents IA
+# Amelioration Documents IA : Upload, Signature & Lisibilite Premium
 
-## Probleme 1 : Textes non visibles dans le document
+## 1. Upload de document existant avec re-branding automatique
 
-Le `ViewDocumentDialog` applique un `scale-[0.6]` sur le preview, ce qui reduit drastiquement la taille du texte. De plus, la fonction `renderContent` dans `DocumentPreview.tsx` supprime les marqueurs de formatage (gras, titres) sans les rendre visuellement, et la couleur `#444` manque de contraste.
+**Nouveau composant `UploadDocumentDialog.tsx`** :
+- Dialog permettant d'uploader un fichier texte (.txt) ou de coller le contenu d'un document existant dans un textarea
+- A la soumission, le contenu est enregistre dans la table `documents` avec l'entreprise_id de l'utilisateur
+- Le document uploade herite automatiquement du logo, de la charte graphique (couleurs) et de la signature de l'entreprise via `DocumentPreview` -- aucun traitement IA necessaire, c'est le preview qui applique le branding
 
-### Correction
+**`DocumentsIA.tsx`** :
+- Ajouter un second bouton "Importer un document" a cote de "Nouveau document"
+- Ouvre le `UploadDocumentDialog`
+
+## 2. Signature : upload d'image + dessin a la souris
+
+**Nouveau composant `SignaturePad.tsx`** :
+- Canvas HTML5 pour dessiner une signature a la souris/tactile
+- Boutons : Effacer, Valider (convertit le canvas en data URL)
+- Upload d'une image de signature (PNG/JPG) comme alternative
+- Sauvegarde la signature dans `entreprises.signature` (champ existant, actuellement texte -- on le reutilise pour stocker l'URL ou le data URL de l'image)
+
+**Integration dans `Parametres.tsx`** :
+- Ajouter une section "Signature" sous le LogoUpload existant
+- Affiche la signature actuelle si elle existe
+- Boutons pour dessiner ou importer une nouvelle signature
+
+**`DocumentPreview.tsx`** :
+- La zone signature (lignes 458-496) affiche deja `entreprise.signature` comme image -- il faut juste s'assurer que le rendu fonctionne avec un data URL ou une URL de storage
+- Aucune modification necessaire si la signature est stockee comme URL d'image
+
+## 3. Amelioration de la lisibilite du contenu
+
+**`DocumentPreview.tsx`** -- ajustements typographiques premium :
+- Augmenter la taille du corps de texte de `text-base` (16px) a 17px pour plus de confort
+- Augmenter l'interligne de `leading-loose` a un `line-height: 2` personnalise
+- Ajouter un leger `letter-spacing: 0.01em` sur les paragraphes
+- Les labels (lignes avec `:`) utilisent un `font-size: 15px` avec `font-weight: 600` au lieu de `<strong>`
+- Les headers de section utilisent un soulignement decoratif (fine ligne accent sous le titre)
+- Le contenu du document utilise `color: #2a2a2a` (plus fonce) au lieu de `#333`
 
 **`ViewDocumentDialog.tsx`** :
-- Remplacer `scale-[0.6]` par `scale-[0.75]` pour un meilleur equilibre lisibilite/apercu
-- Ajouter une largeur max pour eviter le debordement
+- Pas de changement de scale (deja a 0.75)
 
-**`DocumentPreview.tsx`** - Ameliorer `renderContent` pour parser correctement le contenu :
-- Les lignes en MAJUSCULES ou avec `**texte**` sont rendues en `<strong>` avec une taille plus grande et la couleur primaire
-- Les lignes commencant par `:` ou contenant des labels (ex: `Nom et Prenoms :`) utilisent un style semi-bold
-- Le texte de base utilise `color: #333` (plus fonce) au lieu de `#444`
-- Espacement entre paragraphes `mb-5` au lieu de `mb-4` pour plus de respiration
-- Cela reproduit le meme rendu que la section AI content de `InvoicePreview`
+## 4. Application automatique de la signature sur tous les documents
 
-## Probleme 2 : Ajouter edition et suppression de documents
+La signature est deja affichee dans `DocumentPreview.tsx` via `entreprise.signature`. Une fois que l'utilisateur sauvegarde sa signature (image URL ou data URL) dans la table `entreprises`, elle apparaitra automatiquement sur tous les documents generes et existants lors de la visualisation/export PDF.
 
-### Suppression
+## Fichiers concernes
 
-**`DocumentsIA.tsx`** :
-- Ajouter un bouton Supprimer (icone Trash) sur chaque ligne de document
-- Confirmation via `AlertDialog` avant suppression
-- Appel `supabase.from("documents").delete().eq("id", doc.id)` puis rafraichissement de la liste
+| Fichier | Action |
+|---|---|
+| `src/components/SignaturePad.tsx` | Nouveau -- canvas de dessin + upload image |
+| `src/components/dialogs/UploadDocumentDialog.tsx` | Nouveau -- importer un document existant |
+| `src/pages/Parametres.tsx` | Ajouter section signature |
+| `src/pages/DocumentsIA.tsx` | Ajouter bouton "Importer" |
+| `src/components/DocumentPreview.tsx` | Ajustements typographiques |
 
-### Edition
-
-**Nouveau composant `EditDocumentDialog.tsx`** :
-- Dialog avec un `Textarea` pre-rempli avec le contenu actuel du document
-- L'utilisateur peut modifier/effacer/remplacer du texte librement
-- Bouton Enregistrer qui fait un `supabase.from("documents").update({ contenu }).eq("id", doc.id)`
-- Possibilite de changer le type de document via un Select
-
-**`DocumentsIA.tsx`** :
-- Ajouter un bouton Editer (icone Pencil) sur chaque ligne
-- Ouvre le `EditDocumentDialog` avec le document selectionne
-
-### Fichiers modifies
-- `src/components/DocumentPreview.tsx` : ameliorer `renderContent`
-- `src/components/dialogs/ViewDocumentDialog.tsx` : ajuster le scale
-- `src/pages/DocumentsIA.tsx` : ajouter boutons edit/delete + dialogs
-- `src/components/dialogs/EditDocumentDialog.tsx` : nouveau composant
+### Aucun changement sur
+- La structure de la base de donnees (le champ `entreprises.signature` existe deja)
+- Les factures, devis, ou autres pages
+- Le `DocumentDialog` de generation IA
 
