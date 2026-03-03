@@ -1,66 +1,38 @@
 
 
-# Mise a jour automatique du dashboard et du statut des biens
+# Aligner la comptabilite du dashboard avec les donnees reelles
 
-## Problemes identifies
+## Probleme identifie
 
-1. **Arrivees aujourd'hui** : La vue `v_dashboard_simple` filtre les arrivees sur `statut = 'confirmee'` uniquement, ce qui est correct. Mais il manque le compteur **"Sejours en cours"** que l'utilisateur demande.
-2. **Statut des biens** : Quand une reservation est creee, le bien reste "disponible" au lieu de passer a "reserve". Et quand le sejour est termine, le bien ne revient pas a "disponible".
+La vue SQL `v_dashboard_simple` qui alimente le dashboard a des filtres incorrects :
 
-## Modifications
+1. **Arrivees aujourd'hui** : filtre sur `statut = 'confirmee'` uniquement. Mais quand un client arrive, le statut passe a `'en_cours'`, donc l'arrivee disparait du compteur. Resultat : 0 au lieu de 2.
+2. **Departs aujourd'hui** : aucun filtre sur le statut, ce qui peut compter des reservations annulees.
+3. **Sejours en cours** : inclut les reservations `confirmee` dont la date d'arrivee est passee sans que le statut ait change, ce qui peut gonfler le chiffre.
 
-### 1. Migration SQL : ajouter "sejours en cours" a la vue et creer un trigger pour le statut des biens
+Les stats de la page Reservations (calculees cote client) utilisent une logique legerement differente de la vue SQL du dashboard, creant des incoherences.
 
-**a) Mettre a jour `v_dashboard_simple`** pour ajouter un compteur `sejours_en_cours` :
-- Compter les reservations avec `statut = 'en_cours'` OU les reservations confirmees dont la date d'arrivee est passee ou aujourd'hui et la date de depart est dans le futur.
+## Solution
 
-**b) Creer un trigger `handle_reservation_property_status`** sur la table `reservations` :
-- A l'insertion ou mise a jour d'une reservation :
-  - Si `statut` est `confirmee` ou `en_cours` et que `property_id` est renseigne : mettre le bien en `reserve`
-  - Si `statut` est `terminee` ou `annulee` : verifier s'il n'y a pas d'autre reservation active sur ce bien, et si non, remettre le bien en `disponible`
+### 1. Migration SQL : corriger la vue `v_dashboard_simple`
 
-**c) Mettre a jour `auto_complete_reservations`** pour aussi remettre le bien en `disponible` quand la reservation passe a `terminee`.
+Recreer la vue avec les filtres corriges :
 
-### 2. `src/hooks/useDashboardData.tsx` : ajouter `sejours_en_cours` a l'interface
-- Ajouter le champ `sejours_en_cours` dans l'interface `SimpleDashboardData`
+- **Arrivees aujourd'hui** : `date_arrivee = CURRENT_DATE AND statut IN ('confirmee', 'en_cours')` -- inclure les arrivees meme si le statut a deja change
+- **Departs aujourd'hui** : `date_depart = CURRENT_DATE AND statut IN ('en_cours', 'confirmee')` -- exclure les annulees et terminees
+- **Sejours en cours** : `statut IN ('en_cours', 'confirmee') AND date_arrivee <= CURRENT_DATE AND date_depart >= CURRENT_DATE` -- deja correct, pas de changement
 
-### 3. `src/components/dashboard/SimpleDailyActivity.tsx` : afficher "Sejours en cours"
-- Remplacer "Taches urgentes" par "Sejours en cours" (ou ajouter un 5e element) dans la grille d'activite quotidienne
-- Utiliser une icone appropriee (ex: `Clock` ou `Building`)
+### 2. Aligner la page Reservations avec la meme logique
 
-### 4. `src/components/dialogs/ReservationDialog.tsx` : pas de changement
-- Le trigger SQL gerera automatiquement la mise a jour du statut du bien
+Fichier : `src/pages/Reservations.tsx`
+
+Corriger les calculs cote client (lignes 86-89) pour utiliser exactement la meme logique que la vue SQL :
+- `departsToday` : ajouter le filtre `statut IN ('en_cours', 'confirmee')`
+- `enCours` : filtrer sur `statut IN ('en_cours', 'confirmee') AND date_arrivee <= today AND date_depart >= today` au lieu de juste `statut === 'en_cours'`
 
 ### Ce qui ne change PAS
-- La structure de la page Biens (elle lit deja le statut depuis la table `properties`)
-- Le formulaire de reservation
+- Le hook `useDashboardData.tsx` (il lit deja la vue)
+- Le composant `SimpleDailyActivity.tsx` (il affiche deja les bons champs)
+- Les triggers existants
 - Les RLS policies
-- Le graphique financier
-
-## Details techniques
-
-### Trigger SQL
-```text
-FUNCTION handle_reservation_property_status()
-  AFTER INSERT OR UPDATE ON reservations
-  FOR EACH ROW
-  
-  Si NEW.property_id IS NOT NULL:
-    Si NEW.statut IN ('confirmee', 'en_cours'):
-      UPDATE properties SET statut = 'reserve' WHERE id = NEW.property_id
-    Si NEW.statut IN ('terminee', 'annulee'):
-      -- Verifier qu'aucune autre reservation active n'existe pour ce bien
-      Si pas d'autre reservation active:
-        UPDATE properties SET statut = 'disponible' WHERE id = NEW.property_id
-```
-
-### Vue mise a jour
-```text
-v_dashboard_simple ajout :
-LEFT JOIN LATERAL (
-  SELECT COUNT(*) AS sejours_en_cours FROM reservations
-  WHERE entreprise_id = e.id AND statut IN ('en_cours', 'confirmee')
-    AND date_arrivee <= CURRENT_DATE AND date_depart >= CURRENT_DATE
-) sc ON true
-```
 
