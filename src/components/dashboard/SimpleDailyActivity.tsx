@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { LogIn, LogOut, CheckSquare, Wallet } from "lucide-react";
+import { LogIn, LogOut, Building, Wallet } from "lucide-react";
 import type { SimpleDashboardData } from "@/hooks/useDashboardData";
 
 interface Props {
@@ -12,9 +12,9 @@ const formatCurrency = (amount: number) =>
 export const SimpleDailyActivity = ({ data }: Props) => {
   const items = [
     { label: "Arrivées aujourd'hui", value: String(data.arrivees_aujourdhui), icon: LogIn, color: "text-info" },
+    { label: "Séjours en cours", value: String(data.sejours_en_cours), icon: Building, color: "text-primary" },
     { label: "Départs aujourd'hui", value: String(data.departs_aujourdhui), icon: LogOut, color: "text-warning" },
-    { label: "Tâches urgentes", value: String(data.taches_urgentes), icon: CheckSquare, color: "text-destructive" },
-    { label: "Paiements attendus", value: formatCurrency(data.paiements_attendus), icon: Wallet, color: "text-primary" },
+    { label: "Paiements attendus", value: formatCurrency(data.paiements_attendus), icon: Wallet, color: "text-destructive" },
   ];
 
   return (

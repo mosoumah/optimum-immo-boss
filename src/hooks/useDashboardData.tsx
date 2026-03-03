@@ -11,6 +11,7 @@ export interface SimpleDashboardData {
   departs_aujourdhui: number;
   taches_urgentes: number;
   paiements_attendus: number;
+  sejours_en_cours: number;
 }
 
 export interface AdvancedFinanceData {
