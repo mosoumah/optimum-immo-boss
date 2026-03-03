@@ -1,12 +1,11 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Fonction de conversion du montant en lettres (français)
 function nombreEnLettres(n: number): string {
   const unites = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
   const dizaines = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
@@ -64,15 +63,14 @@ function nombreEnLettres(n: number): string {
   return result.trim();
 }
 
-// Fonction de nettoyage du contenu généré
 function nettoyerContenu(texte: string): string {
   return texte
-    .replace(/^[\s]*[-•*]\s*/gm, '') // Supprimer les puces en début de ligne
-    .replace(/\*\*/g, '') // Supprimer le markdown bold
-    .replace(/\*/g, '') // Supprimer les astérisques
-    .replace(/#{1,6}\s*/g, '') // Supprimer les titres markdown
-    .replace(/\n{3,}/g, '\n\n') // Limiter les sauts de ligne
-    .replace(/^\s+|\s+$/g, '') // Trim
+    .replace(/^[\\s]*[-•*]\\s*/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/#{1,6}\s*/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+|\s+$/g, '')
     .trim();
 }
 
@@ -82,6 +80,31 @@ serve(async (req) => {
   }
 
   try {
+    // JWT Authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Non autorisé" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Token invalide" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { 
       entrepriseNom, 
       entrepriseLogo,
@@ -102,7 +125,6 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Convertir le montant en lettres
     const montantNumerique = parseInt(String(montant).replace(/\s/g, ''), 10) || 0;
     const montantEnLettres = nombreEnLettres(montantNumerique);
 
@@ -195,7 +217,6 @@ Maintenant, génère le texte pour cette proposition spécifique. Adapte le prem
       throw new Error('Aucun contenu généré');
     }
 
-    // Nettoyer le contenu généré
     generatedContent = nettoyerContenu(generatedContent);
 
     console.log('Premium quote generated successfully');

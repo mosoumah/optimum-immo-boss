@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { checkPermission } from "@/lib/checkPermission";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { escapeHtml } from "@/lib/escapeHtml";
+import { escapeHtml, sanitizeHexColor } from "@/lib/escapeHtml";
 import {
   Dialog,
   DialogContent,
@@ -231,9 +231,9 @@ const Factures = () => {
     if (!printWindow || !invoiceRef.current) return;
 
     const logoSrc = logoDataUrl || entreprise?.logo || "";
-    const primaryColor = entreprise?.couleur_primaire || "#E97451";
-    const secondaryColor = entreprise?.couleur_secondaire || "#FFF5F2";
-    const accentColor = entreprise?.couleur_accent || "#1a1a2e";
+    const primaryColor = sanitizeHexColor(entreprise?.couleur_primaire, "#E97451");
+    const secondaryColor = sanitizeHexColor(entreprise?.couleur_secondaire, "#FFF5F2");
+    const accentColor = sanitizeHexColor(entreprise?.couleur_accent, "#1a1a2e");
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -346,9 +346,9 @@ const Factures = () => {
     if (!previewFacture || !entreprise) return;
 
     const logoSrc = logoDataUrl || "";
-    const primaryColor = entreprise.couleur_primaire || "#E97451";
-    const secondaryColor = entreprise.couleur_secondaire || "#FFF5F2";
-    const accentColor = entreprise.couleur_accent || "#1a1a2e";
+    const primaryColor = sanitizeHexColor(entreprise.couleur_primaire, "#E97451");
+    const secondaryColor = sanitizeHexColor(entreprise.couleur_secondaire, "#FFF5F2");
+    const accentColor = sanitizeHexColor(entreprise.couleur_accent, "#1a1a2e");
     
     const htmlContent = `
 <!DOCTYPE html>

@@ -2,7 +2,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { DirectMessagePanel } from "@/components/DirectMessagePanel";
 
@@ -38,6 +45,10 @@ export const MessageBell = () => {
         side="right"
         className="w-full sm:max-w-2xl p-0 flex flex-col bg-[hsl(220,20%,6%)] border-l border-primary/20"
       >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Messagerie</SheetTitle>
+          <SheetDescription>Envoyez et recevez des messages directs</SheetDescription>
+        </SheetHeader>
         <DirectMessagePanel isEmbedded onClose={() => setOpen(false)} />
       </SheetContent>
     </Sheet>

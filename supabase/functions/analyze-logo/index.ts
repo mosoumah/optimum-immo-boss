@@ -1,17 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // JWT Authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Non autorisé" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Token invalide" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { logoUrl } = await req.json();
     
     if (!logoUrl) {
@@ -100,11 +125,9 @@ Rules:
       throw new Error("No content in AI response");
     }
 
-    // Extract JSON from the response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error("Could not extract JSON from response:", content);
-      // Return default colors if parsing fails
       return new Response(
         JSON.stringify({
           couleur_primaire: "#E97451",
@@ -117,7 +140,6 @@ Rules:
 
     const colors = JSON.parse(jsonMatch[0]);
     
-    // Validate hex codes
     const hexRegex = /^#[0-9A-Fa-f]{6}$/;
     if (!hexRegex.test(colors.couleur_primaire) || 
         !hexRegex.test(colors.couleur_secondaire) || 
@@ -144,7 +166,6 @@ Rules:
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : "Unknown error",
-        // Return default colors on error
         couleur_primaire: "#E97451",
         couleur_secondaire: "#FFF5F2",
         couleur_accent: "#1a1a2e"

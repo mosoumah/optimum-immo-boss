@@ -50,25 +50,25 @@ export const useDirectMessages = () => {
         return;
       }
 
-      // Fetch roles for each profile
-      const usersWithRoles: UserWithRole[] = [];
-      for (const profile of profiles || []) {
-        // Skip current user
-        if (profile.id === user.id) continue;
+      // Fetch all roles in a single query (fix N+1)
+      const filteredProfiles = (profiles || []).filter((p) => p.id !== user.id);
+      const profileIds = filteredProfiles.map((p) => p.id);
 
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", profile.id)
-          .maybeSingle();
+      const { data: rolesData } = profileIds.length > 0
+        ? await supabase
+            .from("user_roles")
+            .select("user_id, role")
+            .in("user_id", profileIds)
+        : { data: [] };
 
-        usersWithRoles.push({
-          id: profile.id,
-          nom: profile.nom,
-          email: profile.email,
-          role: roleData?.role || null,
-        });
-      }
+      const roleMap = new Map((rolesData || []).map((r) => [r.user_id, r.role]));
+
+      const usersWithRoles: UserWithRole[] = filteredProfiles.map((profile) => ({
+        id: profile.id,
+        nom: profile.nom,
+        email: profile.email,
+        role: roleMap.get(profile.id) || null,
+      }));
 
       setUsers(usersWithRoles);
     } finally {
