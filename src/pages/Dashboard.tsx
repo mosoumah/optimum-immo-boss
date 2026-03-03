@@ -30,6 +30,7 @@ import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
+import { MessageBell } from "@/components/MessageBell";
 
 // Dashboard components
 import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummary";
@@ -182,6 +183,7 @@ const Dashboard = () => {
                 <p className="text-muted-foreground text-xs">Voici un aperçu de votre activité aujourd'hui</p>
               </div>
               <div className="flex items-center gap-2 lg:gap-4">
+                <MessageBell />
                 <NotificationBell />
                 <div className="flex flex-col items-end gap-0.5">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50 glow-primary-sm">
