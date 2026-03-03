@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
-import { differenceInDays, differenceInWeeks, differenceInMonths } from "date-fns";
+import { differenceInDays } from "date-fns";
 
 interface ReservationDialogProps {
   open: boolean;
@@ -57,7 +57,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         client_id: reservation.client_id || "",
         property_id: reservation.property_id || "",
         property_name: reservation.property_name || "",
-        type_location: reservation.type_location || "jour",
+        type_location: "jour",
         date_arrivee: reservation.date_arrivee || "",
         date_depart: reservation.date_depart || "",
         prix_unitaire: reservation.prix_unitaire?.toString() || "",
@@ -77,16 +77,12 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     const start = new Date(form.date_arrivee);
     const end = new Date(form.date_depart);
     const prix = parseFloat(form.prix_unitaire) || 0;
-    const totalDays = Math.abs(differenceInDays(end, start));
-    let units = 0;
-    if (form.type_location === "jour") units = Math.max(totalDays, 1);
-    else if (form.type_location === "semaine") units = Math.max(Math.ceil(totalDays / 7), 1);
-    else units = Math.max(Math.abs(differenceInMonths(end, start)), 1);
+    const units = Math.max(Math.abs(differenceInDays(end, start)), 1);
     return { montantTotal: units * prix, unites: units };
-  }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.type_location]);
+  }, [form.date_arrivee, form.date_depart, form.prix_unitaire]);
 
   const datesInversees = form.date_arrivee && form.date_depart && new Date(form.date_depart) < new Date(form.date_arrivee);
-  const typeLabel = form.type_location === "jour" ? "jour" : form.type_location === "semaine" ? "semaine" : "mois";
+  const typeLabel = "jour";
   const canCalculate = form.date_arrivee && form.date_depart && form.prix_unitaire;
 
   const formatCurrency = (amount: number) =>
@@ -173,17 +169,6 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
               <SelectTrigger><SelectValue placeholder="Sélectionner un bien" /></SelectTrigger>
               <SelectContent>
                 {properties.map((p) => <SelectItem key={p.id} value={p.id}>{p.nom}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Type de location</Label>
-            <Select value={form.type_location} onValueChange={(v) => setForm({ ...form, type_location: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="jour">Jour</SelectItem>
-                <SelectItem value="semaine">Semaine</SelectItem>
-                <SelectItem value="mois">Mois</SelectItem>
               </SelectContent>
             </Select>
           </div>
