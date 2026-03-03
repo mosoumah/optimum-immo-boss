@@ -25,7 +25,6 @@ interface Reservation {
 
 const statutColors: Record<string, string> = {
   en_attente: "bg-muted text-muted-foreground",
-  confirmee: "bg-blue-500/20 text-blue-400",
   en_cours: "bg-success/20 text-success",
   terminee: "bg-purple-500/20 text-purple-400",
   annulee: "bg-destructive/20 text-destructive",
@@ -33,7 +32,6 @@ const statutColors: Record<string, string> = {
 
 const statutLabels: Record<string, string> = {
   en_attente: "En attente",
-  confirmee: "Confirmée",
   en_cours: "En cours",
   terminee: "Terminée",
   annulee: "Annulée",
@@ -83,9 +81,9 @@ const Reservations = () => {
   }, [entrepriseId, fetchReservations]);
 
   const today = new Date().toISOString().split("T")[0];
-  const arriveesToday = reservations.filter((r) => r.date_arrivee === today && ["confirmee", "en_cours"].includes(r.statut)).length;
-  const departsToday = reservations.filter((r) => r.date_depart === today && ["confirmee", "en_cours"].includes(r.statut)).length;
-  const enCours = reservations.filter((r) => ["en_cours", "confirmee"].includes(r.statut) && r.date_arrivee <= today && r.date_depart >= today).length;
+  const arriveesToday = reservations.filter((r) => r.date_arrivee === today && ["en_attente", "en_cours"].includes(r.statut)).length;
+  const departsToday = reservations.filter((r) => r.date_depart === today && ["en_attente", "en_cours"].includes(r.statut)).length;
+  const enCours = reservations.filter((r) => ["en_cours", "en_attente"].includes(r.statut) && r.date_arrivee <= today && r.date_depart >= today).length;
   const paiementsRetard = reservations.filter((r) => r.montant_paye < r.montant_total && r.date_depart < today && r.statut === "terminee").length;
 
   const formatCurrency = (amount: number) =>

@@ -93,6 +93,16 @@ const BienDetail = () => {
                   if (property.cover_image_url && entrepriseId) {
                     await supabase.storage.from("property-covers").remove([`${entrepriseId}/${id}.jpg`]);
                   }
+                  // Delete factures linked to reservations of this property
+                  const { data: linkedRes } = await supabase.from("reservations").select("client_id, property_name").eq("property_id", id!);
+                  if (linkedRes && linkedRes.length > 0) {
+                    for (const res of linkedRes) {
+                      await supabase.from("factures").delete()
+                        .eq("client_id", res.client_id)
+                        .eq("entreprise_id", entrepriseId!)
+                        .ilike("description", `%${res.property_name}%`);
+                    }
+                  }
                   // Delete reservations linked to this property
                   await supabase.from("reservations").delete().eq("property_id", id!);
                   const { error } = await supabase.from("properties").delete().eq("id", id!);

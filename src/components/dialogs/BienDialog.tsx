@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -182,6 +182,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{property ? "Modifier le bien" : "Nouveau bien"}</DialogTitle>
+          <DialogDescription>Remplissez les informations du bien ci-dessous.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {/* Image upload */}

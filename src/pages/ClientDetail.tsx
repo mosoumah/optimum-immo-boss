@@ -39,6 +39,10 @@ const statutColors: Record<string, string> = {
   refuse: "bg-destructive/20 text-destructive",
   paye: "bg-success/20 text-success",
   non_paye: "bg-warning/20 text-warning",
+  en_attente: "bg-muted text-muted-foreground",
+  en_cours: "bg-success/20 text-success",
+  terminee: "bg-purple-500/20 text-purple-400",
+  annulee: "bg-destructive/20 text-destructive",
 };
 
 const statutLabels: Record<string, string> = {
@@ -48,6 +52,10 @@ const statutLabels: Record<string, string> = {
   refuse: "Refusé",
   paye: "Payée",
   non_paye: "Non payée",
+  en_attente: "En attente",
+  en_cours: "En cours",
+  terminee: "Terminée",
+  annulee: "Annulée",
 };
 
 const ClientDetail = () => {
@@ -240,7 +248,7 @@ const ClientDetail = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{formatCurrency(r.montant_total)}</span>
-                          <Badge className={statutColors[r.statut] || "bg-muted text-muted-foreground"}>{r.statut}</Badge>
+                          <Badge className={statutColors[r.statut] || "bg-muted text-muted-foreground"}>{statutLabels[r.statut] || r.statut}</Badge>
                         </div>
                       </div>
                     ))}
