@@ -151,7 +151,7 @@ export const ViewDocumentDialog = ({
           </div>
         </DialogHeader>
         <div className="p-4 flex justify-center bg-muted/30">
-          <div className="transform scale-[0.6] origin-top">
+          <div className="transform scale-[0.75] origin-top max-w-[95vw]">
             <div ref={previewRef}>
               <DocumentPreview
                 entreprise={entreprise}

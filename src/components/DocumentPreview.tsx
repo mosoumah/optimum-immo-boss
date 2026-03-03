@@ -66,25 +66,85 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
       });
     };
 
-    // Parse content into elegant paragraphs
+    // Parse content into professionally formatted paragraphs
     const renderContent = (content: string) => {
-      const lines = content.split('\n').filter(line => line.trim());
+      const lines = content.split('\n');
       return lines.map((line, idx) => {
-        const cleanLine = line
-          .replace(/^[\s•\-\*]+/, '')
-          .replace(/\*\*/g, '')
-          .replace(/#{1,6}\s*/g, '')
-          .trim();
-        
-        if (!cleanLine) return null;
-        
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={idx} className="h-3" />;
+
+        // Detect markdown headers (## or ###)
+        const headerMatch = trimmed.match(/^(#{1,3})\s+(.*)/);
+        if (headerMatch) {
+          const level = headerMatch[1].length;
+          const text = headerMatch[2].replace(/\*\*/g, '');
+          const Tag = level <= 2 ? 'h2' : 'h3';
+          return (
+            <Tag
+              key={idx}
+              className={`font-bold uppercase tracking-wide ${level <= 2 ? 'text-lg mt-8 mb-4' : 'text-base mt-6 mb-3'}`}
+              style={{ color: primaryColor }}
+            >
+              {text}
+            </Tag>
+          );
+        }
+
+        // Detect ALL CAPS lines as section headers
+        if (trimmed.length > 3 && trimmed === trimmed.toUpperCase() && /[A-ZÀ-Ü]/.test(trimmed) && !/^\d/.test(trimmed)) {
+          return (
+            <h3
+              key={idx}
+              className="font-bold uppercase tracking-wide text-base mt-6 mb-3"
+              style={{ color: primaryColor }}
+            >
+              {trimmed.replace(/\*\*/g, '')}
+            </h3>
+          );
+        }
+
+        // Parse inline bold markers **text**
+        const renderInlineBold = (text: string) => {
+          const parts = text.split(/(\*\*[^*]+\*\*)/g);
+          return parts.map((part, i) => {
+            const boldMatch = part.match(/^\*\*(.+)\*\*$/);
+            if (boldMatch) {
+              return <strong key={i} style={{ color: '#222' }}>{boldMatch[1]}</strong>;
+            }
+            return <span key={i}>{part}</span>;
+          });
+        };
+
+        // Detect label lines (e.g. "Nom et Prénoms :" or "Article 1 :")
+        const labelMatch = trimmed.match(/^([^:]{2,40})\s*:\s*(.*)$/);
+        if (labelMatch && labelMatch[1] && !trimmed.startsWith('http')) {
+          return (
+            <p key={idx} className="mb-3 last:mb-0 text-base leading-loose" style={{ color: '#333' }}>
+              <strong style={{ color: '#222' }}>{labelMatch[1].replace(/\*\*/g, '')} :</strong>{' '}
+              {labelMatch[2] ? renderInlineBold(labelMatch[2]) : ''}
+            </p>
+          );
+        }
+
+        // Detect bullet/list items
+        if (/^[\-•]\s+/.test(trimmed)) {
+          const cleanLine = trimmed.replace(/^[\-•]\s+/, '').replace(/\*\*/g, '');
+          return (
+            <div key={idx} className="flex items-start gap-3 mb-2 ml-4">
+              <span className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: primaryColor }} />
+              <p className="text-base leading-loose" style={{ color: '#333' }}>{cleanLine}</p>
+            </div>
+          );
+        }
+
+        // Regular paragraph
         return (
-          <p 
-            key={idx} 
-            className="mb-4 last:mb-0"
-            style={{ textAlign: "justify" }}
+          <p
+            key={idx}
+            className="mb-5 last:mb-0 text-base leading-loose"
+            style={{ textAlign: "justify", color: '#333' }}
           >
-            {cleanLine}
+            {renderInlineBold(trimmed)}
           </p>
         );
       });
