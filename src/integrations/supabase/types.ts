@@ -1351,6 +1351,7 @@ export type Database = {
           factures_impayees: number | null
           paiements_attendus: number | null
           revenus_mois: number | null
+          sejours_en_cours: number | null
           taches_urgentes: number | null
         }
         Relationships: []
