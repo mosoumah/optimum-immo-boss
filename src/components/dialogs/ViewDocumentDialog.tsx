@@ -81,6 +81,7 @@ export const ViewDocumentDialog = ({
       clone.style.position = "absolute";
       clone.style.left = "-9999px";
       clone.style.top = "0";
+      clone.style.width = "794px"; // A4 width at 96dpi
       globalThis.document.body.appendChild(clone);
 
       const canvas = await html2canvas(clone, {
@@ -91,7 +92,6 @@ export const ViewDocumentDialog = ({
         logging: false,
         imageTimeout: 15000,
         onclone: (clonedDoc) => {
-          // Ensure all images use crossOrigin
           const imgs = clonedDoc.querySelectorAll("img");
           imgs.forEach((img) => {
             img.crossOrigin = "anonymous";
@@ -101,7 +101,6 @@ export const ViewDocumentDialog = ({
 
       clone.remove();
 
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -110,20 +109,22 @@ export const ViewDocumentDialog = ({
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
+      const ratio = pdfWidth / canvas.width;
+      const scaledHeight = canvas.height * ratio;
 
-      pdf.addImage(
-        imgData,
-        "PNG",
-        imgX,
-        imgY,
-        imgWidth * ratio,
-        imgHeight * ratio
-      );
+      // Multi-page: slice canvas into A4-height chunks
+      const totalPages = Math.ceil(scaledHeight / pdfHeight);
+      for (let page = 0; page < totalPages; page++) {
+        if (page > 0) pdf.addPage();
+        pdf.addImage(
+          canvas.toDataURL("image/png"),
+          "PNG",
+          0,
+          -(page * pdfHeight),
+          pdfWidth,
+          scaledHeight
+        );
+      }
 
       const fileName = `${document.type.replace(/\s+/g, "_")}_${new Date(document.date).toISOString().split("T")[0]}.pdf`;
       pdf.save(fileName);
