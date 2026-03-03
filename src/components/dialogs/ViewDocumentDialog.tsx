@@ -70,33 +70,85 @@ export const ViewDocumentDialog = ({
     }
   }, [open, entreprise?.logo]);
 
-  // Find the best row to break at (scan for mostly-white rows to avoid cutting text)
+  // Robust page-break finder: scans central content area for lowest ink-density band
   const findSafeBreakPoint = (
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
     idealY: number,
-    searchRange: number
+    searchRange: number,
+    minY: number
   ): number => {
     const width = canvas.width;
-    // Search upward from idealY to find a row that's mostly white/background
-    for (let y = idealY; y > idealY - searchRange && y > 0; y--) {
-      const rowData = ctx.getImageData(0, y, width, 1).data;
-      let isWhiteRow = true;
-      // Sample every 4th pixel for performance
-      for (let x = 0; x < width * 4; x += 16) {
-        const r = rowData[x];
-        const g = rowData[x + 1];
-        const b = rowData[x + 2];
-        // Check if pixel is near-white (background)
-        if (r < 240 || g < 240 || b < 240) {
-          isWhiteRow = false;
-          break;
+    // Exclude 10% on each side to ignore decorative sidebars/gradients
+    const leftBound = Math.floor(width * 0.10);
+    const rightBound = Math.floor(width * 0.90);
+    const scanWidth = rightBound - leftBound;
+    const bandHeight = 5; // evaluate 5-pixel bands for anti-aliasing resilience
+    const halfBand = Math.floor(bandHeight / 2);
+
+    let bestY = idealY;
+    let bestDensity = Infinity;
+
+    // Search from idealY upward first, then downward (prefer earlier breaks)
+    const startY = Math.min(idealY, canvas.height - 1);
+    const upperLimit = Math.max(idealY - searchRange, minY + 1);
+    const lowerLimit = Math.min(idealY + Math.floor(searchRange * 0.5), canvas.height - 1);
+
+    for (let y = startY; y >= upperLimit; y--) {
+      const bandTop = Math.max(y - halfBand, 0);
+      const bandBot = Math.min(y + halfBand, canvas.height - 1);
+      const bh = bandBot - bandTop + 1;
+
+      const rowData = ctx.getImageData(leftBound, bandTop, scanWidth, bh).data;
+      let inkPixels = 0;
+      const totalSamples = Math.floor((scanWidth * bh) / 4); // sample every 4th pixel
+      for (let i = 0; i < rowData.length; i += 16) {
+        const r = rowData[i];
+        const g = rowData[i + 1];
+        const b = rowData[i + 2];
+        if (r < 230 || g < 230 || b < 230) {
+          inkPixels++;
         }
       }
-      if (isWhiteRow) return y;
+      const density = inkPixels / Math.max(totalSamples, 1);
+
+      if (density < bestDensity) {
+        bestDensity = density;
+        bestY = y;
+        // Perfect gap found (nearly blank band) — use it immediately
+        if (density < 0.01) return y;
+      }
     }
-    // If no safe break found, use the ideal position
-    return idealY;
+
+    // Also search slightly downward if upward wasn't clean enough
+    if (bestDensity > 0.05) {
+      for (let y = startY + 1; y <= lowerLimit; y++) {
+        const bandTop = Math.max(y - halfBand, 0);
+        const bandBot = Math.min(y + halfBand, canvas.height - 1);
+        const bh = bandBot - bandTop + 1;
+
+        const rowData = ctx.getImageData(leftBound, bandTop, scanWidth, bh).data;
+        let inkPixels = 0;
+        const totalSamples = Math.floor((scanWidth * bh) / 4);
+        for (let i = 0; i < rowData.length; i += 16) {
+          const r = rowData[i];
+          const g = rowData[i + 1];
+          const b = rowData[i + 2];
+          if (r < 230 || g < 230 || b < 230) {
+            inkPixels++;
+          }
+        }
+        const density = inkPixels / Math.max(totalSamples, 1);
+
+        if (density < bestDensity) {
+          bestDensity = density;
+          bestY = y;
+          if (density < 0.01) return y;
+        }
+      }
+    }
+
+    return bestY;
   };
 
   const handleDownloadPDF = async () => {
@@ -148,14 +200,20 @@ export const ViewDocumentDialog = ({
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context unavailable");
 
+      // Minimum slice height: 30% of a page to avoid tiny fragments
+      const minSliceHeightPx = Math.floor(pageHeightPx * 0.3);
+
       // Calculate all page break points using smart breaks
       const breakPoints: number[] = [0];
       let currentY = 0;
       while (currentY + pageHeightPx < canvas.height) {
         const idealBreak = currentY + pageHeightPx;
-        const safeBreak = findSafeBreakPoint(canvas, ctx, idealBreak, searchRange);
-        breakPoints.push(safeBreak);
-        currentY = safeBreak;
+        const minBreakY = currentY + minSliceHeightPx;
+        const safeBreak = findSafeBreakPoint(canvas, ctx, idealBreak, searchRange, minBreakY);
+        // Ensure forward progress
+        const nextBreak = Math.max(safeBreak, currentY + minSliceHeightPx);
+        breakPoints.push(nextBreak);
+        currentY = nextBreak;
       }
       // Last page goes to the end
       if (breakPoints[breakPoints.length - 1] < canvas.height) {
