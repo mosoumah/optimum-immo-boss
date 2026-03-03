@@ -183,9 +183,14 @@ const Dashboard = () => {
               </div>
               <div className="flex items-center gap-2 lg:gap-4">
                 <NotificationBell />
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50">
-                  <span className="text-xs font-bold text-primary">
-                    {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
+                <div className="flex flex-col items-end gap-0.5">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-primary/50 glow-primary-sm">
+                    <span className="text-xs font-bold text-primary">
+                      {profile?.nom?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-primary/15 to-accent/15 text-primary/80 ring-1 ring-primary/10">
+                    {isAdmin ? "Admin" : isAgent ? "Agent" : "Client"}
                   </span>
                 </div>
               </div>
@@ -210,7 +215,7 @@ const Dashboard = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={action.onClick}
-                  className="action-button border-border/40 hover:border-primary/50 rounded-lg h-8 px-3 text-xs font-medium shadow-sm hover:shadow-md transition-all duration-300"
+                  className="action-button bg-primary/5 border-border/40 hover:bg-primary/10 hover:border-primary/50 rounded-lg h-8 px-3 text-xs font-medium shadow-sm hover:shadow-md transition-all duration-500"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1.5 text-primary" />
                   {action.label}
@@ -220,7 +225,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Separator */}
-          <div className="flex-shrink-0 h-px w-full my-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="flex-shrink-0 h-px w-full my-1 separator-glow" />
 
           {/* Dashboard Content */}
           <div className="flex flex-col gap-1 flex-1 min-h-0">
@@ -230,7 +235,7 @@ const Dashboard = () => {
             </div>
 
             {/* Separator */}
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
+            <div className="h-px w-full separator-glow flex-shrink-0" />
 
             {/* Ligne 2 - Activité du jour */}
             <div>
@@ -238,7 +243,7 @@ const Dashboard = () => {
             </div>
 
             {/* Separator */}
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent flex-shrink-0" />
+            <div className="h-px w-full separator-glow flex-shrink-0" />
 
             {/* Ligne 3 - Graphique + Clients */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 lg:gap-2 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
@@ -265,7 +270,7 @@ const Dashboard = () => {
                     </Button>
                   )}
                 </div>
-                <div className="space-y-2 flex-1">
+                <div className="space-y-0 flex-1">
                   {clients.length > 0 ? (
                     clients.map((client, index) => (
                       <motion.div 
@@ -273,7 +278,8 @@ const Dashboard = () => {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group"
+                        className={`flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all duration-300 cursor-pointer group ${index > 0 ? "mt-0.5 border-t border-t-transparent" : ""}`}
+                        style={index > 0 ? { borderTopColor: "transparent", backgroundImage: undefined } : undefined}
                       >
                         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0 ring-1 ring-primary/10">
                           <Users className="w-4 h-4 text-primary" />

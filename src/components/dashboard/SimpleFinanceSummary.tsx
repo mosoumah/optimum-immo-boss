@@ -25,8 +25,9 @@ export const SimpleFinanceSummary = ({ data }: Props) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 + index * 0.05 }}
-          className="card-kpi p-2 lg:p-3 rounded-xl"
+          className="card-kpi p-2 lg:p-3 rounded-xl ring-1 ring-primary/10 hover:ring-primary/30 transition-all duration-400 relative overflow-hidden group"
         >
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label text-xs">{stat.label}</span>
             <div className={`p-1.5 rounded-lg ${stat.positive ? "bg-success/10 ring-1 ring-success/20" : "bg-destructive/10 ring-1 ring-destructive/20"}`}>
