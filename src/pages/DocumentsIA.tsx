@@ -1,13 +1,25 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Plus, ArrowLeft, FileText, Eye } from "lucide-react";
+import { Sparkles, Plus, ArrowLeft, FileText, Eye, Pencil, Trash2 } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
 import { ViewDocumentDialog } from "@/components/dialogs/ViewDocumentDialog";
+import { EditDocumentDialog } from "@/components/dialogs/EditDocumentDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface Client {
   nom: string;
@@ -43,6 +55,8 @@ const DocumentsIA = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   const fetchDocuments = useCallback(async () => {
@@ -79,6 +93,28 @@ const DocumentsIA = () => {
   const handleViewDocument = (doc: Document) => {
     setSelectedDocument(doc);
     setViewDialogOpen(true);
+  };
+
+  const handleEditDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (doc: Document) => {
+    setSelectedDocument(doc);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedDocument) return;
+    const { error } = await supabase.from("documents").delete().eq("id", selectedDocument.id);
+    setDeleteDialogOpen(false);
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+    toast.success("Document supprimé");
+    fetchDocuments();
   };
 
   if (entrepriseLoading || isLoading) {
@@ -156,6 +192,26 @@ const DocumentsIA = () => {
                   >
                     <Eye className="w-5 h-5 text-primary" />
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditDocument(doc);
+                    }}
+                  >
+                    <Pencil className="w-4 h-4 text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(doc);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
                   <Sparkles className="w-5 h-5 text-primary" />
                 </motion.div>
               ))}
@@ -185,6 +241,30 @@ const DocumentsIA = () => {
         client={selectedDocument?.clients || null}
         entreprise={entreprise}
       />
+
+      <EditDocumentDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        document={selectedDocument}
+        onSuccess={fetchDocuments}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce document ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le document "{selectedDocument?.type}" sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
