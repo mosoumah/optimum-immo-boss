@@ -257,8 +257,6 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
                 <SelectContent>
                   <SelectItem value="disponible">Disponible</SelectItem>
                   <SelectItem value="reserve">Réservé</SelectItem>
-                  <SelectItem value="vendu">Vendu</SelectItem>
-                  <SelectItem value="loue">Loué</SelectItem>
                 </SelectContent>
               </Select>
             </div>

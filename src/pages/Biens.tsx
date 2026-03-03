@@ -32,15 +32,11 @@ interface Property {
 const statutColors: Record<string, string> = {
   disponible: "bg-success/20 text-success",
   reserve: "bg-warning/20 text-warning",
-  vendu: "bg-blue-500/20 text-blue-400",
-  loue: "bg-purple-500/20 text-purple-400",
 };
 
 const statutLabels: Record<string, string> = {
   disponible: "Disponible",
   reserve: "Réservé",
-  vendu: "Vendu",
-  loue: "Loué",
 };
 
 const typeBienLabels: Record<string, string> = {
@@ -137,8 +133,6 @@ const Biens = () => {
                 <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="disponible">Disponible</SelectItem>
                 <SelectItem value="reserve">Réservé</SelectItem>
-                <SelectItem value="vendu">Vendu</SelectItem>
-                <SelectItem value="loue">Loué</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterType} onValueChange={setFilterType}>
