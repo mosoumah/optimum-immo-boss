@@ -11,10 +11,10 @@ const formatCurrency = (amount: number) =>
 
 export const SimpleDailyActivity = ({ data }: Props) => {
   const items = [
-    { label: "Arrivées aujourd'hui", value: String(data.arrivees_aujourdhui), icon: LogIn, color: "text-info" },
-    { label: "Séjours en cours", value: String(data.sejours_en_cours), icon: Building, color: "text-primary" },
-    { label: "Départs aujourd'hui", value: String(data.departs_aujourdhui), icon: LogOut, color: "text-warning" },
-    { label: "Paiements attendus", value: formatCurrency(data.paiements_attendus), icon: Wallet, color: "text-destructive" },
+    { label: "Arrivées aujourd'hui", value: String(data.arrivees_aujourdhui), icon: LogIn, color: "text-info", bgColor: "bg-info/10 ring-1 ring-info/20", numValue: data.arrivees_aujourdhui },
+    { label: "Séjours en cours", value: String(data.sejours_en_cours), icon: Building, color: "text-primary", bgColor: "bg-primary/10 ring-1 ring-primary/20", numValue: data.sejours_en_cours },
+    { label: "Départs aujourd'hui", value: String(data.departs_aujourdhui), icon: LogOut, color: "text-warning", bgColor: "bg-warning/10 ring-1 ring-warning/20", numValue: data.departs_aujourdhui },
+    { label: "Paiements attendus", value: formatCurrency(data.paiements_attendus), icon: Wallet, color: "text-destructive", bgColor: "bg-destructive/10 ring-1 ring-destructive/20", numValue: data.paiements_attendus },
   ];
 
   return (
@@ -29,11 +29,11 @@ export const SimpleDailyActivity = ({ data }: Props) => {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label text-xs">{item.label}</span>
-            <div className="p-1.5 rounded-lg bg-secondary/50">
+            <div className={`p-1.5 rounded-lg ${item.bgColor}`}>
               <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
             </div>
           </div>
-          <div className="text-base lg:text-lg font-bold break-words">{item.value}</div>
+          <div className={`text-base lg:text-lg font-bold break-words ${item.numValue > 0 ? "animate-pulse-slow" : ""}`}>{item.value}</div>
         </motion.div>
       ))}
     </div>
