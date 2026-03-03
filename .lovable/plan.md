@@ -1,17 +1,34 @@
 
-# Fix PDF format: proper A4 pagination
+Objectif: corriger définitivement les coupures de texte entre pages dans le PDF, sans toucher au design/structure visuelle du document.
 
-## Problem
-The current code uses `Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)` which scales the entire document to fit on ONE page. For tall documents, this results in a tiny, unreadable single-page PDF.
+1) Diagnostic précis du bug actuel
+- Le découpage “safe break” scanne une ligne sur toute la largeur du canvas.
+- Or `DocumentPreview` contient des éléments décoratifs non blancs sur toute la hauteur (barres latérales, dégradés), donc la détection “ligne blanche” échoue souvent.
+- Résultat: fallback sur la position idéale brute => coupure possible au milieu d’une ligne de texte.
 
-## Solution
-In `src/components/dialogs/ViewDocumentDialog.tsx`, fix `handleDownloadPDF`:
+2) Correctif ciblé dans `src/components/dialogs/ViewDocumentDialog.tsx` (seul fichier)
+- Remplacer `findSafeBreakPoint` par un algorithme de “faible densité d’encre” plus robuste:
+  - Scanner uniquement la zone centrale utile du contenu (exclure marges/décors latéraux, ex: 8–10% à gauche/droite).
+  - Évaluer une bande de plusieurs pixels (pas 1 seule ligne) pour lisser l’anti-aliasing.
+  - Chercher le meilleur point autour de la coupure idéale en priorité vers le haut, puis vers le bas (fenêtre ±searchRange), et choisir la bande avec la plus faible densité.
+- Ajouter des garde-fous de pagination:
+  - `minSliceHeightPx` pour éviter des pages trop petites si un break “safe” est trop proche.
+  - Si aucun bon break n’est trouvé, fallback contrôlé (position idéale mais contrainte par min/max) pour garantir la progression et éviter toute boucle/duplication.
+- Conserver tout le reste tel quel:
+  - largeur A4, capture html2canvas, CORS, rendu par page, numérotation, marges, styles.
 
-1. **Set the clone width to 794px** (A4 at 96dpi) so html2canvas captures at proper A4 proportions
-2. **Scale to fit A4 width only** (`ratio = pdfWidth / imgWidth`)
-3. **Paginate**: slice the canvas into chunks of `pdfHeight` and add each as a separate PDF page using `addImage` with a negative Y offset for each subsequent page
+3) Critères “ultra-professionnels” visés (sans changer le design)
+- Aucune ligne/phrase coupée en deux à la jonction des pages dans les cas normaux.
+- Continuité visuelle propre (pas de saut, pas de chevauchement, pas de duplication de bande).
+- Pagination stable sur documents courts et longs.
 
-This produces a multi-page A4 PDF with properly sized, readable text — exactly like a real document.
+4) Validation après implémentation
+- Tester au moins 3 contenus:
+  - texte dense sans interlignes,
+  - texte avec sections/titres/listes,
+  - texte très long (plusieurs pages).
+- Vérifier manuellement les jonctions de chaque page et l’intégrité complète du texte exporté.
 
-### File changed
-- `src/components/dialogs/ViewDocumentDialog.tsx` — rewrite lines 86-126 with width-based scaling + multi-page loop
+5) Portée garantie
+- Modification uniquement de la logique de découpage PDF dans `ViewDocumentDialog.tsx`.
+- Aucun changement du design, de la structure React, ni du rendu visuel du `DocumentPreview`.
