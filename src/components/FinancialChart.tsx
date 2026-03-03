@@ -33,6 +33,24 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const [prevRevenus, setPrevRevenus] = useState<Revenu[]>([]);
   const [prevDepenses, setPrevDepenses] = useState<Depense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [realtimeTick, setRealtimeTick] = useState(0);
+
+  // Realtime subscription to auto-refresh chart
+  useEffect(() => {
+    const channel = supabase
+      .channel("chart-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "revenus" }, () => {
+        setRealtimeTick((t) => t + 1);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "depenses" }, () => {
+        setRealtimeTick((t) => t + 1);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,7 +92,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     };
 
     if (entrepriseId) fetchData();
-  }, [entrepriseId, period]);
+  }, [entrepriseId, period, realtimeTick]);
 
   const chartData = useMemo(() => {
     const now = new Date();
