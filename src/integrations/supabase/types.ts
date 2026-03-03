@@ -1449,6 +1449,18 @@ export type Database = {
         | "voir_statistiques_personnelles"
         | "gerer_utilisateurs"
         | "gerer_parametres"
+        | "creer_bien"
+        | "voir_bien"
+        | "modifier_bien"
+        | "supprimer_bien"
+        | "creer_reservation"
+        | "voir_reservation"
+        | "modifier_reservation"
+        | "supprimer_reservation"
+        | "generer_image_ia"
+        | "voir_image_ia"
+        | "redesigner_bien_ia"
+        | "envoyer_message"
       app_role: "admin" | "agent" | "client"
       devis_statut: "brouillon" | "envoye" | "accepte" | "refuse"
       facture_statut: "paye" | "non_paye"
@@ -1611,6 +1623,18 @@ export const Constants = {
         "voir_statistiques_personnelles",
         "gerer_utilisateurs",
         "gerer_parametres",
+        "creer_bien",
+        "voir_bien",
+        "modifier_bien",
+        "supprimer_bien",
+        "creer_reservation",
+        "voir_reservation",
+        "modifier_reservation",
+        "supprimer_reservation",
+        "generer_image_ia",
+        "voir_image_ia",
+        "redesigner_bien_ia",
+        "envoyer_message",
       ],
       app_role: ["admin", "agent", "client"],
       devis_statut: ["brouillon", "envoye", "accepte", "refuse"],

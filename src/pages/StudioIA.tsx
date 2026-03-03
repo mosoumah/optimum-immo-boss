@@ -26,6 +26,7 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
+import { PermissionGate } from "@/components/PermissionGate";
 
 const PLAN_LIMITS: Record<string, number> = { standard: 10, pro: 50, premium: 100 };
 
@@ -333,23 +334,27 @@ const StudioIA = () => {
                       <Label>Inclure numéro de téléphone</Label>
                     </div>
 
-                    <Button
-                      onClick={handleGenerateVisual}
-                      disabled={isGenerating || !bienDescription.trim()}
-                      className="w-full gap-2"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Génération en cours...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          Créer visuel
-                        </>
-                      )}
-                    </Button>
+                    <PermissionGate permission="generer_image_ia" fallback={
+                      <p className="text-sm text-muted-foreground text-center py-2">Vous n'avez pas la permission de générer des visuels.</p>
+                    }>
+                      <Button
+                        onClick={handleGenerateVisual}
+                        disabled={isGenerating || !bienDescription.trim()}
+                        className="w-full gap-2"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Génération en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            Créer visuel
+                          </>
+                        )}
+                      </Button>
+                    </PermissionGate>
                   </CardContent>
                 </Card>
 
@@ -473,23 +478,27 @@ const StudioIA = () => {
                       />
                     </div>
 
-                    <Button
-                      onClick={handleRedesign}
-                      disabled={isRedesigning || !uploadedImage || !instruction.trim()}
-                      className="w-full gap-2"
-                    >
-                      {isRedesigning ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Modification en cours...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="w-4 h-4" />
-                          Modifier avec l'IA
-                        </>
-                      )}
-                    </Button>
+                    <PermissionGate permission="redesigner_bien_ia" fallback={
+                      <p className="text-sm text-muted-foreground text-center py-2">Vous n'avez pas la permission de redesigner.</p>
+                    }>
+                      <Button
+                        onClick={handleRedesign}
+                        disabled={isRedesigning || !uploadedImage || !instruction.trim()}
+                        className="w-full gap-2"
+                      >
+                        {isRedesigning ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Modification en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="w-4 h-4" />
+                            Modifier avec l'IA
+                          </>
+                        )}
+                      </Button>
+                    </PermissionGate>
                   </CardContent>
                 </Card>
 
