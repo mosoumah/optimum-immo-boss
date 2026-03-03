@@ -123,7 +123,7 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
         const labelMatch = trimmed.match(/^([^:]{2,40})\s*:\s*(.*)$/);
         if (labelMatch && labelMatch[1] && !trimmed.startsWith('http')) {
           return (
-            <p key={idx} className="mb-3 last:mb-0" style={{ color: '#2a2a2a', fontSize: '15px', lineHeight: '2' }}>
+            <p key={idx} className="mb-3 last:mb-0" style={{ color: '#2a2a2a', fontSize: '17px', lineHeight: '2' }}>
               <span style={{ fontWeight: 600, color: '#1a1a2e' }}>{labelMatch[1].replace(/\*\*/g, '')} :</span>{' '}
               {labelMatch[2] ? renderInlineBold(labelMatch[2]) : ''}
             </p>
@@ -136,7 +136,7 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
           return (
             <div key={idx} className="flex items-start gap-3 mb-2 ml-4">
               <span className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: primaryColor }} />
-              <p style={{ color: '#2a2a2a', fontSize: '17px', lineHeight: '2' }}>{cleanLine}</p>
+              <p style={{ color: '#2a2a2a', fontSize: '19px', lineHeight: '2' }}>{cleanLine}</p>
             </div>
           );
         }
@@ -146,7 +146,7 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
           <p
             key={idx}
             className="mb-5 last:mb-0"
-            style={{ textAlign: "justify", color: '#2a2a2a', fontSize: '17px', lineHeight: '2', letterSpacing: '0.01em' }}
+            style={{ textAlign: "justify", color: '#2a2a2a', fontSize: '19px', lineHeight: '2', letterSpacing: '0.01em' }}
           >
             {renderInlineBold(trimmed)}
           </p>
@@ -407,7 +407,7 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
                 style={{ 
                   color: "#2a2a2a",
                   fontFamily: "'Georgia', serif",
-                  fontSize: "17px",
+                  fontSize: "19px",
                   lineHeight: "2",
                   letterSpacing: "0.01em"
                 }}
