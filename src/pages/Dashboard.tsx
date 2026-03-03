@@ -95,6 +95,13 @@ const Dashboard = () => {
     setIsLoading(false);
   };
 
+  // Auto-complete expired reservations
+  useEffect(() => {
+    if (entrepriseId) {
+      supabase.rpc("auto_complete_reservations", { _entreprise_id: entrepriseId });
+    }
+  }, [entrepriseId]);
+
   useEffect(() => {
     if (!roleLoading && user) {
       fetchProfileAndClients().catch((err) => {

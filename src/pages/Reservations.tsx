@@ -52,6 +52,9 @@ const Reservations = () => {
   const fetchReservations = useCallback(async () => {
     if (!entrepriseId) return;
 
+    // Auto-complete expired reservations before fetching
+    await supabase.rpc("auto_complete_reservations", { _entreprise_id: entrepriseId });
+
     const [{ data: resData }, { data: clientsData }, { data: propsData }] = await Promise.all([
       supabase
         .from("reservations")
