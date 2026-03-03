@@ -1,55 +1,42 @@
 
-# Corrections de la logique des reservations et nettoyage du formulaire
 
-## Objectif
-1. Ne marquer "terminee" que si la facture liee est payee (pas automatiquement a l'expiration de la date)
-2. L'argent n'apparait sur le dashboard que quand la facture est payee (deja le cas via le trigger `handle_facture_paid`)
-3. Les arrivees/departs se mettent a jour automatiquement sur le dashboard (deja fonctionnel via la vue `v_dashboard_simple`)
-4. Supprimer le champ "Type de location" du formulaire de reservation
+# Mise a jour automatique du dashboard en temps reel
+
+## Probleme actuel
+Les donnees du dashboard (KPIs financiers, arrivees/departs, graphique) ne se mettent a jour qu'au rechargement de la page. Quand une facture est marquee comme payee ou qu'une reservation est creee, il faut rafraichir manuellement.
+
+## Solution
+Utiliser les abonnements temps reel de la base de donnees pour detecter les changements sur les tables cles et rafraichir automatiquement les donnees du dashboard.
+
+## Tables a surveiller
+- `factures` : quand un statut change (paye/non_paye), les revenus et KPIs se mettent a jour
+- `revenus` : quand un revenu est cree (via le trigger), le graphique et les KPIs se mettent a jour
+- `depenses` : quand une depense est ajoutee, le graphique et les KPIs se mettent a jour
+- `reservations` : quand une reservation est creee/modifiee, les arrivees/departs se mettent a jour
 
 ## Modifications
 
-### 1. Migration SQL : modifier `auto_complete_reservations`
-La fonction actuelle marque automatiquement les reservations comme "terminee" ET passe les factures en "paye". Il faut inverser la logique :
-- Ne marquer la reservation comme "terminee" QUE si toutes les factures liees sont deja payees
-- Si les factures ne sont pas payees, la reservation reste "en_cours" (pas de changement automatique)
+### 1. Migration SQL : activer le realtime sur les tables
+Ajouter les tables `factures`, `revenus`, `depenses`, et `reservations` a la publication `supabase_realtime` pour permettre les abonnements temps reel.
 
-```text
-Nouvelle logique :
-reservation en_cours (date_depart passee)
-  -> verifier si facture liee est "paye"
-    -> OUI : statut = terminee (l'argent est deja sur le dashboard)
-    -> NON : ne rien faire (reste en_cours, pas d'argent sur le dashboard)
-```
+### 2. `src/hooks/useDashboardData.tsx`
+- Ajouter un abonnement Supabase Realtime qui ecoute les changements sur `factures`, `revenus`, `depenses`, et `reservations`
+- Quand un changement est detecte, invalider les caches react-query correspondants pour forcer un re-fetch automatique
+- Nettoyer l'abonnement au demontage du composant
 
-### 2. Formulaire ReservationDialog (`src/components/dialogs/ReservationDialog.tsx`)
-- Supprimer le champ "Type de location" (le Select Jour/Semaine/Mois, lignes 179-189)
-- Forcer `type_location` a "jour" par defaut dans le state et le payload (la colonne existe toujours en base mais on ne la montre plus)
-- Simplifier le calcul du montant total pour utiliser uniquement les jours
-- Supprimer le label dynamique "jour/semaine/mois" sous le montant total
-
-### 3. Dashboard (`src/pages/Dashboard.tsx`)
-- L'appel RPC `auto_complete_reservations` reste en place mais avec la nouvelle logique SQL
-- Les arrivees/departs sont deja comptes via la vue `v_dashboard_simple` qui filtre sur `CURRENT_DATE` — pas de changement necessaire cote code
+### 3. `src/components/FinancialChart.tsx`
+- Ajouter un abonnement Realtime sur `revenus` et `depenses`
+- Quand un changement est detecte, re-executer le fetch des donnees du graphique automatiquement
 
 ### Ce qui ne change PAS
-- La page Reservations (liste)
-- La sidebar, les autres pages
-- La vue `v_dashboard_simple` (les arrivees/departs fonctionnent deja)
-- Le trigger `handle_facture_paid` (inchange)
+- La structure des composants du dashboard
+- Les vues SQL existantes
+- Le formulaire de reservation
+- Les RLS policies
 
 ## Details techniques
 
-### Migration SQL
-```sql
-CREATE OR REPLACE FUNCTION public.auto_complete_reservations(...)
--- Boucle sur reservations en_cours avec date_depart < CURRENT_DATE
--- Pour chaque reservation, verifie si une facture liee existe et est "paye"
--- Si oui : UPDATE statut = 'terminee'
--- Si non : ne rien faire
-```
+Le hook `useDashboardData` recevra un `queryClient` via `useQueryClient()` pour invalider les caches. Un canal Realtime unique ecoutera les 4 tables et declenchera `queryClient.invalidateQueries()` sur les cles correspondantes.
 
-### ReservationDialog
-- Retirer le bloc Select "Type de location"
-- Le calcul `montantTotal` utilise toujours `differenceInDays` (type_location = "jour")
-- Le label sous le montant affiche toujours "X jour(s)"
+Pour le `FinancialChart`, un compteur d'etat sera incremente a chaque evenement Realtime, forçant le `useEffect` a re-fetcher les donnees.
+
