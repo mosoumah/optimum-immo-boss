@@ -23,7 +23,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
   const { entrepriseId } = useEntreprise();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
-  const [properties, setProperties] = useState<{ id: string; nom: string }[]>([]);
+  const [properties, setProperties] = useState<{ id: string; nom: string; statut: string }[]>([]);
 
   const [form, setForm] = useState({
     client_id: "",
@@ -44,7 +44,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     if (!entrepriseId || !open) return;
     Promise.all([
       supabase.from("clients").select("id, nom").eq("entreprise_id", entrepriseId).order("nom"),
-      supabase.from("properties").select("id, nom").eq("entreprise_id", entrepriseId).order("nom"),
+      supabase.from("properties").select("id, nom, statut").eq("entreprise_id", entrepriseId).order("nom"),
     ]).then(([c, p]) => {
       setClients(c.data || []);
       setProperties(p.data || []);
@@ -72,14 +72,16 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     }
   }, [reservation, open]);
 
-  const { montantTotal, unites } = useMemo(() => {
-    if (!form.date_arrivee || !form.date_depart || !form.prix_unitaire) return { montantTotal: 0, unites: 0 };
+  const { montantTotal, unites, resteAPayer } = useMemo(() => {
+    if (!form.date_arrivee || !form.date_depart || !form.prix_unitaire) return { montantTotal: 0, unites: 0, resteAPayer: 0 };
     const start = new Date(form.date_arrivee);
     const end = new Date(form.date_depart);
     const prix = parseFloat(form.prix_unitaire) || 0;
     const units = Math.max(Math.abs(differenceInDays(end, start)), 1);
-    return { montantTotal: units * prix, unites: units };
-  }, [form.date_arrivee, form.date_depart, form.prix_unitaire]);
+    const total = units * prix;
+    const paye = parseFloat(form.montant_paye) || 0;
+    return { montantTotal: total, unites: units, resteAPayer: Math.max(total - paye, 0) };
+  }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.montant_paye]);
 
   const datesInversees = form.date_arrivee && form.date_depart && new Date(form.date_depart) < new Date(form.date_arrivee);
   const typeLabel = "jour";
@@ -168,7 +170,9 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <Select value={form.property_id} onValueChange={(v) => setForm({ ...form, property_id: v })}>
               <SelectTrigger><SelectValue placeholder="Sélectionner un bien" /></SelectTrigger>
               <SelectContent>
-                {properties.map((p) => <SelectItem key={p.id} value={p.id}>{p.nom}</SelectItem>)}
+                {properties
+                  .filter((p) => p.statut !== "reserve" || (reservation && reservation.property_id === p.id))
+                  .map((p) => <SelectItem key={p.id} value={p.id}>{p.nom}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -188,6 +192,9 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
               </div>
               {canCalculate && montantTotal > 0 && (
                 <p className="text-xs text-muted-foreground mt-1">{unites} {typeLabel}{unites > 1 ? "s" : ""} × {formatCurrency(parseFloat(form.prix_unitaire))}</p>
+              )}
+              {canCalculate && resteAPayer > 0 && resteAPayer < montantTotal && (
+                <p className="text-xs text-primary font-semibold mt-1">Reste à payer : {formatCurrency(resteAPayer)}</p>
               )}
             </div>
           </div>
