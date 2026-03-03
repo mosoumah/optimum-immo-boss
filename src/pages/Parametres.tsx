@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Building2, LogOut, Save, ToggleLeft } from "lucide-react";
+import { ArrowLeft, User, Building2, LogOut, Save, ToggleLeft, PenTool } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { LogoUpload } from "@/components/LogoUpload";
 import { useAgencySettings } from "@/hooks/useAgencySettings";
+import { SignaturePad } from "@/components/SignaturePad";
 
 interface Profile {
   nom: string;
@@ -23,6 +24,7 @@ interface Entreprise {
   telephone: string | null;
   email: string | null;
   logo: string | null;
+  signature: string | null;
 }
 
 const Parametres = () => {
@@ -30,7 +32,7 @@ const Parametres = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile>({ nom: "", email: "" });
-  const [entreprise, setEntreprise] = useState<Entreprise>({ nom: "", adresse: "", telephone: "", email: "", logo: null });
+  const [entreprise, setEntreprise] = useState<Entreprise>({ nom: "", adresse: "", telephone: "", email: "", logo: null, signature: null });
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -52,7 +54,7 @@ const Parametres = () => {
         if (profileData.entreprise_id) {
           const { data: entrepriseData } = await supabase
             .from("entreprises")
-            .select("nom, adresse, telephone, email, logo")
+            .select("nom, adresse, telephone, email, logo, signature")
             .eq("id", profileData.entreprise_id)
             .maybeSingle();
 
@@ -63,6 +65,7 @@ const Parametres = () => {
               telephone: entrepriseData.telephone || "",
               email: entrepriseData.email || "",
               logo: entrepriseData.logo || null,
+              signature: entrepriseData.signature || null,
             });
           }
         }
@@ -111,6 +114,20 @@ const Parametres = () => {
 
   const handleLogoUpdated = (newLogoUrl: string) => {
     setEntreprise((prev) => ({ ...prev, logo: newLogoUrl }));
+  };
+
+  const handleSignatureSave = async (dataUrl: string) => {
+    if (!entrepriseId) return;
+    const { error } = await supabase
+      .from("entreprises")
+      .update({ signature: dataUrl })
+      .eq("id", entrepriseId);
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible de sauvegarder la signature", variant: "destructive" });
+    } else {
+      setEntreprise((prev) => ({ ...prev, signature: dataUrl }));
+      toast({ title: "Succès", description: "Signature enregistrée" });
+    }
   };
 
   const handleSignOut = async () => {
@@ -192,6 +209,18 @@ const Parametres = () => {
                   onLogoUpdated={handleLogoUpdated}
                 />
               )}
+
+              {/* Signature Section */}
+              <div className="pt-4 border-t border-border/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <PenTool className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Signature de l'entreprise</span>
+                </div>
+                <SignaturePad
+                  currentSignature={entreprise.signature}
+                  onSignatureSave={handleSignatureSave}
+                />
+              </div>
               <div>
                 <Label htmlFor="entreprise-nom">Nom de l'entreprise</Label>
                 <Input

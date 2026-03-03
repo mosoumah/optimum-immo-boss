@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Plus, ArrowLeft, FileText, Eye, Pencil, Trash2 } from "lucide-react";
+import { Sparkles, Plus, ArrowLeft, FileText, Eye, Pencil, Trash2, Upload } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
 import { ViewDocumentDialog } from "@/components/dialogs/ViewDocumentDialog";
 import { EditDocumentDialog } from "@/components/dialogs/EditDocumentDialog";
+import { UploadDocumentDialog } from "@/components/dialogs/UploadDocumentDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ const DocumentsIA = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const fetchDocuments = useCallback(async () => {
     if (!entrepriseId) return;
@@ -150,10 +152,16 @@ const DocumentsIA = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-end mb-6"
         >
-          <Button onClick={() => setDialogOpen(true)} className="premium-button">
-            <Plus className="w-4 h-4 mr-2" />
-            Nouveau document
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importer un document
+            </Button>
+            <Button onClick={() => setDialogOpen(true)} className="premium-button">
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau document
+            </Button>
+          </div>
         </motion.div>
 
         <motion.div
@@ -248,6 +256,15 @@ const DocumentsIA = () => {
         document={selectedDocument}
         onSuccess={fetchDocuments}
       />
+
+      {entrepriseId && (
+        <UploadDocumentDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          entrepriseId={entrepriseId}
+          onSuccess={fetchDocuments}
+        />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
