@@ -84,8 +84,8 @@ const Reservations = () => {
 
   const today = new Date().toISOString().split("T")[0];
   const arriveesToday = reservations.filter((r) => r.date_arrivee === today && ["confirmee", "en_cours"].includes(r.statut)).length;
-  const departsToday = reservations.filter((r) => r.date_depart === today).length;
-  const enCours = reservations.filter((r) => r.statut === "en_cours").length;
+  const departsToday = reservations.filter((r) => r.date_depart === today && ["confirmee", "en_cours"].includes(r.statut)).length;
+  const enCours = reservations.filter((r) => ["en_cours", "confirmee"].includes(r.statut) && r.date_arrivee <= today && r.date_depart >= today).length;
   const paiementsRetard = reservations.filter((r) => r.montant_paye < r.montant_total && r.date_depart < today && r.statut === "terminee").length;
 
   const formatCurrency = (amount: number) =>
