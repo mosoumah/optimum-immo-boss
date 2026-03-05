@@ -81,7 +81,13 @@ const Reservations = () => {
     if (entrepriseId) fetchReservations();
   }, [entrepriseId, fetchReservations]);
 
-  const today = new Date().toISOString().split("T")[0];
+  const formatLocalDate = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+  const today = formatLocalDate(new Date());
   const arriveesToday = reservations.filter((r) => r.date_arrivee === today && ["en_attente", "en_cours"].includes(r.statut)).length;
   const departsToday = reservations.filter((r) => r.date_depart === today && ["en_attente", "en_cours"].includes(r.statut)).length;
   const enCours = reservations.filter((r) => ["en_cours", "en_attente"].includes(r.statut) && r.date_arrivee <= today && r.date_depart >= today).length;
