@@ -1,24 +1,23 @@
 
 
-# Modifier la structure d'affichage et gestion des revenus
+# Analyse du graphique Revenus vs Depenses — Problemes identifies et corrections
 
-## Changements demandés
+## Problemes trouves
 
-### 1. Corriger l'affichage des revenus manuels
-- **Titre (en haut)** : Toujours afficher "Revenu" pour les revenus manuels (au lieu de la source)
-- **Sous-titre (en bas)** : Afficher la `source` saisie (ex: "Notre part du marché") au lieu de "Revenu manuel"
-- Pour les revenus liés à une facture : garder le nom du client en haut et la description de la facture en bas
+### 1. Bug de decalage de dates (cause principale)
+Le graphique utilise `toISOString().split("T")[0]` pour generer les dates de comparaison. Cette methode convertit en UTC, ce qui peut decaler la date d'un jour selon le fuseau horaire de l'utilisateur.
 
-### 2. Ajouter un dialog de détail au clic
-- Créer un dialog qui s'ouvre quand on clique sur un revenu
-- Affiche : source ou client, montant, date, type (manuel ou facture)
+Exemple : `new Date(2026, 2, 5)` a minuit local en UTC+1 donne `"2026-03-04"` au lieu de `"2026-03-05"`. Les revenus/depenses du jour ne correspondent plus aux bonnes colonnes du graphique.
 
-### 3. Ajouter la suppression (admin uniquement)
-- Ajouter une RLS policy DELETE sur la table `revenus` pour les admins uniquement
-- Bouton "Supprimer" dans le dialog de détail, protégé par `PermissionGate`
-- Après suppression, rafraîchir la liste
+**Correction** : Utiliser une fonction locale `formatLocalDate(date)` qui extrait `getFullYear()`, `getMonth()+1`, `getDate()` sans conversion UTC.
 
-## Fichiers modifiés
-- **Migration SQL** : ajouter policy DELETE admin-only sur `revenus`
-- **`src/pages/Revenus.tsx`** : corriger l'affichage titre/sous-titre, ajouter le dialog de détail avec vue + suppression
+### 2. Le graphique n'ecoute pas les changements de factures
+Le realtime du graphique ecoute uniquement `revenus` et `depenses`. Quand une facture est marquee payee, le trigger `handle_facture_paid` cree un revenu. Le realtime sur `revenus` devrait capter cela, mais ajouter `factures` comme listener rend le systeme plus fiable (double assurance).
+
+**Correction** : Ajouter `.on("postgres_changes", { event: "*", schema: "public", table: "factures" }, ...)` au channel realtime du graphique.
+
+## Fichiers modifies
+- **`src/components/FinancialChart.tsx`** :
+  - Remplacer tous les `toISOString().split("T")[0]` par une fonction locale `formatLocalDate`
+  - Ajouter l'ecoute realtime sur la table `factures`
 
