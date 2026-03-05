@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TrendingUp, ArrowLeft, Plus, Calendar, CalendarDays, CalendarRange, List } from "lucide-react";
+import { TrendingUp, ArrowLeft, Plus, Calendar, CalendarDays, CalendarRange, List, Trash2 } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +11,16 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
 import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
+import { useUserRole } from "@/hooks/useUserRole";
 import { isToday, isThisWeek, isThisMonth } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface Revenu {
   id: string;
@@ -40,6 +49,10 @@ const Revenus = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('month');
   const { loading: permissionsLoading } = usePermissions();
+  const { isAdmin } = useUserRole();
+  const [selectedRevenu, setSelectedRevenu] = useState<Revenu | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -85,7 +98,6 @@ const Revenus = () => {
   }, []);
 
   const filteredRevenus = useMemo(() => {
-    // Utiliser la date de la facture pour le filtrage (plus fiable que la date du revenu)
     return revenus.filter((r) => {
       const effectiveDate = r.factures?.date || r.date;
       return filterByPeriod(effectiveDate, filterPeriod);
@@ -101,9 +113,45 @@ const Revenus = () => {
   };
 
   const formatDate = (revenu: Revenu) => {
-    // Utiliser la date de la facture si disponible
     const effectiveDate = revenu.factures?.date || revenu.date;
     return new Date(effectiveDate).toLocaleDateString("fr-FR");
+  };
+
+  const getRevenuTitle = (revenu: Revenu) => {
+    if (revenu.facture_id && revenu.factures?.clients?.nom) {
+      return revenu.factures.clients.nom;
+    }
+    return "Revenu";
+  };
+
+  const getRevenuSubtitle = (revenu: Revenu) => {
+    if (revenu.facture_id && revenu.factures?.description) {
+      return revenu.factures.description;
+    }
+    if (revenu.facture_id) {
+      return "Paiement facture";
+    }
+    return revenu.source || "—";
+  };
+
+  const handleRevenuClick = (revenu: Revenu) => {
+    setSelectedRevenu(revenu);
+    setDetailOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedRevenu) return;
+    setDeleting(true);
+    const { error } = await supabase.from("revenus").delete().eq("id", selectedRevenu.id);
+    setDeleting(false);
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+    toast.success("Revenu supprimé");
+    setDetailOpen(false);
+    setSelectedRevenu(null);
+    fetchRevenus();
   };
 
   if (entrepriseLoading || isLoading || permissionsLoading) {
@@ -204,22 +252,15 @@ const Revenus = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
+                  className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item cursor-pointer"
+                  onClick={() => handleRevenuClick(revenu)}
                 >
                   <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-success" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium">
-                      {revenu.facture_id && revenu.factures?.clients?.nom 
-                        ? revenu.factures.clients.nom 
-                        : revenu.source || "Revenu"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {revenu.facture_id && revenu.factures?.description 
-                        ? revenu.factures.description 
-                        : (revenu.facture_id ? "Paiement facture" : "Revenu manuel")}
-                    </div>
+                    <div className="font-medium">{getRevenuTitle(revenu)}</div>
+                    <div className="text-sm text-muted-foreground">{getRevenuSubtitle(revenu)}</div>
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-success">+{formatCurrency(revenu.montant)}</div>
@@ -245,6 +286,63 @@ const Revenus = () => {
           onSuccess={fetchRevenus}
         />
       )}
+
+      {/* Detail Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Détails du revenu</DialogTitle>
+            <DialogDescription>Informations sur ce revenu</DialogDescription>
+          </DialogHeader>
+          {selectedRevenu && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <p className="font-medium">{selectedRevenu.facture_id ? "Facture" : "Manuel"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Montant</p>
+                  <p className="font-medium text-success">{formatCurrency(selectedRevenu.montant)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Date</p>
+                  <p className="font-medium">{formatDate(selectedRevenu)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedRevenu.facture_id ? "Client" : "Source"}
+                  </p>
+                  <p className="font-medium">
+                    {selectedRevenu.facture_id
+                      ? selectedRevenu.factures?.clients?.nom || "—"
+                      : selectedRevenu.source || "—"}
+                  </p>
+                </div>
+              </div>
+              {selectedRevenu.facture_id && selectedRevenu.factures?.description && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Description facture</p>
+                  <p className="font-medium">{selectedRevenu.factures.description}</p>
+                </div>
+              )}
+              {isAdmin && (
+                <div className="pt-4 border-t border-border/50">
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-full"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {deleting ? "Suppression..." : "Supprimer ce revenu"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       </main>
     </div>
   );
