@@ -1,39 +1,24 @@
 
 
-# Séparer Revenus et Factures — Plan de correction
+# Modifier la structure d'affichage et gestion des revenus
 
-## Problème actuel
+## Changements demandés
 
-La table `revenus` a une colonne `facture_id` **NOT NULL**, ce qui force le code à créer une fausse facture à chaque ajout manuel de revenu. Résultat : chaque revenu manuel apparaît aussi dans la liste des factures, et prend le nom d'un client au hasard.
+### 1. Corriger l'affichage des revenus manuels
+- **Titre (en haut)** : Toujours afficher "Revenu" pour les revenus manuels (au lieu de la source)
+- **Sous-titre (en bas)** : Afficher la `source` saisie (ex: "Notre part du marché") au lieu de "Revenu manuel"
+- Pour les revenus liés à une facture : garder le nom du client en haut et la description de la facture en bas
 
-## Solution
+### 2. Ajouter un dialog de détail au clic
+- Créer un dialog qui s'ouvre quand on clique sur un revenu
+- Affiche : source ou client, montant, date, type (manuel ou facture)
 
-Suivre le même modèle que les dépenses (`depenses`) : la table `depenses` a simplement `description`, `montant`, `date`, `entreprise_id` — pas de lien obligatoire vers une autre table.
-
-### 1. Migration SQL
-- Ajouter une colonne `source` (text, nullable) à la table `revenus` pour stocker la description des revenus manuels
-- Rendre `facture_id` **nullable** (au lieu de NOT NULL) pour permettre les revenus non liés à une facture
-
-```sql
-ALTER TABLE public.revenus ADD COLUMN source text;
-ALTER TABLE public.revenus ALTER COLUMN facture_id DROP NOT NULL;
-```
-
-### 2. Refactorer `RevenuDialog.tsx`
-- Supprimer toute la logique de création de facture
-- Insérer directement dans `revenus` avec : `source`, `montant`, `date`, `entreprise_id`, `facture_id: null`
-- Le formulaire reste identique (source, montant, date) — exactement comme `DepenseDialog`
-
-### 3. Mettre à jour `Revenus.tsx` (affichage)
-- Pour les revenus avec `facture_id` : afficher le nom du client et la description de la facture (comportement actuel)
-- Pour les revenus sans `facture_id` (manuels) : afficher la colonne `source` comme description
-- Adapter le type `Revenu` pour inclure `source: string | null`
-
-### 4. Nettoyage des fausses factures existantes
-- Optionnel : supprimer les factures créées artificiellement par l'ancien code (celles avec `statut = 'paye'` et un client "Revenu manuel")
+### 3. Ajouter la suppression (admin uniquement)
+- Ajouter une RLS policy DELETE sur la table `revenus` pour les admins uniquement
+- Bouton "Supprimer" dans le dialog de détail, protégé par `PermissionGate`
+- Après suppression, rafraîchir la liste
 
 ## Fichiers modifiés
-- Migration SQL (1 fichier)
-- `src/components/dialogs/RevenuDialog.tsx` — simplification majeure
-- `src/pages/Revenus.tsx` — adapter l'affichage pour les revenus avec/sans facture
+- **Migration SQL** : ajouter policy DELETE admin-only sur `revenus`
+- **`src/pages/Revenus.tsx`** : corriger l'affichage titre/sous-titre, ajouter le dialog de détail avec vue + suppression
 
