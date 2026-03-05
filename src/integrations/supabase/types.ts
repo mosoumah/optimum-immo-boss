@@ -558,6 +558,7 @@ export type Database = {
           entreprise_id: string
           id: string
           montant: number
+          reservation_id: string | null
           statut: Database["public"]["Enums"]["facture_statut"]
           updated_at: string
         }
@@ -571,6 +572,7 @@ export type Database = {
           entreprise_id: string
           id?: string
           montant?: number
+          reservation_id?: string | null
           statut?: Database["public"]["Enums"]["facture_statut"]
           updated_at?: string
         }
@@ -584,6 +586,7 @@ export type Database = {
           entreprise_id?: string
           id?: string
           montant?: number
+          reservation_id?: string | null
           statut?: Database["public"]["Enums"]["facture_statut"]
           updated_at?: string
         }
@@ -636,6 +639,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_dashboard_simple"
             referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "factures_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
           },
         ]
       }

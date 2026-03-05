@@ -113,10 +113,14 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     };
 
     let result;
+    let newReservationId: string | null = null;
     if (reservation) {
       result = await supabase.from("reservations").update(payload).eq("id", reservation.id);
     } else {
-      result = await supabase.from("reservations").insert(payload);
+      result = await supabase.from("reservations").insert(payload).select("id").single();
+      if (result.data) {
+        newReservationId = result.data.id;
+      }
     }
 
     if (result.error) {
@@ -138,7 +142,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         montant: montantTotal,
         description: `Location ${propertyName} du ${form.date_arrivee} au ${form.date_depart}${resteDesc}`,
         date: new Date().toISOString().split("T")[0],
-      });
+        reservation_id: newReservationId,
+      } as any);
       if (factureError) {
         toast({ title: "Attention", description: "Réservation créée mais erreur lors de la génération de la facture : " + factureError.message, variant: "destructive" });
       } else {
