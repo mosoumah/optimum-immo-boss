@@ -26,6 +26,13 @@ interface Depense {
   montant: number;
 }
 
+const formatLocalDate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const [period, setPeriod] = useState<Period>("month");
   const [revenus, setRevenus] = useState<Revenu[]>([]);
@@ -43,6 +50,9 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
         setRealtimeTick((t) => t + 1);
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "depenses" }, () => {
+        setRealtimeTick((t) => t + 1);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "factures" }, () => {
         setRealtimeTick((t) => t + 1);
       })
       .subscribe();
@@ -73,9 +83,9 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
         prevEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
       }
 
-      const startDateStr = startDate.toISOString().split("T")[0];
-      const prevStartStr = prevStartDate.toISOString().split("T")[0];
-      const prevEndStr = prevEndDate.toISOString().split("T")[0];
+      const startDateStr = formatLocalDate(startDate);
+      const prevStartStr = formatLocalDate(prevStartDate);
+      const prevEndStr = formatLocalDate(prevEndDate);
 
       const [revenusRes, depensesRes, prevRevenusRes, prevDepensesRes] = await Promise.all([
         supabase.from("revenus").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", startDateStr),
@@ -103,7 +113,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       for (let i = 6; i >= 0; i--) {
         const date = new Date(now);
         date.setDate(now.getDate() - i);
-        const dateStr = date.toISOString().split("T")[0];
+        const dateStr = formatLocalDate(date);
         data.push({
           label: dayNames[date.getDay()],
           revenus: revenus.filter((r) => r.date === dateStr).reduce((sum, r) => sum + Number(r.montant), 0),
@@ -114,7 +124,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(now.getFullYear(), now.getMonth(), day);
-        const dateStr = date.toISOString().split("T")[0];
+        const dateStr = formatLocalDate(date);
         data.push({
           label: String(day),
           revenus: revenus.filter((r) => r.date === dateStr).reduce((sum, r) => sum + Number(r.montant), 0),
