@@ -909,25 +909,28 @@ export type Database = {
           created_at: string
           date: string
           entreprise_id: string
-          facture_id: string
+          facture_id: string | null
           id: string
           montant: number
+          source: string | null
         }
         Insert: {
           created_at?: string
           date?: string
           entreprise_id: string
-          facture_id: string
+          facture_id?: string | null
           id?: string
           montant: number
+          source?: string | null
         }
         Update: {
           created_at?: string
           date?: string
           entreprise_id?: string
-          facture_id?: string
+          facture_id?: string | null
           id?: string
           montant?: number
+          source?: string | null
         }
         Relationships: [
           {

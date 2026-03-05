@@ -17,7 +17,8 @@ interface Revenu {
   id: string;
   montant: number;
   date: string;
-  facture_id: string;
+  source: string | null;
+  facture_id: string | null;
   factures: { description: string | null; date: string; clients: { nom: string } | null } | null;
 }
 
@@ -52,7 +53,7 @@ const Revenus = () => {
       .from("revenus")
       .select("*, factures(description, date, clients(nom))")
       .eq("entreprise_id", entrepriseId)
-      .order("date", { ascending: false });
+      .order("date", { ascending: false }) as any;
 
     setRevenus(data || []);
     setIsLoading(false);
@@ -209,8 +210,8 @@ const Revenus = () => {
                     <TrendingUp className="w-6 h-6 text-success" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium">{revenu.factures?.clients?.nom || "Revenu"}</div>
-                    <div className="text-sm text-muted-foreground">{revenu.factures?.description || "Paiement facture"}</div>
+                    <div className="font-medium">{revenu.factures?.clients?.nom || revenu.source || "Revenu"}</div>
+                    <div className="text-sm text-muted-foreground">{revenu.factures?.description || revenu.source || "Revenu manuel"}</div>
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-success">+{formatCurrency(revenu.montant)}</div>
