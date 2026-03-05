@@ -35,98 +35,20 @@ export const RevenuDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Re
 
     setIsLoading(true);
 
-    // First create a facture as reference (required by database schema)
-    const { data: factureData, error: factureError } = await supabase
-      .from("factures")
-      .insert({
-        description: source.trim(),
-        montant: parseFloat(montant),
-        date: format(date, "yyyy-MM-dd"),
-        entreprise_id: entrepriseId,
-        statut: "paye",
-        client_id: null, // Will need a default client
-      })
-      .select("id")
-      .single();
-
-    // If facture creation fails due to client_id constraint, we need to create differently
-    // For manual revenue, we'll create a special "manual" entry
-    if (factureError) {
-      // Get or create a default client for manual entries
-      const { data: clients } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("entreprise_id", entrepriseId)
-        .limit(1);
-
-      let clientId = clients?.[0]?.id;
-
-      if (!clientId) {
-        // Create a default client
-        const { data: newClient, error: clientError } = await supabase
-          .from("clients")
-          .insert({
-            nom: "Revenu manuel",
-            entreprise_id: entrepriseId,
-          })
-          .select("id")
-          .single();
-
-        if (clientError) {
-          toast.error("Erreur lors de la création du revenu");
-          setIsLoading(false);
-          return;
-        }
-        clientId = newClient.id;
-      }
-
-      // Create facture with client
-      const { data: newFacture, error: newFactureError } = await supabase
-        .from("factures")
-        .insert({
-          description: source.trim(),
-          montant: parseFloat(montant),
-          date: format(date, "yyyy-MM-dd"),
-          entreprise_id: entrepriseId,
-          statut: "paye",
-          client_id: clientId,
-        })
-        .select("id")
-        .single();
-
-      if (newFactureError) {
-        toast.error("Erreur lors de la création du revenu");
-        setIsLoading(false);
-        return;
-      }
-
-      // Insert revenue entry (trigger should handle this but we make sure)
-      const { error: revenuError } = await supabase.from("revenus").insert({
-        facture_id: newFacture.id,
-        montant: parseFloat(montant),
-        date: format(date, "yyyy-MM-dd"),
-        entreprise_id: entrepriseId,
-      });
-
-      if (revenuError) {
-        console.log("Revenue may have been created by trigger");
-      }
-    } else {
-      // Revenue should be auto-created by trigger since status is 'paye'
-      // But we verify
-      const { error: revenuError } = await supabase.from("revenus").insert({
-        facture_id: factureData.id,
-        montant: parseFloat(montant),
-        date: format(date, "yyyy-MM-dd"),
-        entreprise_id: entrepriseId,
-      });
-
-      if (revenuError) {
-        console.log("Revenue may have been created by trigger");
-      }
-    }
+    const { error } = await supabase.from("revenus").insert({
+      source: source.trim(),
+      montant: parseFloat(montant),
+      date: format(date, "yyyy-MM-dd"),
+      entreprise_id: entrepriseId,
+    } as any);
 
     setIsLoading(false);
+
+    if (error) {
+      toast.error("Erreur lors de la création du revenu");
+      return;
+    }
+
     toast.success("Revenu ajouté avec succès");
     setSource("");
     setMontant("");
