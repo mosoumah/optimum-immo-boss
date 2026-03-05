@@ -1,97 +1,69 @@
 
 
-# Recap complet — Analyse de toutes les fonctionnalites
+# Plan : Restructurer le formulaire de generation de documents IA
 
-Apres analyse du code, de la base de donnees et des vues SQL, voici les problemes identifies et leur statut.
+## Perimetre strict
+- Modifier UNIQUEMENT `src/components/dialogs/DocumentDialog.tsx` (formulaire)
+- Mettre a jour `supabase/functions/generate-document/index.ts` (pour passer les nouveaux champs au prompt IA)
+- Ne PAS toucher au PDF, au dashboard, ni a aucun autre fichier
 
----
+## Donnees disponibles dans la base
 
-## Ce qui FONCTIONNE correctement
+Les champs du formulaire seront pre-remplis depuis les donnees existantes quand possible :
+- **Entreprise** (`entreprises`) : `nom`, `telephone`, `email`, `adresse`, `signature`
+- **Client** (`clients`) : `nom`, `telephone`, `email` (pas d'adresse en base — champ libre)
+- **Bien** (`properties`) : `nom`, `adresse`, `type_bien`, `prix`
+- **Agent** (`profiles`) : `nom`, `email`
 
-1. **Graphique Revenus vs Depenses** — Corrige : utilise `formatLocalDate` (pas de decalage UTC), ecoute les tables `revenus`, `depenses` et `factures` en temps reel.
-2. **Trigger `handle_facture_paid`** — Quand une facture passe a "paye", un revenu est cree automatiquement. Fonctionne.
-3. **Trigger `handle_reservation_payment_sync`** — Quand une facture **liee** a une reservation passe a "paye", `montant_paye` de la reservation est mis a jour. Fonctionne pour les nouvelles reservations.
-4. **ReservationDialog** — Stocke desormais `reservation_id` dans la facture generee. Fonctionne.
-5. **Revenus** — Affichage correct (titre "Revenu" pour les manuels, nom client pour les factures). Suppression admin operationnelle.
-6. **Factures** — Marquage "payee", generation PDF, impression. Fonctionne.
+## Structure du formulaire (7 sections avec accordeons ou separateurs visuels)
 
----
+### Section 1 — Informations du document
+- Type de document (Select, existant)
+- Numero de document (Input, libre, ex: "DOC-2026-001")
+- Date de creation (DatePicker, default aujourd'hui)
 
-## Problemes IDENTIFIES (a corriger)
+### Section 2 — Informations de l'agence
+- Nom de l'agence (Input, pre-rempli depuis `entreprise.nom`)
+- Nom de l'agent (Input, pre-rempli depuis `profile.nom`)
+- Telephone (Input, pre-rempli depuis `entreprise.telephone`)
+- Email (Input, pre-rempli depuis `entreprise.email`)
 
-### 1. Reservations orphelines sans lien facture (donnees historiques)
+### Section 3 — Informations du client
+- Client (Select existant depuis la base, auto-remplit les champs suivants)
+- Telephone (Input, pre-rempli quand client selectionne)
+- Email (Input, pre-rempli quand client selectionne)
+- Adresse (Input, champ libre car pas en base)
 
-**Probleme** : 5 reservations n'ont aucune facture liee (`reservation_id IS NULL`). Le script de rattrapage de la migration n'a pas reussi a les lier car les descriptions des factures ne correspondaient pas au pattern `%Location%` + `%property_name%`.
+### Section 4 — Informations du bien
+- Bien (Select depuis `properties`, auto-remplit les champs suivants)
+- Adresse du bien (Input, pre-rempli)
+- Type de bien (Input, pre-rempli)
 
-Reservations concernees :
-- `99bfaf5e` : "appartement", 1 400 000, paye 300 000, statut `en_cours`
-- `bd2f4521` : "appartement 2", 900 000, paye 300 000, statut `en_cours`  
-- `0cd9a38f` : "appartement", 400 000, paye 0, statut `terminee`
-- `ddd9a694` : "—", 2 500 000, paye 0, statut `terminee`
-- Plusieurs anciennes (A1, A2) sans facture liee
+### Section 5 — Informations de la transaction
+- Prix de vente / Loyer (Input)
+- Duree de location (Input)
+- Caution (Input)
 
-**Impact** : Le dashboard affiche toujours "Paiements attendus: 2 700 000 GNF" et la page Reservations affiche "Paiements en retard" pour des reservations dont la facture est peut-etre payee mais pas liee.
+### Section 6 — Clauses
+- Textarea pour clauses personnalisees
 
-**Correction** : Migration SQL pour nettoyer les donnees :
-- Lier manuellement les factures aux reservations par `client_id` + `entreprise_id` + correspondance de montant
-- Mettre a jour `montant_paye = montant_total` pour les reservations dont la facture est payee
-- Marquer comme `terminee` les reservations expirees avec facture payee
+### Section 7 — Signatures
+- Signature client : mention textuelle (la signature physique se fait hors systeme)
+- Signature agence : affichage de la signature existante depuis `entreprise.signature`
+- Date de signature (DatePicker, default aujourd'hui)
 
-### 2. Bug de date UTC dans Reservations.tsx (ligne 84)
+## Modifications fichiers
 
-**Probleme** : La page Reservations utilise `new Date().toISOString().split("T")[0]` pour `today`, ce qui peut decaler d'un jour (meme bug qu'on a corrige dans le graphique).
+### 1. `src/components/dialogs/DocumentDialog.tsx`
+- Ajouter tous les nouveaux champs d'etat (documentNumber, creationDate, agencyName, agentName, agencyPhone, agencyEmail, clientPhone, clientEmail, clientAddress, propertyId, propertyTitle, propertyAddress, propertyType, salePrice, rentalDuration, securityDeposit, clauses, signatureDate)
+- Fetch supplementaire : `profiles` (pour nom agent) et `properties` (pour liste biens)
+- Auto-remplissage quand client ou bien selectionne
+- Organiser en 7 sections visuelles avec `Separator` et titres de section
+- Passer tous les champs dans le body de l'appel edge function `generate-document`
+- Conserver la logique d'enregistrement existante (insert dans `documents` avec type, contenu, client_id, entreprise_id)
 
-**Impact** : Les compteurs "Arrivees aujourd'hui", "Departs aujourd'hui" et "Sejours en cours" peuvent etre decales.
-
-**Correction** : Remplacer par `formatLocalDate(new Date())`.
-
-### 3. `auto_complete_reservations` utilise `reservation_id` mais aussi description pattern
-
-**Probleme** : La fonction SQL cherche les factures par `description ILIKE '%property_name%'` au lieu d'utiliser le nouveau champ `reservation_id`. Cela ne fonctionne pas pour les factures dont la description ne contient pas exactement le nom du bien.
-
-**Correction** : Mettre a jour la fonction pour utiliser `f.reservation_id = _res.id` en priorite, avec le pattern en fallback.
-
-### 4. Reservation `confirmee` — statut non gere
-
-**Probleme** : Une reservation (id `5d4ddf76`) a le statut `confirmee` qui n'existe pas dans les labels/couleurs de l'interface. Elle n'apparait ni dans les filtres de la vue dashboard ni dans `auto_complete_reservations`.
-
-**Correction** : Soit la migrer vers `en_cours`, soit ajouter le statut dans l'interface.
-
-### 5. Facture doublon sur reservation `de4a6eb9`
-
-**Probleme** : La reservation `de4a6eb9` a deux factures liees (`d6a37150` et `d8237bd3`), toutes deux payees. Cela pourrait fausser les revenus si deux revenus ont ete generes.
-
-**Correction** : Verifier et supprimer le doublon si necessaire.
-
----
-
-## Plan de correction
-
-### Migration SQL
-1. Mettre a jour `auto_complete_reservations` pour utiliser `reservation_id`
-2. Nettoyer les reservations orphelines (lier factures, corriger `montant_paye`)
-3. Migrer le statut `confirmee` vers `en_cours`
-4. Verifier et supprimer les doublons de factures
-
-### Code
-1. **`src/pages/Reservations.tsx` ligne 84** : Remplacer `new Date().toISOString().split("T")[0]` par une fonction locale pour eviter le decalage UTC
-2. Ajouter le meme helper `formatLocalDate` utilise dans `FinancialChart.tsx`
-
----
-
-## Resume
-
-| Fonctionnalite | Statut |
-|---|---|
-| Graphique Revenus vs Depenses | OK |
-| Ajout revenu manuel | OK |
-| Ajout depense | OK |
-| Marquer facture payee → revenu auto | OK |
-| Facture liee a reservation (nouvelles) | OK |
-| Paiements attendus dashboard | BUG — donnees historiques non liees |
-| Paiements en retard reservations | BUG — meme cause |
-| Compteurs arrivees/departs/sejours | BUG — decalage UTC |
-| Auto-complete reservations | BUG — ne cherche pas par reservation_id |
-| Statut "confirmee" orphelin | BUG mineur — non gere dans UI |
-| Facture doublon | BUG mineur — a nettoyer |
+### 2. `supabase/functions/generate-document/index.ts`
+- Recevoir les nouveaux champs dans le body JSON
+- Enrichir le `systemPrompt` et le `userPrompt` avec toutes les informations structurees (agence, client, bien, transaction, clauses)
+- Garder le meme modele IA et la meme logique de nettoyage
 
