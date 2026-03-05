@@ -34,7 +34,7 @@ const formatLocalDate = (date: Date): string => {
 };
 
 export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
-  const [period, setPeriod] = useState<Period>("month");
+  const [period, setPeriod] = useState<Period>("week");
   const [revenus, setRevenus] = useState<Revenu[]>([]);
   const [depenses, setDepenses] = useState<Depense[]>([]);
   const [prevRevenus, setPrevRevenus] = useState<Revenu[]>([]);
