@@ -210,8 +210,16 @@ const Revenus = () => {
                     <TrendingUp className="w-6 h-6 text-success" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium">{revenu.factures?.clients?.nom || revenu.source || "Revenu"}</div>
-                    <div className="text-sm text-muted-foreground">{revenu.factures?.description || revenu.source || "Revenu manuel"}</div>
+                    <div className="font-medium">
+                      {revenu.facture_id && revenu.factures?.clients?.nom 
+                        ? revenu.factures.clients.nom 
+                        : revenu.source || "Revenu"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {revenu.facture_id && revenu.factures?.description 
+                        ? revenu.factures.description 
+                        : (revenu.facture_id ? "Paiement facture" : "Revenu manuel")}
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-success">+{formatCurrency(revenu.montant)}</div>
