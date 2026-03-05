@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,7 +260,17 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradientRevenus" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradientDepenses" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
                 <XAxis
                   dataKey="label"
@@ -278,25 +288,29 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
                   dx={-3}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Line
+                <Area
                   type="monotone"
                   dataKey="revenus"
                   name="Revenus"
                   stroke="hsl(var(--success))"
                   strokeWidth={2}
+                  fill="url(#gradientRevenus)"
+                  fillOpacity={1}
                   dot={false}
                   activeDot={{ r: 4, fill: "hsl(var(--success))", strokeWidth: 0 }}
                 />
-                <Line
+                <Area
                   type="monotone"
                   dataKey="depenses"
                   name="Dépenses"
                   stroke="hsl(var(--destructive))"
                   strokeWidth={2}
+                  fill="url(#gradientDepenses)"
+                  fillOpacity={1}
                   dot={false}
                   activeDot={{ r: 4, fill: "hsl(var(--destructive))", strokeWidth: 0 }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           )}
         </div>
