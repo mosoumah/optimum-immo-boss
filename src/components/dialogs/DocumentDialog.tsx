@@ -68,22 +68,32 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const DatePickerField = ({ label, date, onSelect }: { label: string; date: Date; onSelect: (d: Date | undefined) => void }) => (
-  <div className="space-y-2">
-    <Label>{label}</Label>
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {format(date, "dd/MM/yyyy")}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={date} onSelect={onSelect} initialFocus className="p-3 pointer-events-auto" locale={fr} />
-      </PopoverContent>
-    </Popover>
-  </div>
-);
+const DatePickerField = ({ label, date, onSelect }: { label: string; date: Date; onSelect: (d: Date | undefined) => void }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {format(date, "dd/MM/yyyy")}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(d) => { onSelect(d); setOpen(false); }}
+            initialFocus
+            className="p-3 pointer-events-auto"
+            locale={fr}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
 
 export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: DocumentDialogProps) => {
   const { user } = useAuth();
