@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,7 @@ const DatePickerField = ({ label, date, onSelect }: { label: string; date: Date;
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -102,6 +102,7 @@ export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: 
   const [type, setType] = useState("");
   const [documentNumber, setDocumentNumber] = useState("");
   const [creationDate, setCreationDate] = useState<Date>(new Date());
+  const typeTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Section 2 — Agency
   const [agencyName, setAgencyName] = useState("");
@@ -205,7 +206,9 @@ export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: 
 
   const handleGenerate = async () => {
     if (!type) {
-      toast.error("Sélectionnez un type de document");
+      toast.error("Le type de document est obligatoire pour générer avec l'IA");
+      typeTriggerRef.current?.focus();
+      typeTriggerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -238,7 +241,13 @@ export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: 
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
 
-      setContenu(data.content);
+      const generatedContent = data?.content || data?.generated_content || data?.text || "";
+      if (!generatedContent.trim()) {
+        toast.error("L'IA n'a pas retourné de contenu. Réessayez.");
+        return;
+      }
+
+      setContenu(generatedContent);
       toast.success("Document généré avec succès !");
     } catch (error) {
       console.error("Erreur génération:", error);
@@ -295,7 +304,7 @@ export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: 
             <div className="space-y-2">
               <Label>Type de document *</Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                <SelectTrigger ref={typeTriggerRef}><SelectValue placeholder="Sélectionner" /></SelectTrigger>
                 <SelectContent>
                   {documentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
@@ -428,7 +437,7 @@ export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: 
 
           {/* Generate button */}
           <Separator />
-          <Button type="button" variant="outline" onClick={handleGenerate} disabled={isGenerating || !type} className="w-full border-primary/50 hover:bg-primary/10">
+          <Button type="button" variant="outline" onClick={handleGenerate} disabled={isGenerating} className="w-full border-primary/50 hover:bg-primary/10">
             {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Génération en cours...</> : <><Sparkles className="w-4 h-4 mr-2" />Générer avec l'IA</>}
           </Button>
 
