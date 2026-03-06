@@ -79,17 +79,15 @@ export const ViewDocumentDialog = ({
     minY: number
   ): number => {
     const width = canvas.width;
-    // Exclude 10% on each side to ignore decorative sidebars/gradients
     const leftBound = Math.floor(width * 0.10);
     const rightBound = Math.floor(width * 0.90);
     const scanWidth = rightBound - leftBound;
-    const bandHeight = 5; // evaluate 5-pixel bands for anti-aliasing resilience
+    const bandHeight = 40; // cover a full text line to detect inter-paragraph gaps
     const halfBand = Math.floor(bandHeight / 2);
 
     let bestY = idealY;
     let bestDensity = Infinity;
 
-    // Search from idealY upward first, then downward (prefer earlier breaks)
     const startY = Math.min(idealY, canvas.height - 1);
     const upperLimit = Math.max(idealY - searchRange, minY + 1);
     const lowerLimit = Math.min(idealY + Math.floor(searchRange * 0.5), canvas.height - 1);
@@ -101,26 +99,25 @@ export const ViewDocumentDialog = ({
 
       const rowData = ctx.getImageData(leftBound, bandTop, scanWidth, bh).data;
       let inkPixels = 0;
-      const totalSamples = Math.floor((scanWidth * bh) / 4); // sample every 4th pixel
-      for (let i = 0; i < rowData.length; i += 16) {
+      let totalPixels = 0;
+      for (let i = 0; i < rowData.length; i += 4) {
         const r = rowData[i];
         const g = rowData[i + 1];
         const b = rowData[i + 2];
-        if (r < 230 || g < 230 || b < 230) {
+        totalPixels++;
+        if (r < 200 || g < 200 || b < 200) {
           inkPixels++;
         }
       }
-      const density = inkPixels / Math.max(totalSamples, 1);
+      const density = inkPixels / Math.max(totalPixels, 1);
 
       if (density < bestDensity) {
         bestDensity = density;
         bestY = y;
-        // Perfect gap found (nearly blank band) — use it immediately
-        if (density < 0.01) return y;
+        if (density < 0.02) return y;
       }
     }
 
-    // Also search slightly downward if upward wasn't clean enough
     if (bestDensity > 0.05) {
       for (let y = startY + 1; y <= lowerLimit; y++) {
         const bandTop = Math.max(y - halfBand, 0);
@@ -129,21 +126,22 @@ export const ViewDocumentDialog = ({
 
         const rowData = ctx.getImageData(leftBound, bandTop, scanWidth, bh).data;
         let inkPixels = 0;
-        const totalSamples = Math.floor((scanWidth * bh) / 4);
-        for (let i = 0; i < rowData.length; i += 16) {
+        let totalPixels = 0;
+        for (let i = 0; i < rowData.length; i += 4) {
           const r = rowData[i];
           const g = rowData[i + 1];
           const b = rowData[i + 2];
-          if (r < 230 || g < 230 || b < 230) {
+          totalPixels++;
+          if (r < 200 || g < 200 || b < 200) {
             inkPixels++;
           }
         }
-        const density = inkPixels / Math.max(totalSamples, 1);
+        const density = inkPixels / Math.max(totalPixels, 1);
 
         if (density < bestDensity) {
           bestDensity = density;
           bestY = y;
-          if (density < 0.01) return y;
+          if (density < 0.02) return y;
         }
       }
     }
@@ -195,7 +193,8 @@ export const ViewDocumentDialog = ({
 
       // Calculate the pixel height of one A4 page based on canvas width
       const pageHeightPx = Math.floor((contentHeight / pdfWidth) * canvas.width);
-      const searchRange = Math.floor(pageHeightPx * 0.15); // search 15% of page height for safe breaks
+      const searchRange = Math.floor(pageHeightPx * 0.25); // search 25% of page height for safe breaks
+      const safetyPadding = 10; // pixels to avoid clipping glyphs at break edges
 
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context unavailable");
@@ -225,8 +224,12 @@ export const ViewDocumentDialog = ({
       for (let page = 0; page < totalPages; page++) {
         if (page > 0) pdf.addPage();
 
-        const sliceY = breakPoints[page];
-        const sliceHeight = breakPoints[page + 1] - sliceY;
+        const rawSliceY = breakPoints[page];
+        const rawSliceEnd = breakPoints[page + 1];
+        // Apply safety padding to avoid cutting glyphs at edges
+        const sliceY = page === 0 ? rawSliceY : rawSliceY + safetyPadding;
+        const sliceEnd = page === totalPages - 1 ? rawSliceEnd : rawSliceEnd - safetyPadding;
+        const sliceHeight = Math.max(sliceEnd - sliceY, 1);
 
         // Create a cropped canvas for this page
         const pageCanvas = globalThis.document.createElement("canvas");
