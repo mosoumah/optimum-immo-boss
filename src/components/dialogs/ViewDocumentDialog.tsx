@@ -209,6 +209,8 @@ export const ViewDocumentDialog = ({
       clone.style.width = "794px"; // A4 width at 96dpi
       globalThis.document.body.appendChild(clone);
 
+      const domBreakCandidates = collectDomBreakCandidates(clone);
+
       const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
