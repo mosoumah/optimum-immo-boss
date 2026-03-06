@@ -82,7 +82,7 @@ export const ViewDocumentDialog = ({
     const leftBound = Math.floor(width * 0.10);
     const rightBound = Math.floor(width * 0.90);
     const scanWidth = rightBound - leftBound;
-    const bandHeight = 40; // cover a full text line to detect inter-paragraph gaps
+    const bandHeight = 40; // cover a full line to find real paragraph gaps
     const halfBand = Math.floor(bandHeight / 2);
 
     let bestY = idealY;
@@ -147,6 +147,52 @@ export const ViewDocumentDialog = ({
     }
 
     return bestY;
+  };
+
+  const collectDomBreakCandidates = (root: HTMLElement): number[] => {
+    const nodes = Array.from(root.querySelectorAll<HTMLElement>("h1, h2, h3, h4, p, li, div"));
+    const candidates: number[] = [];
+
+    for (const node of nodes) {
+      const text = node.innerText?.trim() || "";
+      const top = Math.round(node.offsetTop);
+      const height = Math.round(node.offsetHeight);
+
+      if (top <= 0 || height < 24) continue;
+      if (text.length < 20 && !node.querySelector("img")) continue;
+
+      candidates.push(top);
+    }
+
+    candidates.sort((a, b) => a - b);
+
+    // Dedupe close points (same visual line/section)
+    const deduped: number[] = [];
+    for (const point of candidates) {
+      const last = deduped[deduped.length - 1];
+      if (last === undefined || Math.abs(point - last) > 18) {
+        deduped.push(point);
+      }
+    }
+
+    return deduped;
+  };
+
+  const findDomBreakPoint = (
+    candidates: number[],
+    idealY: number,
+    minY: number,
+    maxY: number
+  ): number | null => {
+    const inWindow = candidates.filter((p) => p >= minY && p <= maxY);
+    if (inWindow.length === 0) return null;
+
+    const belowOrEqual = inWindow.filter((p) => p <= idealY);
+    if (belowOrEqual.length > 0) {
+      return belowOrEqual[belowOrEqual.length - 1];
+    }
+
+    return inWindow[0] ?? null;
   };
 
   const handleDownloadPDF = async () => {
