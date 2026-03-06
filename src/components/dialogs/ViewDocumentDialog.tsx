@@ -224,8 +224,12 @@ export const ViewDocumentDialog = ({
       for (let page = 0; page < totalPages; page++) {
         if (page > 0) pdf.addPage();
 
-        const sliceY = breakPoints[page];
-        const sliceHeight = breakPoints[page + 1] - sliceY;
+        const rawSliceY = breakPoints[page];
+        const rawSliceEnd = breakPoints[page + 1];
+        // Apply safety padding to avoid cutting glyphs at edges
+        const sliceY = page === 0 ? rawSliceY : rawSliceY + safetyPadding;
+        const sliceEnd = page === totalPages - 1 ? rawSliceEnd : rawSliceEnd - safetyPadding;
+        const sliceHeight = Math.max(sliceEnd - sliceY, 1);
 
         // Create a cropped canvas for this page
         const pageCanvas = globalThis.document.createElement("canvas");
