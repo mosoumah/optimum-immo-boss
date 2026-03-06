@@ -250,19 +250,24 @@ export const ViewDocumentDialog = ({
       // Minimum slice height: 30% of a page to avoid tiny fragments
       const minSliceHeightPx = Math.floor(pageHeightPx * 0.3);
 
-      // Calculate all page break points using smart breaks
+      // Calculate all page break points using DOM-aware breaks first, then pixel fallback
       const breakPoints: number[] = [0];
       let currentY = 0;
       while (currentY + pageHeightPx < canvas.height) {
         const idealBreak = currentY + pageHeightPx;
         const minBreakY = currentY + minSliceHeightPx;
-        const safeBreak = findSafeBreakPoint(canvas, ctx, idealBreak, searchRange, minBreakY);
-        // Ensure forward progress
-        const nextBreak = Math.max(safeBreak, currentY + minSliceHeightPx);
+        const maxBreakY = Math.min(idealBreak + Math.floor(searchRange * 0.8), canvas.height - 1);
+
+        const domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, maxBreakY);
+        const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, searchRange, minBreakY);
+
+        const chosenBreak = domBreak ?? fallbackBreak;
+        const nextBreak = Math.max(Math.min(chosenBreak, canvas.height - 1), currentY + minSliceHeightPx);
+
         breakPoints.push(nextBreak);
         currentY = nextBreak;
       }
-      // Last page goes to the end
+
       if (breakPoints[breakPoints.length - 1] < canvas.height) {
         breakPoints.push(canvas.height);
       }
