@@ -193,7 +193,8 @@ export const ViewDocumentDialog = ({
 
       // Calculate the pixel height of one A4 page based on canvas width
       const pageHeightPx = Math.floor((contentHeight / pdfWidth) * canvas.width);
-      const searchRange = Math.floor(pageHeightPx * 0.15); // search 15% of page height for safe breaks
+      const searchRange = Math.floor(pageHeightPx * 0.25); // search 25% of page height for safe breaks
+      const safetyPadding = 10; // pixels to avoid clipping glyphs at break edges
 
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context unavailable");
