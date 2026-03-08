@@ -79,8 +79,8 @@ export const ViewDocumentDialog = ({
     minY: number
   ): number => {
     const width = canvas.width;
-    const leftBound = Math.floor(width * 0.10);
-    const rightBound = Math.floor(width * 0.90);
+    const leftBound = Math.floor(width * 0.20);
+    const rightBound = Math.floor(width * 0.80);
     const scanWidth = rightBound - leftBound;
     const bandHeight = 40; // cover a full line to find real paragraph gaps
     const halfBand = Math.floor(bandHeight / 2);
