@@ -79,8 +79,8 @@ export const ViewDocumentDialog = ({
     minY: number
   ): number => {
     const width = canvas.width;
-    const leftBound = Math.floor(width * 0.10);
-    const rightBound = Math.floor(width * 0.90);
+    const leftBound = Math.floor(width * 0.20);
+    const rightBound = Math.floor(width * 0.80);
     const scanWidth = rightBound - leftBound;
     const bandHeight = 40; // cover a full line to find real paragraph gaps
     const halfBand = Math.floor(bandHeight / 2);
@@ -149,28 +149,50 @@ export const ViewDocumentDialog = ({
     return bestY;
   };
 
-  const collectDomBreakCandidates = (root: HTMLElement): number[] => {
-    const nodes = Array.from(root.querySelectorAll<HTMLElement>("h1, h2, h3, h4, p, li, div"));
-    const candidates: number[] = [];
+  const collectDomBreakCandidates = (root: HTMLElement, scale: number): number[] => {
+    const rootRect = root.getBoundingClientRect();
+    const nodes = Array.from(root.querySelectorAll<HTMLElement>("h1, h2, h3, h4, p, li, tr, div"));
+    
+    // Collect absolute bottom positions of meaningful elements
+    const elementEdges: { top: number; bottom: number }[] = [];
 
     for (const node of nodes) {
+      const rect = node.getBoundingClientRect();
+      const relTop = (rect.top - rootRect.top) * scale;
+      const relBottom = (rect.bottom - rootRect.top) * scale;
+      const height = relBottom - relTop;
+
+      if (height < 10 || relTop <= 0) continue;
+      // Skip container divs that wrap the whole document
+      if (height > rootRect.height * scale * 0.5) continue;
+
       const text = node.innerText?.trim() || "";
-      const top = Math.round(node.offsetTop);
-      const height = Math.round(node.offsetHeight);
+      if (text.length < 10 && !node.querySelector("img")) continue;
 
-      if (top <= 0 || height < 24) continue;
-      if (text.length < 20 && !node.querySelector("img")) continue;
-
-      candidates.push(top);
+      elementEdges.push({ top: relTop, bottom: relBottom });
     }
 
-    candidates.sort((a, b) => a - b);
+    // Sort by top position
+    elementEdges.sort((a, b) => a.top - b.top);
 
-    // Dedupe close points (same visual line/section)
+    // Find gaps between consecutive elements: midpoint of (bottom_i, top_i+1)
+    const candidates: number[] = [];
+    for (let i = 0; i < elementEdges.length - 1; i++) {
+      const gapStart = elementEdges[i].bottom;
+      const gapEnd = elementEdges[i + 1].top;
+      if (gapEnd > gapStart) {
+        candidates.push(Math.round((gapStart + gapEnd) / 2));
+      } else {
+        // Elements overlap or are adjacent – use the boundary
+        candidates.push(Math.round(gapStart));
+      }
+    }
+
+    // Dedupe close points
     const deduped: number[] = [];
     for (const point of candidates) {
       const last = deduped[deduped.length - 1];
-      if (last === undefined || Math.abs(point - last) > 18) {
+      if (last === undefined || Math.abs(point - last) > 20) {
         deduped.push(point);
       }
     }
@@ -209,7 +231,7 @@ export const ViewDocumentDialog = ({
       clone.style.width = "794px"; // A4 width at 96dpi
       globalThis.document.body.appendChild(clone);
 
-      const domBreakCandidates = collectDomBreakCandidates(clone);
+      const domBreakCandidates = collectDomBreakCandidates(clone, 2);
 
       const canvas = await html2canvas(clone, {
         scale: 2,
