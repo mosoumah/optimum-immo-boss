@@ -256,15 +256,22 @@ export const ViewDocumentDialog = ({
         format: "a4",
       });
 
+      // Format: match a standard document PDF layout (consistent margins + stable page height)
       const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
-      const margin = 5; // mm margin for page numbers
-      const contentHeight = pdfHeight - margin; // leave space for page number at bottom
 
-      // Calculate the pixel height of one A4 page based on canvas width
-      const pageHeightPx = Math.floor((contentHeight / pdfWidth) * canvas.width);
+      // Page paddings to avoid edge-to-edge rendering (closer to typical PDF exports)
+      const pagePaddingX = 8; // mm
+      const pagePaddingTop = 8; // mm
+      const pagePaddingBottom = 8; // mm
+      const footerReserved = 6; // mm reserved for page number
+
+      const contentWidth = pdfWidth - pagePaddingX * 2;
+      const contentHeight = pdfHeight - pagePaddingTop - pagePaddingBottom - footerReserved;
+
+      // Calculate the pixel height of one page based on canvas width and content area ratio
+      const pageHeightPx = Math.floor((contentHeight / contentWidth) * canvas.width);
       const searchRange = Math.floor(pageHeightPx * 0.25); // search 25% of page height for safe breaks
-      const safetyPadding = 10; // pixels to avoid clipping glyphs at break edges
 
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context unavailable");
@@ -299,11 +306,8 @@ export const ViewDocumentDialog = ({
       for (let page = 0; page < totalPages; page++) {
         if (page > 0) pdf.addPage();
 
-        const rawSliceY = breakPoints[page];
-        const rawSliceEnd = breakPoints[page + 1];
-        // Apply safety padding to avoid cutting glyphs at edges
-        const sliceY = page === 0 ? rawSliceY : rawSliceY + safetyPadding;
-        const sliceEnd = page === totalPages - 1 ? rawSliceEnd : rawSliceEnd - safetyPadding;
+        const sliceY = breakPoints[page];
+        const sliceEnd = breakPoints[page + 1];
         const sliceHeight = Math.max(sliceEnd - sliceY, 1);
 
         // Create a cropped canvas for this page
@@ -318,31 +322,27 @@ export const ViewDocumentDialog = ({
         pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
 
         // Draw the slice from the main canvas
-        pageCtx.drawImage(
-          canvas,
-          0, sliceY, canvas.width, sliceHeight,
-          0, 0, canvas.width, sliceHeight
-        );
+        pageCtx.drawImage(canvas, 0, sliceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
 
-        const sliceRatio = pdfWidth / pageCanvas.width;
+        const sliceRatio = contentWidth / pageCanvas.width;
         const renderedHeight = pageCanvas.height * sliceRatio;
 
         pdf.addImage(
           pageCanvas.toDataURL("image/png"),
           "PNG",
-          0,
-          0,
-          pdfWidth,
-          renderedHeight
+          pagePaddingX,
+          pagePaddingTop,
+          contentWidth,
+          Math.min(renderedHeight, contentHeight)
         );
 
-        // Add page number
+        // Add page number (subtle, in reserved footer area)
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
         pdf.text(
           `Page ${page + 1} / ${totalPages}`,
           pdfWidth / 2,
-          pdfHeight - 2,
+          pdfHeight - pagePaddingBottom,
           { align: "center" }
         );
       }
