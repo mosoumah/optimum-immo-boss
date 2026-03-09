@@ -1,24 +1,25 @@
 
 
-# Plan : Convertir le graphique en Area Chart avec degrades
+# Auto-remplissage du prix unitaire depuis le bien sélectionné
 
-## Fichier unique a modifier : `src/components/FinancialChart.tsx`
+## Changements dans `src/components/dialogs/ReservationDialog.tsx`
 
-### Changements
+1. **Récupérer le prix** : Ajouter `prix` au `select()` de la requête properties (ligne 47) : `select("id, nom, statut, prix")`
 
-1. **Import** : Remplacer `LineChart, Line` par `AreaChart, Area` depuis `recharts`.
+2. **Mettre à jour l'interface** : Ajouter `prix` au type du state `properties` (ligne 18) : `{ id: string; nom: string; statut: string; prix: number }`
 
-2. **Ajouter des `<defs>` SVG** dans le `<AreaChart>` pour definir deux gradients lineaires :
-   - `gradientRevenus` : `#22c55e` a 30% d'opacite en haut → transparent en bas
-   - `gradientDepenses` : `#ef4444` a 20% d'opacite en haut → transparent en bas
+3. **Auto-remplir au changement de bien** : Dans le `onValueChange` du Select "Bien" (actuellement ligne ~136), quand un bien est sélectionné et qu'il n'y a pas encore de prix unitaire saisi (ou en mode création), chercher le bien dans la liste et pré-remplir `prix_unitaire` avec `property.prix`
 
-3. **Remplacer les `<Line>`** par des `<Area>` avec :
-   - `type="monotone"` (courbes lisses, deja en place)
-   - `fill="url(#gradientRevenus)"` / `fill="url(#gradientDepenses)"`
-   - `fillOpacity={1}` pour utiliser l'opacite definie dans le gradient
-   - Conserver `stroke`, `strokeWidth`, `dot`, `activeDot` identiques
+```tsx
+onValueChange={(v) => {
+  const selected = properties.find(p => p.id === v);
+  setForm({ 
+    ...form, 
+    property_id: v,
+    prix_unitaire: selected?.prix ? selected.prix.toString() : form.prix_unitaire 
+  });
+}}
+```
 
-4. **Remplacer `<LineChart>`** par `<AreaChart>` (memes props : data, margin).
-
-Aucun autre fichier modifie. Le layout, le PDF et le dashboard restent intacts.
+Cela ne s'applique que lors de la sélection — l'utilisateur peut toujours modifier le prix manuellement après.
 
