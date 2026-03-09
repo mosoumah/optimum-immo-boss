@@ -291,19 +291,21 @@ export const ViewDocumentDialog = ({
         const minBreakY = currentY + minSliceHeightPx;
         const aggressiveMinBreakY = currentY + aggressiveSliceHeightPx;
 
-        // 1. Chercher un bon saut DOM dans la zone agressive (85% - 100%)
-        let domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, aggressiveMinBreakY, idealBreak);
+        // 1. Chercher un bon saut DOM dans la zone agressive (90% - 100%)
+        const domBreakAggressive = findDomBreakPoint(domBreakCandidates, idealBreak, aggressiveMinBreakY, idealBreak);
         
-        // 2. S'il n'y a pas de saut DOM dans la zone agressive, chercher en zone de sauvetage (30% - 85%)
-        if (!domBreak) {
-          domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, aggressiveMinBreakY);
-        }
-
-        // 3. Fallback chirurgical en pixels + sauvetage
+        // 2. Fallback chirurgical en pixels (zone agressive 90-100%)
         const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, minBreakY, aggressiveMinBreakY);
 
-        // Prioriser le DOM s'il a trouvé un bon point de coupure, sinon l'analyse de pixels
-        const chosenBreak = domBreak ?? fallbackBreak;
+        // 3. Seulement si densité très élevée (image/tableau insécable), autoriser rescue DOM (70-90%)
+        let rescueBreak: number | null = null;
+        if (!domBreakAggressive && fallbackBreak < aggressiveMinBreakY) {
+          // Le pixel fallback a reculé sous 90% — contenu dense détecté, chercher rescue DOM
+          rescueBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, aggressiveMinBreakY);
+        }
+
+        // Priorité : DOM agressif > pixel fallback > rescue DOM
+        const chosenBreak = domBreakAggressive ?? (fallbackBreak >= aggressiveMinBreakY ? fallbackBreak : (rescueBreak ?? fallbackBreak));
         const nextBreak = Math.max(Math.min(chosenBreak, canvas.height - 1), currentY + minSliceHeightPx);
 
         breakPoints.push(nextBreak);
