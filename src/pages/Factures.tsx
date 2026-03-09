@@ -332,6 +332,7 @@ const Factures = () => {
             </div>
             <div class="signature">
               <p>Signature et cachet</p>
+              ${entreprise?.signature ? `<img src="${escapeHtml(entreprise.signature)}" style="max-height:60px;max-width:180px;object-fit:contain;margin:8px auto;" />` : '<div style="height:30px;"></div>'}
               <div class="signature-line"></div>
             </div>
           </div>
