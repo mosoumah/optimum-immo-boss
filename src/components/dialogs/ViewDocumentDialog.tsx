@@ -283,8 +283,8 @@ export const ViewDocumentDialog = ({
 
       // Minimum slice height (Rescue): 70% of a page
       const minSliceHeightPx = Math.floor(pageHeightPx * 0.70);
-      // Aggressive slice height: 90% of a page
-      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.90);
+      // Aggressive slice height: 95% of a page — greedy fill
+      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.95);
 
       // Calculate all page break points using DOM-aware breaks first, then pixel fallback
       const breakPoints: number[] = [0];
