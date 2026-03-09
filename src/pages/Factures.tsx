@@ -87,7 +87,7 @@ const Factures = () => {
 
     const { data } = await supabase
       .from("entreprises")
-      .select("nom, logo, adresse, telephone, email, couleur_primaire, couleur_secondaire, couleur_accent")
+      .select("nom, logo, signature, adresse, telephone, email, couleur_primaire, couleur_secondaire, couleur_accent")
       .eq("id", entrepriseId)
       .single();
 
