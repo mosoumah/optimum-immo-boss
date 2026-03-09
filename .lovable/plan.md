@@ -1,19 +1,24 @@
 
-# Élimination des espaces blancs dans le PDF
 
-J'ai identifié pourquoi tu obtiens parfois de grandes zones blanches en bas de page : l'algorithme actuel est trop prudent. S'il ne trouve pas un grand espace vide (comme un gros saut de paragraphe), il préfère casser la page très tôt (parfois à 30% de la hauteur) pour éviter de couper une ligne.
+# Plan : Convertir le graphique en Area Chart avec degrades
 
-Pour régler ça de manière créative et élégante sans toucher au design visuel, je vais implémenter une **stratégie de remplissage intelligent à double passe** :
+## Fichier unique a modifier : `src/components/FinancialChart.tsx`
 
-## 1. Détection "Chirurgicale" (Interligne)
-Je vais affiner le "scanner d'encre" pour qu'il cherche des espaces de **10 pixels** au lieu de 40. Cela lui permettra de se glisser discrètement **entre deux lignes de texte** au sein d'un même paragraphe si nécessaire. Ainsi, on n'a plus besoin d'un saut de paragraphe pour changer de page.
+### Changements
 
-## 2. Stratégie Double Passe (Remplissage Forcé)
-*   **Passe Agressive (85% à 100%)** : L'algorithme sera forcé de remplir la page au moins jusqu'à 85%. Il cherchera un espace entre les lignes uniquement tout en bas de la page. Fini les pages à moitié vides.
-*   **Passe de Sauvetage (30% à 85%)** : Si, et seulement si, le bas de la page est un bloc massif *insécable* (comme une grande image ou un gros tableau coloré), l'algorithme reculera intelligemment pour casser la page au-dessus de l'image, garantissant qu'elle ne soit pas coupée en deux. 
+1. **Import** : Remplacer `LineChart, Line` par `AreaChart, Area` depuis `recharts`.
 
-## 3. Mise à l'échelle Anti-écrasement
-Si l'algorithme déborde d'un ou deux millimètres pour attraper la fin parfaite d'une phrase, l'image sera très légèrement redimensionnée de manière proportionnelle sur le PDF A4. Le texte restera net et ne sera plus jamais écrasé ou déformé verticalement.
+2. **Ajouter des `<defs>` SVG** dans le `<AreaChart>` pour definir deux gradients lineaires :
+   - `gradientRevenus` : `#22c55e` a 30% d'opacite en haut → transparent en bas
+   - `gradientDepenses` : `#ef4444` a 20% d'opacite en haut → transparent en bas
 
-## Fichier modifié
-`src/components/dialogs/ViewDocumentDialog.tsx` (L'export PDF du Document IA uniquement).
+3. **Remplacer les `<Line>`** par des `<Area>` avec :
+   - `type="monotone"` (courbes lisses, deja en place)
+   - `fill="url(#gradientRevenus)"` / `fill="url(#gradientDepenses)"`
+   - `fillOpacity={1}` pour utiliser l'opacite definie dans le gradient
+   - Conserver `stroke`, `strokeWidth`, `dot`, `activeDot` identiques
+
+4. **Remplacer `<LineChart>`** par `<AreaChart>` (memes props : data, margin).
+
+Aucun autre fichier modifie. Le layout, le PDF et le dashboard restent intacts.
+

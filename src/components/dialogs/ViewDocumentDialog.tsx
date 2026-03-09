@@ -75,24 +75,25 @@ export const ViewDocumentDialog = ({
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
     idealY: number,
-    searchRange: number,
-    minY: number
+    minY: number,
+    aggressiveMinY: number
   ): number => {
     const width = canvas.width;
     const leftBound = Math.floor(width * 0.20);
     const rightBound = Math.floor(width * 0.80);
     const scanWidth = rightBound - leftBound;
-    const bandHeight = 40; // cover a full line to find real paragraph gaps
+    const bandHeight = 10; // Détection chirurgicale entre les lignes
     const halfBand = Math.floor(bandHeight / 2);
 
     let bestY = idealY;
     let bestDensity = Infinity;
 
     const startY = Math.min(idealY, canvas.height - 1);
-    const upperLimit = Math.max(idealY - searchRange, minY + 1);
-    const lowerLimit = Math.min(idealY + Math.floor(searchRange * 0.5), canvas.height - 1);
 
-    for (let y = startY; y >= upperLimit; y--) {
+    // Passe agressive (85% - 100%)
+    const aggressiveUpperLimit = Math.max(aggressiveMinY, 1);
+
+    for (let y = startY; y >= aggressiveUpperLimit; y--) {
       const bandTop = Math.max(y - halfBand, 0);
       const bandBot = Math.min(y + halfBand, canvas.height - 1);
       const bh = bandBot - bandTop + 1;
@@ -105,7 +106,7 @@ export const ViewDocumentDialog = ({
         const g = rowData[i + 1];
         const b = rowData[i + 2];
         totalPixels++;
-        if (r < 200 || g < 200 || b < 200) {
+        if (r < 240 && g < 240 && b < 240) { // Plus sensible à l'encre claire
           inkPixels++;
         }
       }
@@ -114,12 +115,14 @@ export const ViewDocumentDialog = ({
       if (density < bestDensity) {
         bestDensity = density;
         bestY = y;
-        if (density < 0.02) return y;
+        if (density < 0.01) return y; // Espace parfait trouvé
       }
     }
 
+    // Passe de sauvetage (30% - 85%) si la zone agressive coupe une image (densité > 5%)
     if (bestDensity > 0.05) {
-      for (let y = startY + 1; y <= lowerLimit; y++) {
+      const rescueUpperLimit = Math.max(minY, 1);
+      for (let y = aggressiveUpperLimit - 1; y >= rescueUpperLimit; y--) {
         const bandTop = Math.max(y - halfBand, 0);
         const bandBot = Math.min(y + halfBand, canvas.height - 1);
         const bh = bandBot - bandTop + 1;
@@ -132,7 +135,7 @@ export const ViewDocumentDialog = ({
           const g = rowData[i + 1];
           const b = rowData[i + 2];
           totalPixels++;
-          if (r < 200 || g < 200 || b < 200) {
+          if (r < 240 && g < 240 && b < 240) {
             inkPixels++;
           }
         }
@@ -141,7 +144,7 @@ export const ViewDocumentDialog = ({
         if (density < bestDensity) {
           bestDensity = density;
           bestY = y;
-          if (density < 0.02) return y;
+          if (density < 0.01) return y; // Sauvetage parfait
         }
       }
     }
@@ -271,13 +274,14 @@ export const ViewDocumentDialog = ({
 
       // Calculate the pixel height of one page based on canvas width and content area ratio
       const pageHeightPx = Math.floor((contentHeight / contentWidth) * canvas.width);
-      const searchRange = Math.floor(pageHeightPx * 0.25); // search 25% of page height for safe breaks
 
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context unavailable");
 
-      // Minimum slice height: 30% of a page to avoid tiny fragments
+      // Minimum slice height (Rescue): 30% of a page
       const minSliceHeightPx = Math.floor(pageHeightPx * 0.3);
+      // Aggressive slice height: 85% of a page
+      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.85);
 
       // Calculate all page break points using DOM-aware breaks first, then pixel fallback
       const breakPoints: number[] = [0];
@@ -285,11 +289,20 @@ export const ViewDocumentDialog = ({
       while (currentY + pageHeightPx < canvas.height) {
         const idealBreak = currentY + pageHeightPx;
         const minBreakY = currentY + minSliceHeightPx;
-        const maxBreakY = Math.min(idealBreak + Math.floor(searchRange * 0.8), canvas.height - 1);
+        const aggressiveMinBreakY = currentY + aggressiveSliceHeightPx;
 
-        const domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, maxBreakY);
-        const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, searchRange, minBreakY);
+        // 1. Chercher un bon saut DOM dans la zone agressive (85% - 100%)
+        let domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, aggressiveMinBreakY, idealBreak);
+        
+        // 2. S'il n'y a pas de saut DOM dans la zone agressive, chercher en zone de sauvetage (30% - 85%)
+        if (!domBreak) {
+          domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, aggressiveMinBreakY);
+        }
 
+        // 3. Fallback chirurgical en pixels + sauvetage
+        const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, minBreakY, aggressiveMinBreakY);
+
+        // Prioriser le DOM s'il a trouvé un bon point de coupure, sinon l'analyse de pixels
         const chosenBreak = domBreak ?? fallbackBreak;
         const nextBreak = Math.max(Math.min(chosenBreak, canvas.height - 1), currentY + minSliceHeightPx);
 
@@ -325,6 +338,7 @@ export const ViewDocumentDialog = ({
         pageCtx.drawImage(canvas, 0, sliceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
 
         const sliceRatio = contentWidth / pageCanvas.width;
+        // Anti-squish: Use precise proportional rendering height
         const renderedHeight = pageCanvas.height * sliceRatio;
 
         pdf.addImage(
@@ -333,7 +347,7 @@ export const ViewDocumentDialog = ({
           pagePaddingX,
           pagePaddingTop,
           contentWidth,
-          Math.min(renderedHeight, contentHeight)
+          renderedHeight
         );
 
         // Add page number (subtle, in reserved footer area)
