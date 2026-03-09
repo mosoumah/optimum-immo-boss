@@ -44,7 +44,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     if (!entrepriseId || !open) return;
     Promise.all([
       supabase.from("clients").select("id, nom").eq("entreprise_id", entrepriseId).order("nom"),
-      supabase.from("properties").select("id, nom, statut").eq("entreprise_id", entrepriseId).order("nom"),
+      supabase.from("properties").select("id, nom, statut, prix").eq("entreprise_id", entrepriseId).order("nom"),
     ]).then(([c, p]) => {
       setClients(c.data || []);
       setProperties(p.data || []);
