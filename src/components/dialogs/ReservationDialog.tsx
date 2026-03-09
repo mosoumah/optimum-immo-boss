@@ -23,7 +23,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
   const { entrepriseId } = useEntreprise();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
-  const [properties, setProperties] = useState<{ id: string; nom: string; statut: string }[]>([]);
+  const [properties, setProperties] = useState<{ id: string; nom: string; statut: string; prix: number }[]>([]);
 
   const [form, setForm] = useState({
     client_id: "",
@@ -44,7 +44,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     if (!entrepriseId || !open) return;
     Promise.all([
       supabase.from("clients").select("id, nom").eq("entreprise_id", entrepriseId).order("nom"),
-      supabase.from("properties").select("id, nom, statut").eq("entreprise_id", entrepriseId).order("nom"),
+      supabase.from("properties").select("id, nom, statut, prix").eq("entreprise_id", entrepriseId).order("nom"),
     ]).then(([c, p]) => {
       setClients(c.data || []);
       setProperties(p.data || []);
@@ -177,7 +177,10 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
           </div>
           <div>
             <Label>Bien</Label>
-            <Select value={form.property_id} onValueChange={(v) => setForm({ ...form, property_id: v })}>
+            <Select value={form.property_id} onValueChange={(v) => {
+              const selected = properties.find(p => p.id === v);
+              setForm({ ...form, property_id: v, prix_unitaire: selected?.prix ? selected.prix.toString() : form.prix_unitaire });
+            }}>
               <SelectTrigger><SelectValue placeholder="Sélectionner un bien" /></SelectTrigger>
               <SelectContent>
                 {properties
