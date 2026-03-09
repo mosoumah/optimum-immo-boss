@@ -40,6 +40,7 @@ interface Devis {
 interface Entreprise {
   nom: string;
   logo: string | null;
+  signature: string | null;
   adresse: string | null;
   telephone: string | null;
   email: string | null;
@@ -102,7 +103,7 @@ const Devis = () => {
 
     const { data } = await supabase
       .from("entreprises")
-      .select("nom, logo, adresse, telephone, email, couleur_primaire, couleur_secondaire, couleur_accent")
+      .select("nom, logo, signature, adresse, telephone, email, couleur_primaire, couleur_secondaire, couleur_accent")
       .eq("id", entrepriseId)
       .single();
 
@@ -356,6 +357,7 @@ const Devis = () => {
             </div>
             <div class="signature">
               <p>Signature et cachet</p>
+              ${entreprise?.signature ? `<img src="${escapeHtml(entreprise.signature)}" style="max-height:60px;max-width:180px;object-fit:contain;margin:8px auto;" />` : '<div style="height:30px;"></div>'}
               <div class="signature-line"></div>
             </div>
           </div>
@@ -477,6 +479,7 @@ const Devis = () => {
     </div>
     <div class="signature">
       <p>Signature et cachet</p>
+      ${entreprise.signature ? `<img src="${escapeHtml(entreprise.signature)}" style="max-height:60px;max-width:180px;object-fit:contain;margin:8px auto;" />` : '<div style="height:30px;"></div>'}
       <div class="signature-line"></div>
     </div>
   </div>

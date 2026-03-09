@@ -4,6 +4,7 @@ interface InvoicePreviewProps {
   entreprise: {
     nom: string;
     logo: string | null;
+    signature?: string | null;
     adresse: string | null;
     telephone: string | null;
     email: string | null;
@@ -510,9 +511,11 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   Signature & Cachet
                 </p>
                 <div 
-                  className="w-52 h-24 rounded-xl relative overflow-hidden"
+                  className="w-52 h-24 rounded-xl relative overflow-hidden flex items-center justify-center"
                   style={{ 
-                    border: `2px dashed ${primaryColor}40`,
+                    border: entreprise.signature 
+                      ? `2px solid ${primaryColor}60` 
+                      : `2px dashed ${primaryColor}40`,
                     background: `linear-gradient(135deg, ${secondaryColor}30, white)`
                   }}
                 >
@@ -531,15 +534,22 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                       borderRight: `3px solid ${primaryColor}`
                     }}
                   />
-                  {/* Center decoration */}
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  {entreprise.signature ? (
+                    <img
+                      src={entreprise.signature}
+                      alt="Signature"
+                      className="relative z-10"
+                      style={{ maxHeight: "80%", maxWidth: "85%", objectFit: "contain" }}
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
                     <div 
                       className="w-8 h-8 rounded-full opacity-20"
                       style={{ 
                         background: `radial-gradient(circle, ${accentColor}, transparent)`
                       }}
                     />
-                  </div>
+                  )}
                 </div>
                 <p 
                   className="mt-2 text-[10px]"

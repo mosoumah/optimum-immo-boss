@@ -4,6 +4,7 @@ interface QuotePreviewProps {
   entreprise: {
     nom: string;
     logo: string | null;
+    signature?: string | null;
     adresse: string | null;
     telephone: string | null;
     email: string | null;
@@ -505,9 +506,11 @@ export const QuotePreview = forwardRef<HTMLDivElement, QuotePreviewProps>(
                   Signature & Cachet
                 </p>
                 <div 
-                  className="w-48 h-20 rounded-xl relative overflow-hidden"
+                  className="w-48 h-20 rounded-xl relative overflow-hidden flex items-center justify-center"
                   style={{ 
-                    border: `2px dashed ${lightenColor(primaryColor, 0.3)}`,
+                    border: entreprise.signature
+                      ? `2px solid ${primaryColor}60`
+                      : `2px dashed ${lightenColor(primaryColor, 0.3)}`,
                     background: `linear-gradient(135deg, ${secondaryColor}30, white)`
                   }}
                 >
@@ -526,7 +529,22 @@ export const QuotePreview = forwardRef<HTMLDivElement, QuotePreviewProps>(
                       borderRight: `3px solid ${accentColor}`
                     }}
                   />
+                  {entreprise.signature && (
+                    <img
+                      src={entreprise.signature}
+                      alt="Signature"
+                      className="relative z-10"
+                      style={{ maxHeight: "80%", maxWidth: "85%", objectFit: "contain" }}
+                      crossOrigin="anonymous"
+                    />
+                  )}
                 </div>
+                <p 
+                  className="mt-2 text-[10px]"
+                  style={{ color: "#999" }}
+                >
+                  {entreprise.nom}
+                </p>
               </div>
             </div>
           </div>

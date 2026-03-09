@@ -1,30 +1,24 @@
 
 
-# Ajout de la signature sur les factures et devis
+# Plan : Convertir le graphique en Area Chart avec degrades
 
-## Analyse
+## Fichier unique a modifier : `src/components/FinancialChart.tsx`
 
-La signature est stockée dans `entreprises.signature` comme un data URL (image PNG/JPG) via le composant `SignaturePad`. Les composants `InvoicePreview` et `QuotePreview` ont déjà une zone "Signature & Cachet" mais elle est vide (juste un cadre décoratif). Les pages `Factures.tsx` et `Devis.tsx` ne récupèrent pas le champ `signature` de la base de données.
+### Changements
 
-## Modifications
+1. **Import** : Remplacer `LineChart, Line` par `AreaChart, Area` depuis `recharts`.
 
-### 1. `src/pages/Factures.tsx` et `src/pages/Devis.tsx`
-- Ajouter `signature` à l'interface `Entreprise` et à la requête `select()` de `fetchEntreprise`
+2. **Ajouter des `<defs>` SVG** dans le `<AreaChart>` pour definir deux gradients lineaires :
+   - `gradientRevenus` : `#22c55e` a 30% d'opacite en haut → transparent en bas
+   - `gradientDepenses` : `#ef4444` a 20% d'opacite en haut → transparent en bas
 
-### 2. `src/components/InvoicePreview.tsx`
-- Ajouter `signature?: string | null` à l'interface `entreprise` dans les props
-- Dans la zone "Signature & Cachet" : si une signature existe, afficher l'image à la place du cercle décoratif central, avec un léger effet d'opacité et un positionnement élégant
-- Conserver le cadre avec les coins décoratifs pour encadrer la signature
+3. **Remplacer les `<Line>`** par des `<Area>` avec :
+   - `type="monotone"` (courbes lisses, deja en place)
+   - `fill="url(#gradientRevenus)"` / `fill="url(#gradientDepenses)"`
+   - `fillOpacity={1}` pour utiliser l'opacite definie dans le gradient
+   - Conserver `stroke`, `strokeWidth`, `dot`, `activeDot` identiques
 
-### 3. `src/components/QuotePreview.tsx`
-- Même modification que InvoicePreview
+4. **Remplacer `<LineChart>`** par `<AreaChart>` (memes props : data, margin).
 
-### 4. Templates HTML d'impression (dans Factures.tsx et Devis.tsx)
-- Intégrer l'image de signature dans les templates `printDevis`/`printFacture` et `downloadAsHtml` si la signature existe
-
-## Design de la signature
-- L'image signature s'affiche centrée dans le cadre existant avec `max-height: 80%`, `object-contain`
-- Le cadre passe de `dashed` à `solid` quand une signature est présente (plus professionnel)
-- Le label "Signature & Cachet" et le nom de l'entreprise en dessous sont conservés
-- Aucun changement de structure ou de layout
+Aucun autre fichier modifie. Le layout, le PDF et le dashboard restent intacts.
 
