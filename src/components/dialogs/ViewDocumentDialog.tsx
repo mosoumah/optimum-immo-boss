@@ -90,8 +90,10 @@ export const ViewDocumentDialog = ({
 
     const startY = Math.min(idealY, canvas.height - 1);
 
-    // Passe agressive (85% - 100%)
+    // Passe agressive (95% - 100%)
     const aggressiveUpperLimit = Math.max(aggressiveMinY, 1);
+    // Seuil de proximité : 2% de la hauteur de page — retour immédiat seulement si très proche de l'idéal
+    const nearIdealThreshold = (idealY - aggressiveMinY) * 0.4;
 
     for (let y = startY; y >= aggressiveUpperLimit; y--) {
       const bandTop = Math.max(y - halfBand, 0);
@@ -106,7 +108,7 @@ export const ViewDocumentDialog = ({
         const g = rowData[i + 1];
         const b = rowData[i + 2];
         totalPixels++;
-        if (r < 240 && g < 240 && b < 240) { // Plus sensible à l'encre claire
+        if (r < 240 && g < 240 && b < 240) {
           inkPixels++;
         }
       }
@@ -115,7 +117,8 @@ export const ViewDocumentDialog = ({
       if (density < bestDensity) {
         bestDensity = density;
         bestY = y;
-        if (density < 0.01) return y; // Espace parfait trouvé
+        // Retour immédiat seulement si on est très proche de idealY (greedy fill)
+        if (density < 0.01 && (idealY - y) <= nearIdealThreshold) return y;
       }
     }
 
