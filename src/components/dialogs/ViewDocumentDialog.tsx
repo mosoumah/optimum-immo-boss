@@ -274,13 +274,14 @@ export const ViewDocumentDialog = ({
 
       // Calculate the pixel height of one page based on canvas width and content area ratio
       const pageHeightPx = Math.floor((contentHeight / contentWidth) * canvas.width);
-      const searchRange = Math.floor(pageHeightPx * 0.25); // search 25% of page height for safe breaks
 
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context unavailable");
 
-      // Minimum slice height: 30% of a page to avoid tiny fragments
+      // Minimum slice height (Rescue): 30% of a page
       const minSliceHeightPx = Math.floor(pageHeightPx * 0.3);
+      // Aggressive slice height: 85% of a page
+      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.85);
 
       // Calculate all page break points using DOM-aware breaks first, then pixel fallback
       const breakPoints: number[] = [0];
@@ -288,11 +289,20 @@ export const ViewDocumentDialog = ({
       while (currentY + pageHeightPx < canvas.height) {
         const idealBreak = currentY + pageHeightPx;
         const minBreakY = currentY + minSliceHeightPx;
-        const maxBreakY = Math.min(idealBreak + Math.floor(searchRange * 0.8), canvas.height - 1);
+        const aggressiveMinBreakY = currentY + aggressiveSliceHeightPx;
 
-        const domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, maxBreakY);
-        const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, searchRange, minBreakY);
+        // 1. Chercher un bon saut DOM dans la zone agressive (85% - 100%)
+        let domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, aggressiveMinBreakY, idealBreak);
+        
+        // 2. S'il n'y a pas de saut DOM dans la zone agressive, chercher en zone de sauvetage (30% - 85%)
+        if (!domBreak) {
+          domBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, aggressiveMinBreakY);
+        }
 
+        // 3. Fallback chirurgical en pixels + sauvetage
+        const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, minBreakY, aggressiveMinBreakY);
+
+        // Prioriser le DOM s'il a trouvé un bon point de coupure, sinon l'analyse de pixels
         const chosenBreak = domBreak ?? fallbackBreak;
         const nextBreak = Math.max(Math.min(chosenBreak, canvas.height - 1), currentY + minSliceHeightPx);
 
@@ -328,6 +338,7 @@ export const ViewDocumentDialog = ({
         pageCtx.drawImage(canvas, 0, sliceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
 
         const sliceRatio = contentWidth / pageCanvas.width;
+        // Anti-squish: Use precise proportional rendering height
         const renderedHeight = pageCanvas.height * sliceRatio;
 
         pdf.addImage(
@@ -336,7 +347,7 @@ export const ViewDocumentDialog = ({
           pagePaddingX,
           pagePaddingTop,
           contentWidth,
-          Math.min(renderedHeight, contentHeight)
+          renderedHeight
         );
 
         // Add page number (subtle, in reserved footer area)
