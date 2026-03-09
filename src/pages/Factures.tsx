@@ -38,6 +38,7 @@ interface Facture {
 interface Entreprise {
   nom: string;
   logo: string | null;
+  signature: string | null;
   adresse: string | null;
   telephone: string | null;
   email: string | null;
