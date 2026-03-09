@@ -90,8 +90,10 @@ export const ViewDocumentDialog = ({
 
     const startY = Math.min(idealY, canvas.height - 1);
 
-    // Passe agressive (85% - 100%)
+    // Passe agressive (95% - 100%)
     const aggressiveUpperLimit = Math.max(aggressiveMinY, 1);
+    // Seuil de proximité : 2% de la hauteur de page — retour immédiat seulement si très proche de l'idéal
+    const nearIdealThreshold = (idealY - aggressiveMinY) * 0.4;
 
     for (let y = startY; y >= aggressiveUpperLimit; y--) {
       const bandTop = Math.max(y - halfBand, 0);
@@ -106,7 +108,7 @@ export const ViewDocumentDialog = ({
         const g = rowData[i + 1];
         const b = rowData[i + 2];
         totalPixels++;
-        if (r < 240 && g < 240 && b < 240) { // Plus sensible à l'encre claire
+        if (r < 240 && g < 240 && b < 240) {
           inkPixels++;
         }
       }
@@ -115,7 +117,8 @@ export const ViewDocumentDialog = ({
       if (density < bestDensity) {
         bestDensity = density;
         bestY = y;
-        if (density < 0.01) return y; // Espace parfait trouvé
+        // Retour immédiat seulement si on est très proche de idealY (greedy fill)
+        if (density < 0.01 && (idealY - y) <= nearIdealThreshold) return y;
       }
     }
 
@@ -280,8 +283,8 @@ export const ViewDocumentDialog = ({
 
       // Minimum slice height (Rescue): 70% of a page
       const minSliceHeightPx = Math.floor(pageHeightPx * 0.70);
-      // Aggressive slice height: 90% of a page
-      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.90);
+      // Aggressive slice height: 95% of a page — greedy fill
+      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.95);
 
       // Calculate all page break points using DOM-aware breaks first, then pixel fallback
       const breakPoints: number[] = [0];
@@ -297,15 +300,17 @@ export const ViewDocumentDialog = ({
         // 2. Fallback chirurgical en pixels (zone agressive 90-100%)
         const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, minBreakY, aggressiveMinBreakY);
 
-        // 3. Seulement si densité très élevée (image/tableau insécable), autoriser rescue DOM (70-90%)
+        // 3. Seulement si pixel fallback recule sous 93% (contenu dense insécable), autoriser rescue DOM (70-95%)
+        const threshold93 = currentY + Math.floor(pageHeightPx * 0.93);
         let rescueBreak: number | null = null;
-        if (!domBreakAggressive && fallbackBreak < aggressiveMinBreakY) {
-          // Le pixel fallback a reculé sous 90% — contenu dense détecté, chercher rescue DOM
+        if (!domBreakAggressive && fallbackBreak < threshold93) {
           rescueBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, aggressiveMinBreakY);
         }
 
-        // Priorité : DOM agressif > pixel fallback > rescue DOM
-        const chosenBreak = domBreakAggressive ?? (fallbackBreak >= aggressiveMinBreakY ? fallbackBreak : (rescueBreak ?? fallbackBreak));
+        // Priorité : pixel fallback (s'il est dans la zone 95-100%) > DOM agressif > rescue DOM > pixel fallback bas
+        const chosenBreak = (fallbackBreak >= aggressiveMinBreakY ? fallbackBreak : null) 
+          ?? domBreakAggressive 
+          ?? (rescueBreak ?? fallbackBreak);
         const nextBreak = Math.max(Math.min(chosenBreak, canvas.height - 1), currentY + minSliceHeightPx);
 
         breakPoints.push(nextBreak);
