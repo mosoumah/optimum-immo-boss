@@ -23,7 +23,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
   const { entrepriseId } = useEntreprise();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
-  const [properties, setProperties] = useState<{ id: string; nom: string; statut: string }[]>([]);
+  const [properties, setProperties] = useState<{ id: string; nom: string; statut: string; prix: number }[]>([]);
 
   const [form, setForm] = useState({
     client_id: "",
