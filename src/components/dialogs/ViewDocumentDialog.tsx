@@ -278,10 +278,10 @@ export const ViewDocumentDialog = ({
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context unavailable");
 
-      // Minimum slice height (Rescue): 30% of a page
-      const minSliceHeightPx = Math.floor(pageHeightPx * 0.3);
-      // Aggressive slice height: 85% of a page
-      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.85);
+      // Minimum slice height (Rescue): 70% of a page
+      const minSliceHeightPx = Math.floor(pageHeightPx * 0.70);
+      // Aggressive slice height: 90% of a page
+      const aggressiveSliceHeightPx = Math.floor(pageHeightPx * 0.90);
 
       // Calculate all page break points using DOM-aware breaks first, then pixel fallback
       const breakPoints: number[] = [0];
