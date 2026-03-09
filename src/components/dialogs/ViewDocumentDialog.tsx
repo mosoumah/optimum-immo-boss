@@ -300,15 +300,17 @@ export const ViewDocumentDialog = ({
         // 2. Fallback chirurgical en pixels (zone agressive 90-100%)
         const fallbackBreak = findSafeBreakPoint(canvas, ctx, idealBreak, minBreakY, aggressiveMinBreakY);
 
-        // 3. Seulement si densité très élevée (image/tableau insécable), autoriser rescue DOM (70-90%)
+        // 3. Seulement si pixel fallback recule sous 93% (contenu dense insécable), autoriser rescue DOM (70-95%)
+        const threshold93 = currentY + Math.floor(pageHeightPx * 0.93);
         let rescueBreak: number | null = null;
-        if (!domBreakAggressive && fallbackBreak < aggressiveMinBreakY) {
-          // Le pixel fallback a reculé sous 90% — contenu dense détecté, chercher rescue DOM
+        if (!domBreakAggressive && fallbackBreak < threshold93) {
           rescueBreak = findDomBreakPoint(domBreakCandidates, idealBreak, minBreakY, aggressiveMinBreakY);
         }
 
-        // Priorité : DOM agressif > pixel fallback > rescue DOM
-        const chosenBreak = domBreakAggressive ?? (fallbackBreak >= aggressiveMinBreakY ? fallbackBreak : (rescueBreak ?? fallbackBreak));
+        // Priorité : pixel fallback (s'il est dans la zone 95-100%) > DOM agressif > rescue DOM > pixel fallback bas
+        const chosenBreak = (fallbackBreak >= aggressiveMinBreakY ? fallbackBreak : null) 
+          ?? domBreakAggressive 
+          ?? (rescueBreak ?? fallbackBreak);
         const nextBreak = Math.max(Math.min(chosenBreak, canvas.height - 1), currentY + minSliceHeightPx);
 
         breakPoints.push(nextBreak);
