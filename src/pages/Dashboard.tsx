@@ -311,6 +311,9 @@ const Dashboard = () => {
         </div>
       </main>
 
+      {/* AI Chatbot */}
+      <AIChatBot userName={profile?.nom || undefined} />
+
       {/* Dialogs */}
       {profile?.entreprise_id && (
         <>
