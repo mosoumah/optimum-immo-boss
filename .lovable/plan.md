@@ -1,24 +1,19 @@
 
 
-# Plan : Convertir le graphique en Area Chart avec degrades
+# Fix: Chatbot se mélange avec le dashboard
 
-## Fichier unique a modifier : `src/components/FinancialChart.tsx`
+## Problème
+La fenêtre du chatbot utilise des fonds semi-transparents (`backdrop-blur`, gradients avec opacité faible) qui laissent voir le dashboard en dessous. Le contenu du dashboard est visible à travers le chatbot, rendant les deux indistinguables.
 
-### Changements
+## Solution
+Rendre le fond du chatbot **complètement opaque** tout en conservant le style premium :
 
-1. **Import** : Remplacer `LineChart, Line` par `AreaChart, Area` depuis `recharts`.
+### `src/components/chat/AIChatBot.tsx`
+- **Fenêtre principale** (ligne 132-138) : Remplacer le background semi-transparent par un fond opaque solide (`hsl(220, 20%, 9%)` → `hsl(220, 25%, 5%)`) sans transparence
+- **Header** (ligne 141) : Remplacer `hsl(220, 18%, 12%, 0.8)` par une valeur opaque `hsl(220, 18%, 12%)`
+- **Suggestions, input, messages** : Remplacer tous les `bg-card/30`, `bg-card/40`, `bg-card/60` par des valeurs opaques (`bg-card` ou couleurs solides)
+- **Tabs** : `bg-card/40` → fond opaque
+- **ScrollArea et conteneurs internes** : S'assurer qu'aucun `backdrop-blur-sm` ne crée de transparence sur le contenu
 
-2. **Ajouter des `<defs>` SVG** dans le `<AreaChart>` pour definir deux gradients lineaires :
-   - `gradientRevenus` : `#22c55e` a 30% d'opacite en haut → transparent en bas
-   - `gradientDepenses` : `#ef4444` a 20% d'opacite en haut → transparent en bas
-
-3. **Remplacer les `<Line>`** par des `<Area>` avec :
-   - `type="monotone"` (courbes lisses, deja en place)
-   - `fill="url(#gradientRevenus)"` / `fill="url(#gradientDepenses)"`
-   - `fillOpacity={1}` pour utiliser l'opacite definie dans le gradient
-   - Conserver `stroke`, `strokeWidth`, `dot`, `activeDot` identiques
-
-4. **Remplacer `<LineChart>`** par `<AreaChart>` (memes props : data, margin).
-
-Aucun autre fichier modifie. Le layout, le PDF et le dashboard restent intacts.
+Le résultat : un chatbot visuellement distinct, opaque, flottant au-dessus du dashboard avec un contraste net.
 
