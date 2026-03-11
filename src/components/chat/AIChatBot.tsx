@@ -107,16 +107,15 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-2xl flex items-center justify-center group"
+            className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center group"
             style={{
-              background: "linear-gradient(145deg, hsl(220, 18%, 14%), hsl(220, 20%, 8%))",
-              boxShadow: "0 0 30px hsl(72, 100%, 50%, 0.25), 0 0 60px hsl(72, 100%, 50%, 0.1), 0 8px 32px hsl(220, 30%, 4%, 0.5)",
-              border: "1px solid hsl(72, 100%, 50%, 0.2)",
+              background: "transparent",
+              filter: "drop-shadow(0 0 20px hsl(72, 100%, 50%, 0.3)) drop-shadow(0 4px 12px rgba(0,0,0,0.4))",
             }}
           >
             {/* Orbital ring */}
-            <span className="absolute inset-[-3px] rounded-[18px] border border-primary/20 animate-[spin_8s_linear_infinite] opacity-60 group-hover:opacity-100 group-hover:border-primary/40 transition-opacity" />
-            <img src={chatbotIcon} alt="Assistant IA" className="w-9 h-9 object-contain relative z-10 drop-shadow-[0_0_8px_hsl(72,100%,50%,0.4)]" />
+            <span className="absolute inset-[-3px] rounded-full border border-primary/20 animate-[spin_8s_linear_infinite] opacity-60 group-hover:opacity-100 group-hover:border-primary/40 transition-opacity" />
+            <img src={chatbotIcon} alt="Assistant IA" className="w-14 h-14 object-contain relative z-10" />
           </motion.button>
         )}
       </AnimatePresence>
