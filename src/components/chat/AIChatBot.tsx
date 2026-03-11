@@ -253,7 +253,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
                 {/* Input */}
                 <div className="px-4 pb-4 pt-2 flex-shrink-0">
                   <div
-                    className="flex gap-2 p-1 rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm focus-within:border-primary/40 focus-within:shadow-[0_0_20px_hsl(72,100%,50%,0.1)] transition-all duration-300"
+                    className="flex gap-2 p-1 rounded-2xl border border-border/30 bg-card focus-within:border-primary/40 focus-within:shadow-[0_0_20px_hsl(72,100%,50%,0.1)] transition-all duration-300"
                   >
                     <input
                       ref={inputRef}
