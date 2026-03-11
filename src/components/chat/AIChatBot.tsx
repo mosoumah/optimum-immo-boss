@@ -132,9 +132,8 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             className="fixed bottom-6 right-6 z-50 w-[400px] h-[580px] rounded-3xl flex flex-col overflow-hidden"
             style={{
               background: "linear-gradient(180deg, hsl(220, 20%, 9%) 0%, hsl(220, 25%, 5%) 100%)",
-              backgroundImage: "radial-gradient(at 30% 10%, hsl(72, 100%, 50%, 0.06) 0px, transparent 50%), radial-gradient(at 80% 90%, hsl(72, 80%, 45%, 0.04) 0px, transparent 50%)",
-              boxShadow: "0 0 40px hsl(72, 100%, 50%, 0.1), 0 25px 60px hsl(220, 30%, 2%, 0.7)",
-              border: "1px solid hsl(72, 100%, 50%, 0.12)",
+              boxShadow: "0 0 40px hsl(72, 100%, 50%, 0.15), 0 25px 60px rgba(0,0,0,0.8)",
+              border: "1px solid hsl(72, 100%, 50%, 0.15)",
             }}
           >
             {/* Header */}
