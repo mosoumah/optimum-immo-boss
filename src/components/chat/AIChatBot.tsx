@@ -36,10 +36,10 @@ const suggestions = [
 
 const TypingIndicator = () => (
   <div className="flex gap-2 items-start">
-    <div className="w-8 h-8 rounded-xl bg-card/60 backdrop-blur-sm border border-border/30 flex items-center justify-center flex-shrink-0">
+    <div className="w-8 h-8 rounded-xl bg-card border border-border/30 flex items-center justify-center flex-shrink-0">
       <img src={chatbotIcon} alt="" className="w-5 h-5 object-contain" />
     </div>
-    <div className="bg-card/60 backdrop-blur-sm border border-border/30 rounded-2xl px-4 py-3">
+    <div className="bg-card border border-border/30 rounded-2xl px-4 py-3">
       <div className="flex gap-1.5 items-center h-4">
         {[0, 1, 2].map((i) => (
           <motion.div
@@ -132,16 +132,15 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             className="fixed bottom-6 right-6 z-50 w-[400px] h-[580px] rounded-3xl flex flex-col overflow-hidden"
             style={{
               background: "linear-gradient(180deg, hsl(220, 20%, 9%) 0%, hsl(220, 25%, 5%) 100%)",
-              backgroundImage: "radial-gradient(at 30% 10%, hsl(72, 100%, 50%, 0.06) 0px, transparent 50%), radial-gradient(at 80% 90%, hsl(72, 80%, 45%, 0.04) 0px, transparent 50%)",
-              boxShadow: "0 0 40px hsl(72, 100%, 50%, 0.1), 0 25px 60px hsl(220, 30%, 2%, 0.7)",
-              border: "1px solid hsl(72, 100%, 50%, 0.12)",
+              boxShadow: "0 0 40px hsl(72, 100%, 50%, 0.15), 0 25px 60px rgba(0,0,0,0.8)",
+              border: "1px solid hsl(72, 100%, 50%, 0.15)",
             }}
           >
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 flex-shrink-0" style={{ background: "linear-gradient(180deg, hsl(220, 18%, 12%, 0.8) 0%, transparent 100%)" }}>
+            <div className="px-5 pt-5 pb-4 flex-shrink-0" style={{ background: "linear-gradient(180deg, hsl(220, 18%, 12%) 0%, hsl(220, 20%, 9%) 100%)" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-card/60 backdrop-blur-sm border border-primary/20 flex items-center justify-center shadow-[0_0_20px_hsl(72,100%,50%,0.15)]">
+                  <div className="w-10 h-10 rounded-xl bg-card border border-primary/20 flex items-center justify-center shadow-[0_0_20px_hsl(72,100%,50%,0.15)]">
                     <img src={chatbotIcon} alt="" className="w-6 h-6 object-contain" />
                   </div>
                   <div>
@@ -198,7 +197,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
               className="flex-1 flex flex-col min-h-0"
             >
               <div className="px-5 flex-shrink-0">
-                <TabsList className="w-full h-9 bg-card/40 backdrop-blur-sm rounded-xl p-1 border border-border/20">
+                <TabsList className="w-full h-9 bg-card rounded-xl p-1 border border-border/20">
                   <TabsTrigger
                     value="discussion"
                     className="h-7 text-xs rounded-lg flex-1 gap-1.5 data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
@@ -232,7 +231,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
                             onClick={() => sendMessage(s.text)}
-                            className="flex items-center gap-2 text-left text-xs px-3 py-2.5 rounded-xl border border-border/30 bg-card/30 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 text-foreground/80 hover:text-primary transition-all duration-200 group"
+                            className="flex items-center gap-2 text-left text-xs px-3 py-2.5 rounded-xl border border-border/30 bg-card hover:bg-primary/10 hover:border-primary/30 text-foreground/80 hover:text-primary transition-all duration-200 group"
                           >
                             <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
                             <span className="truncate">{s.text}</span>
@@ -254,7 +253,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
                 {/* Input */}
                 <div className="px-4 pb-4 pt-2 flex-shrink-0">
                   <div
-                    className="flex gap-2 p-1 rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm focus-within:border-primary/40 focus-within:shadow-[0_0_20px_hsl(72,100%,50%,0.1)] transition-all duration-300"
+                    className="flex gap-2 p-1 rounded-2xl border border-border/30 bg-card focus-within:border-primary/40 focus-within:shadow-[0_0_20px_hsl(72,100%,50%,0.1)] transition-all duration-300"
                   >
                     <input
                       ref={inputRef}
@@ -300,7 +299,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
                             setActiveTab("discussion");
                           }}
                         >
-                          <div className="w-8 h-8 rounded-lg bg-card/60 border border-border/20 flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-lg bg-card border border-border/20 flex items-center justify-center flex-shrink-0">
                             <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                           </div>
                           <div className="flex-1 min-w-0">
