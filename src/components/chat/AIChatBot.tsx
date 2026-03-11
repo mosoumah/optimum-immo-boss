@@ -197,7 +197,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
               className="flex-1 flex flex-col min-h-0"
             >
               <div className="px-5 flex-shrink-0">
-                <TabsList className="w-full h-9 bg-card/40 backdrop-blur-sm rounded-xl p-1 border border-border/20">
+                <TabsList className="w-full h-9 bg-card rounded-xl p-1 border border-border/20">
                   <TabsTrigger
                     value="discussion"
                     className="h-7 text-xs rounded-lg flex-1 gap-1.5 data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
