@@ -31,6 +31,7 @@ import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MessageBell } from "@/components/MessageBell";
+import { AIChatBot } from "@/components/chat/AIChatBot";
 
 // Dashboard components
 import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummary";
@@ -309,6 +310,9 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* AI Chatbot */}
+      <AIChatBot userName={profile?.nom || undefined} />
 
       {/* Dialogs */}
       {profile?.entreprise_id && (
