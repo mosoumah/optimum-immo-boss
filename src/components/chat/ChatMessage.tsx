@@ -1,10 +1,22 @@
-import ReactMarkdown from "react-markdown";
 import { Bot, User } from "lucide-react";
 import type { ChatMessage as ChatMessageType } from "@/hooks/useChatAssistant";
 
 interface ChatMessageProps {
   message: ChatMessageType;
 }
+
+// Simple markdown-like rendering without external dependency
+const renderContent = (text: string) => {
+  // Bold
+  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  // Code inline
+  html = html.replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-secondary text-xs">$1</code>');
+  // Line breaks
+  html = html.replace(/\n/g, '<br/>');
+  return html;
+};
 
 export const ChatMessage = ({ message }: ChatMessageProps) => {
   const isUser = message.role === "user";
@@ -30,9 +42,10 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         {isUser ? (
           <p>{message.content}</p>
         ) : (
-          <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
-          </div>
+          <div
+            className="[&_strong]:font-semibold [&_em]:italic [&_code]:font-mono"
+            dangerouslySetInnerHTML={{ __html: renderContent(message.content) }}
+          />
         )}
       </div>
     </div>
