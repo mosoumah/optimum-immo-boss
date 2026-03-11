@@ -1,24 +1,21 @@
 
 
-# Plan : Convertir le graphique en Area Chart avec degrades
+# Remplacement de l'icône du chatbot
 
-## Fichier unique a modifier : `src/components/FinancialChart.tsx`
+## Changements
 
-### Changements
+### 1. Copier la nouvelle icône
+- `user-uploads://Gemini_Generated_Image_7n4qio7n4qio7n4q_-_Edited.png` → `src/assets/chatbot-icon.png` (écrase l'ancienne)
 
-1. **Import** : Remplacer `LineChart, Line` par `AreaChart, Area` depuis `recharts`.
+### 2. `src/components/chat/AIChatBot.tsx` — Bouton flottant (lignes 110-119)
+- Supprimer le fond noir du bouton : remplacer le `background: linear-gradient(145deg, hsl(220, 18%, 14%), hsl(220, 20%, 8%))` par `background: transparent`
+- Supprimer la bordure sombre (`border: "1px solid ..."`)
+- Agrandir l'icône pour qu'elle remplisse tout le bouton : `w-9 h-9` → `w-14 h-14`
+- Conserver le glow vert en `boxShadow` et l'anneau orbital pour l'effet premium
+- Le bouton devient essentiellement l'icône elle-même, sans cadre noir autour
 
-2. **Ajouter des `<defs>` SVG** dans le `<AreaChart>` pour definir deux gradients lineaires :
-   - `gradientRevenus` : `#22c55e` a 30% d'opacite en haut → transparent en bas
-   - `gradientDepenses` : `#ef4444` a 20% d'opacite en haut → transparent en bas
+### 3. Header du chat (icône dans le header)
+- Même icône mise à jour automatiquement via l'import
 
-3. **Remplacer les `<Line>`** par des `<Area>` avec :
-   - `type="monotone"` (courbes lisses, deja en place)
-   - `fill="url(#gradientRevenus)"` / `fill="url(#gradientDepenses)"`
-   - `fillOpacity={1}` pour utiliser l'opacite definie dans le gradient
-   - Conserver `stroke`, `strokeWidth`, `dot`, `activeDot` identiques
-
-4. **Remplacer `<LineChart>`** par `<AreaChart>` (memes props : data, margin).
-
-Aucun autre fichier modifie. Le layout, le PDF et le dashboard restent intacts.
+Aucun autre fichier modifié.
 
