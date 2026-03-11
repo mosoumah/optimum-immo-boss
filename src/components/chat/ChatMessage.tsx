@@ -34,7 +34,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
           isUser
             ? "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_2px_16px_hsl(72,100%,50%,0.2)]"
-            : "bg-card/60 backdrop-blur-sm border border-border/30 text-foreground"
+            : "bg-card border border-border/30 text-foreground"
         }`}
       >
         {isUser ? (
