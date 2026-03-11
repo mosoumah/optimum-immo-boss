@@ -231,7 +231,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
                             onClick={() => sendMessage(s.text)}
-                            className="flex items-center gap-2 text-left text-xs px-3 py-2.5 rounded-xl border border-border/30 bg-card/30 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 text-foreground/80 hover:text-primary transition-all duration-200 group"
+                            className="flex items-center gap-2 text-left text-xs px-3 py-2.5 rounded-xl border border-border/30 bg-card hover:bg-primary/10 hover:border-primary/30 text-foreground/80 hover:text-primary transition-all duration-200 group"
                           >
                             <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
                             <span className="truncate">{s.text}</span>
