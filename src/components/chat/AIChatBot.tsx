@@ -102,20 +102,33 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
         {!isOpen && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              y: [0, -8, 0],
+              filter: [
+                "drop-shadow(0 0 18px hsl(72, 100%, 50%, 0.35)) drop-shadow(0 4px 14px rgba(0,0,0,0.4))",
+                "drop-shadow(0 0 32px hsl(72, 100%, 50%, 0.55)) drop-shadow(0 4px 20px rgba(0,0,0,0.5))",
+                "drop-shadow(0 0 18px hsl(72, 100%, 50%, 0.35)) drop-shadow(0 4px 14px rgba(0,0,0,0.4))",
+              ],
+            }}
+            transition={{
+              scale: { duration: 0.4 },
+              opacity: { duration: 0.4 },
+              y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+              filter: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+            }}
             exit={{ scale: 0, opacity: 0 }}
-            whileHover={{ scale: 1.08 }}
+            whileHover={{ scale: 1.12 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center group"
-            style={{
-              background: "transparent",
-              filter: "drop-shadow(0 0 20px hsl(72, 100%, 50%, 0.3)) drop-shadow(0 4px 12px rgba(0,0,0,0.4))",
-            }}
+            className="fixed bottom-6 right-6 z-50 w-20 h-20 rounded-full flex items-center justify-center group"
           >
-            {/* Orbital ring */}
-            <span className="absolute inset-[-3px] rounded-full border border-primary/20 animate-[spin_8s_linear_infinite] opacity-60 group-hover:opacity-100 group-hover:border-primary/40 transition-opacity" />
-            <img src={chatbotIcon} alt="Assistant IA" className="w-14 h-14 object-contain relative z-10" />
+            {/* Orbital ring 1 */}
+            <span className="absolute inset-[-6px] rounded-full border border-primary/30 animate-[spin_8s_linear_infinite] opacity-60 group-hover:opacity-100 group-hover:border-primary/50 transition-opacity" />
+            {/* Orbital ring 2 — reverse */}
+            <span className="absolute inset-[-12px] rounded-full border border-primary/15 animate-[spin_12s_linear_infinite_reverse] opacity-40 group-hover:opacity-80 group-hover:border-primary/30 transition-opacity" />
+            <img src={chatbotIcon} alt="Assistant IA" className="w-20 h-20 object-contain relative z-10 rounded-full" />
           </motion.button>
         )}
       </AnimatePresence>
