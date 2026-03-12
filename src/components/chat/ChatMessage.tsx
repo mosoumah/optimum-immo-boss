@@ -23,29 +23,29 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
       initial={{ opacity: 0, x: isUser ? 12 : -12, y: 4 }}
       animate={{ opacity: 1, x: 0, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className={`flex gap-2.5 ${isUser ? "flex-row-reverse" : "flex-row"}`}
-    >
-      {!isUser && (
-        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <img src={chatbotIcon} alt="" className="w-8 h-8 object-contain" />
+      className={`flex gap-2.5 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+      
+      {!isUser &&
+      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <img alt="" className="w-8 h-8 object-contain" src="/lovable-uploads/d4f62b36-5131-446e-8202-c59c8e09a824.png" />
         </div>
-      )}
+      }
       <div
         className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-          isUser
-            ? "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_2px_16px_hsl(72,100%,50%,0.2)]"
-            : "bg-card border border-border/30 text-foreground"
-        }`}
-      >
-        {isUser ? (
-          <p>{message.content}</p>
-        ) : (
-          <div
-            className="[&_strong]:font-semibold [&_em]:italic [&_code]:font-mono"
-            dangerouslySetInnerHTML={{ __html: renderContent(message.content) }}
-          />
-        )}
+        isUser ?
+        "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_2px_16px_hsl(72,100%,50%,0.2)]" :
+        "bg-card border border-border/30 text-foreground"}`
+        }>
+        
+        {isUser ?
+        <p>{message.content}</p> :
+
+        <div
+          className="[&_strong]:font-semibold [&_em]:italic [&_code]:font-mono"
+          dangerouslySetInnerHTML={{ __html: renderContent(message.content) }} />
+
+        }
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
