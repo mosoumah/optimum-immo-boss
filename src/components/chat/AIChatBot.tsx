@@ -36,8 +36,8 @@ const suggestions = [
 
 const TypingIndicator = () => (
   <div className="flex gap-2 items-start">
-    <div className="w-8 h-8 rounded-xl bg-card border border-border/30 flex items-center justify-center flex-shrink-0">
-      <img src={chatbotIcon} alt="" className="w-5 h-5 object-contain" />
+    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0">
+      <img src={chatbotIcon} alt="" className="w-8 h-8 object-contain drop-shadow-[0_0_6px_hsl(72,100%,50%,0.3)]" />
     </div>
     <div className="bg-card border border-border/30 rounded-2xl px-4 py-3">
       <div className="flex gap-1.5 items-center h-4">
@@ -122,13 +122,13 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             whileHover={{ scale: 1.12 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-20 h-20 rounded-full flex items-center justify-center group"
+            className="fixed bottom-6 right-6 z-50 w-24 h-24 flex items-center justify-center group"
           >
             {/* Orbital ring 1 */}
-            <span className="absolute inset-[-6px] rounded-full border border-primary/30 animate-[spin_8s_linear_infinite] opacity-60 group-hover:opacity-100 group-hover:border-primary/50 transition-opacity" />
+            <span className="absolute inset-[-4px] rounded-full border border-primary/30 animate-[spin_8s_linear_infinite] opacity-60 group-hover:opacity-100 group-hover:border-primary/50 transition-opacity" />
             {/* Orbital ring 2 — reverse */}
-            <span className="absolute inset-[-12px] rounded-full border border-primary/15 animate-[spin_12s_linear_infinite_reverse] opacity-40 group-hover:opacity-80 group-hover:border-primary/30 transition-opacity" />
-            <img src={chatbotIcon} alt="Assistant IA" className="w-20 h-20 object-contain relative z-10 rounded-full" />
+            <span className="absolute inset-[-10px] rounded-full border border-primary/15 animate-[spin_12s_linear_infinite_reverse] opacity-40 group-hover:opacity-80 group-hover:border-primary/30 transition-opacity" />
+            <img src={chatbotIcon} alt="Assistant IA" className="w-24 h-24 object-contain relative z-10 drop-shadow-[0_0_20px_hsl(72,100%,50%,0.4)]" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -152,8 +152,8 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             <div className="px-5 pt-5 pb-4 flex-shrink-0" style={{ background: "linear-gradient(180deg, hsl(220, 18%, 12%) 0%, hsl(220, 20%, 9%) 100%)" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-card border border-primary/20 flex items-center justify-center shadow-[0_0_20px_hsl(72,100%,50%,0.15)]">
-                    <img src={chatbotIcon} alt="" className="w-6 h-6 object-contain" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                    <img src={chatbotIcon} alt="" className="w-10 h-10 object-contain drop-shadow-[0_0_10px_hsl(72,100%,50%,0.25)]" />
                   </div>
                   <div>
                     <span className="font-bold text-sm text-foreground">Assistant IA</span>
