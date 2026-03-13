@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { User } from "lucide-react";
 import type { ChatMessage as ChatMessageType } from "@/hooks/useChatAssistant";
 import chatbotIcon from "@/assets/chatbot-icon.png";
 
@@ -10,7 +9,7 @@ interface ChatMessageProps {
 const renderContent = (text: string) => {
   let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  html = html.replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-secondary/60 text-xs font-mono">$1</code>');
+  html = html.replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded text-xs font-mono" style="background: hsl(220, 18%, 15%)">$1</code>');
   html = html.replace(/\n/g, '<br/>');
   return html;
 };
@@ -26,16 +25,21 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
       className={`flex gap-2.5 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       
       {!isUser &&
-        <div className="w-11 h-11 rounded-full overflow-hidden ring-1 ring-primary/25 flex-shrink-0 mt-0.5 drop-shadow-[0_0_10px_hsl(72,100%,50%,0.25)]">
+        <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-primary/30 flex-shrink-0 mt-0.5 drop-shadow-[0_0_10px_hsl(72,100%,50%,0.2)]">
           <img alt="" className="w-full h-full object-cover object-center scale-[1.22]" src={chatbotIcon} />
         </div>
       }
       <div
-        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-        isUser ?
-        "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_2px_16px_hsl(72,100%,50%,0.2)]" :
-        "bg-card border border-border/30 text-foreground"}`
-        }>
+        className={`max-w-[80%] px-3.5 py-2.5 text-sm leading-relaxed ${
+        isUser
+          ? "rounded-2xl rounded-tr-sm bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_2px_20px_hsl(72,100%,50%,0.2)]"
+          : "rounded-2xl rounded-tl-sm text-foreground"
+        }`}
+        style={!isUser ? {
+          background: "linear-gradient(135deg, hsl(220, 20%, 13%) 0%, hsl(220, 18%, 10%) 100%)",
+          border: "1px solid hsl(220, 15%, 18%)",
+        } : undefined}
+      >
         
         {isUser ?
         <p>{message.content}</p> :
