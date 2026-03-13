@@ -151,8 +151,8 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             <div className="px-5 pt-5 pb-4 flex-shrink-0" style={{ background: "linear-gradient(180deg, hsl(220, 18%, 12%) 0%, hsl(220, 20%, 9%) 100%)" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 flex items-center justify-center flex-shrink-0">
-                    <img src={chatbotIcon} alt="" className="w-11 h-11 object-contain" />
+                  <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                    <img src={chatbotIcon} alt="" className="w-14 h-14 object-contain drop-shadow-[0_0_12px_hsl(72,100%,50%,0.3)]" />
                   </div>
                   <div>
                     <span className="font-bold text-sm text-foreground">Assistant IA</span>
