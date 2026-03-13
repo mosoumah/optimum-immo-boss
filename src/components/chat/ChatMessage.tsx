@@ -26,8 +26,8 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
       className={`flex gap-2.5 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       
       {!isUser &&
-      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <img alt="" className="w-8 h-8 object-contain" src="/lovable-uploads/d4f62b36-5131-446e-8202-c59c8e09a824.png" />
+      <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <img alt="" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_hsl(72,100%,50%,0.3)]" src={chatbotIcon} />
         </div>
       }
       <div
