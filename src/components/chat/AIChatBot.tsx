@@ -36,8 +36,8 @@ const suggestions = [
 
 const TypingIndicator = () => (
   <div className="flex gap-2 items-start">
-    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-      <img src={chatbotIcon} alt="" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_hsl(72,100%,50%,0.3)]" />
+    <div className="w-11 h-11 rounded-full overflow-hidden ring-1 ring-primary/25 flex-shrink-0 drop-shadow-[0_0_10px_hsl(72,100%,50%,0.25)]">
+      <img src={chatbotIcon} alt="" className="w-full h-full object-cover object-center scale-[1.22]" />
     </div>
     <div className="bg-card border border-border/30 rounded-2xl px-4 py-3">
       <div className="flex gap-1.5 items-center h-4">
