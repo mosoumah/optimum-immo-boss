@@ -36,8 +36,8 @@ const suggestions = [
 
 const TypingIndicator = () => (
   <div className="flex gap-2 items-start">
-    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-      <img src={chatbotIcon} alt="" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_hsl(72,100%,50%,0.3)]" />
+    <div className="w-11 h-11 rounded-full overflow-hidden ring-1 ring-primary/25 flex-shrink-0 drop-shadow-[0_0_10px_hsl(72,100%,50%,0.25)]">
+      <img src={chatbotIcon} alt="" className="w-full h-full object-cover object-center scale-[1.22]" />
     </div>
     <div className="bg-card border border-border/30 rounded-2xl px-4 py-3">
       <div className="flex gap-1.5 items-center h-4">
@@ -151,8 +151,8 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             <div className="px-5 pt-5 pb-4 flex-shrink-0" style={{ background: "linear-gradient(180deg, hsl(220, 18%, 12%) 0%, hsl(220, 20%, 9%) 100%)" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
-                    <img src={chatbotIcon} alt="" className="w-14 h-14 object-contain drop-shadow-[0_0_12px_hsl(72,100%,50%,0.3)]" />
+                  <div className="w-16 h-16 rounded-full overflow-hidden ring-1 ring-primary/25 flex-shrink-0 drop-shadow-[0_0_14px_hsl(72,100%,50%,0.3)]">
+                    <img src={chatbotIcon} alt="" className="w-full h-full object-cover object-center scale-[1.22]" />
                   </div>
                   <div>
                     <span className="font-bold text-sm text-foreground">Assistant IA</span>
