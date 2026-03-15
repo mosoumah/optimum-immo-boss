@@ -1,23 +1,47 @@
 
 
-# Icône chatbot : remplissage total + effet flottant premium
+# Correction : auto-complétion des réservations expirées et statut des biens
 
-## Changements
+## Problème identifié
 
-### 1. Remplacer l'icône par la nouvelle image (face à l'utilisateur)
-- Copier `user-uploads://Gemini_Generated_Image_hhkuzmhhkuzmhhku_1.png` → `src/assets/chatbot-icon.png`
+La fonction `auto_complete_reservations` ne marque une réservation comme "terminée" **que si** la facture associée est payée. Si la facture n'est pas payée (ou n'existe pas), la réservation reste "en cours" et le bien reste "réservé" indéfiniment, même après la date de départ.
 
-### 2. `src/components/chat/AIChatBot.tsx` — Bouton flottant (lignes 100-121)
+De plus, le statut `en_attente` n'est pas vérifié dans la boucle.
 
-Refonte complète du bouton pour que l'icône remplisse le cercle et attire l'oeil :
+## Solution
 
-- **Taille** : Agrandir le bouton à `w-20 h-20` et l'icône à `w-20 h-20` pour remplir totalement
-- **Fond** : Supprimer le fond transparent, pas de cercle noir visible
-- **Animation flottante** : Ajouter une animation `y: [0, -8, 0]` en boucle (Framer Motion `animate`) pour un effet de lévitation douce
-- **Glow pulsante** : Double `drop-shadow` lime animé avec une pulsation (`animate` Framer Motion alternant entre deux intensités de glow)
-- **Anneau orbital** : Conserver mais agrandir (`inset-[-6px]`), border plus visible (`border-primary/30`), rotation lente
-- **Second anneau** : Ajouter un deuxième anneau orbital en sens inverse (`animate-[spin_12s_linear_infinite_reverse]`) pour un effet premium
-- **Hover** : Scale à 1.12 avec glow intensifié
+Modifier la fonction pour qu'elle complète automatiquement **toute réservation dont la date de départ est passée**, indépendamment du statut de paiement de la facture :
 
-Aucun autre élément modifié.
+1. **Migration SQL** : Réécrire `auto_complete_reservations` pour :
+   - Inclure les statuts `en_attente`, `en_cours`, `confirmee`
+   - Marquer comme `terminee` toute réservation avec `date_depart < CURRENT_DATE`, sans condition sur le paiement de la facture
+   - Mettre à jour `montant_paye` uniquement si la facture est effectivement payée (ne pas forcer `montant_paye = montant_total` si ce n'est pas le cas)
+   - Remettre le bien en `disponible` s'il n'a plus de réservation active
+
+2. **Aucun changement côté code** : Les appels existants dans `Reservations.tsx` et `Dashboard.tsx` restent identiques.
+
+## Détails techniques
+
+```sql
+-- Nouvelle logique simplifiée
+FOR _res IN
+  SELECT ... FROM reservations
+  WHERE entreprise_id = _entreprise_id
+    AND statut IN ('en_attente', 'en_cours', 'confirmee')
+    AND date_depart < CURRENT_DATE
+LOOP
+  -- Toujours terminer la réservation
+  UPDATE reservations SET statut = 'terminee', updated_at = now() WHERE id = _res.id;
+  
+  -- Mettre à jour montant_paye si facture payée
+  -- ...
+  
+  -- Libérer le bien si plus de réservation active
+  -- ...
+END LOOP;
+```
+
+## Fichiers impactés
+- 1 migration SQL (nouvelle)
+- Aucun fichier front-end modifié
 
