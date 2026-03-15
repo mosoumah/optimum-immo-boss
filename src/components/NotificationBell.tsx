@@ -105,9 +105,9 @@ export const NotificationBell = () => {
           whileTap={{ scale: 0.95 }}
           className="relative group cursor-pointer"
         >
-          <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-[hsl(72,100%,50%)] via-[hsl(90,70%,35%)] to-[hsl(140,60%,20%)] p-[1.5px] shadow-[0_0_15px_hsl(72,100%,50%,0.3)] group-hover:shadow-[0_0_25px_hsl(72,100%,50%,0.5)] transition-shadow duration-500">
-            <div className="h-full w-full rounded-[10px] bg-background/90 backdrop-blur-sm flex items-center justify-center">
-              <Bell className="w-5 h-5 text-primary group-hover:text-[hsl(72,100%,50%)] transition-colors duration-300" />
+          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[hsl(72,100%,50%)] via-[hsl(90,70%,35%)] to-[hsl(140,60%,20%)] p-[1px] shadow-[0_0_10px_hsl(72,100%,50%,0.2)] group-hover:shadow-[0_0_18px_hsl(72,100%,50%,0.4)] transition-shadow duration-500">
+            <div className="h-full w-full rounded-[7px] bg-background/60 backdrop-blur-sm flex items-center justify-center">
+              <Bell className="w-4 h-4 text-primary group-hover:text-[hsl(72,100%,50%)] transition-colors duration-300" />
             </div>
           </div>
           <AnimatePresence>
@@ -116,7 +116,7 @@ export const NotificationBell = () => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                className="absolute -top-1 -right-1 min-w-[20px] h-[20px] flex items-center justify-center bg-gradient-to-br from-[hsl(72,100%,50%)] to-primary text-primary-foreground text-[10px] font-bold rounded-full px-1 shadow-[0_0_12px_hsl(72,100%,50%,0.6)] ring-2 ring-background"
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-gradient-to-br from-[hsl(72,100%,50%)] to-primary text-primary-foreground text-[10px] font-bold rounded-full px-1 shadow-[0_0_10px_hsl(72,100%,50%,0.5)] ring-2 ring-background"
               >
                 {unreadCount > 9 ? "9+" : unreadCount}
               </motion.span>
