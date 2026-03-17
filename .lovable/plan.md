@@ -1,27 +1,23 @@
 
 
-# Update ImmoPilot AI Assistant System Prompt
+# Icône chatbot : remplissage total + effet flottant premium
 
-## What changes
+## Changements
 
-Update the system prompt in `supabase/functions/chat-assistant/index.ts` (lines 391-402) to implement the comprehensive ImmoPilot persona with strict behavior rules.
+### 1. Remplacer l'icône par la nouvelle image (face à l'utilisateur)
+- Copier `user-uploads://Gemini_Generated_Image_hhkuzmhhkuzmhhku_1.png` → `src/assets/chatbot-icon.png`
 
-## Plan
+### 2. `src/components/chat/AIChatBot.tsx` — Bouton flottant (lignes 100-121)
 
-1. **Replace the system prompt** in the edge function with the full ImmoPilot specification:
-   - Professional real estate assistant identity for "Optimum Immo"
-   - Scope limitation: only real estate and business operations topics
-   - Action confirmation flow: extract info → check completeness → ask if missing → show summary → wait for confirmation before executing
-   - Formatted confirmation messages before any create action
-   - Concise analysis responses with real data
-   - Multi-language support (French/English based on user language)
-   - Security reminder: only access data for current entreprise
-   - Professional, efficient, calm personality — no casual or emotional tone
+Refonte complète du bouton pour que l'icône remplisse le cercle et attire l'oeil :
 
-2. **No frontend changes needed** — the chatbot UI already renders messages properly.
+- **Taille** : Agrandir le bouton à `w-20 h-20` et l'icône à `w-20 h-20` pour remplir totalement
+- **Fond** : Supprimer le fond transparent, pas de cercle noir visible
+- **Animation flottante** : Ajouter une animation `y: [0, -8, 0]` en boucle (Framer Motion `animate`) pour un effet de lévitation douce
+- **Glow pulsante** : Double `drop-shadow` lime animé avec une pulsation (`animate` Framer Motion alternant entre deux intensités de glow)
+- **Anneau orbital** : Conserver mais agrandir (`inset-[-6px]`), border plus visible (`border-primary/30`), rotation lente
+- **Second anneau** : Ajouter un deuxième anneau orbital en sens inverse (`animate-[spin_12s_linear_infinite_reverse]`) pour un effet premium
+- **Hover** : Scale à 1.12 avec glow intensifié
 
-3. **No tool changes needed** — existing tools already cover all listed capabilities (create_client, create_tache, create_facture, create_devis, search_clients, search_factures, search_reservations, analyze_finances, search_properties).
-
-## Files impacted
-- `supabase/functions/chat-assistant/index.ts` — system prompt update only (~lines 391-402)
+Aucun autre élément modifié.
 
