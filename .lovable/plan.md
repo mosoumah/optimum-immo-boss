@@ -1,17 +1,23 @@
 
-# Improve Chatbot Header Visibility
 
-## Problem
-The chatbot header (avatar, "Assistant IA", status, greeting) blends into the dark background and isn't visually prominent enough.
+# Icône chatbot : remplissage total + effet flottant premium
 
-## Changes — `src/components/chat/AIChatBot.tsx`
+## Changements
 
-1. **Increase header contrast**: Add a brighter gradient background with a subtle bottom border glow to separate it from the chat body
-2. **Enlarge the avatar**: Bump from `w-12 h-12` to `w-14 h-14` with a stronger ring glow
-3. **Make "Assistant IA" title larger and bolder**: Increase font size to `text-base font-extrabold` with a green gradient text
-4. **Enhance "En ligne" indicator**: Slightly larger dot with stronger pulse glow
-5. **Add a subtle bottom border/glow line** to the header for clear visual separation from chat content
-6. **Make the greeting text slightly larger** (`text-base`) so "Bonjour Mohamed 👋" stands out
+### 1. Remplacer l'icône par la nouvelle image (face à l'utilisateur)
+- Copier `user-uploads://Gemini_Generated_Image_hhkuzmhhkuzmhhku_1.png` → `src/assets/chatbot-icon.png`
 
-## Files impacted
-- `src/components/chat/AIChatBot.tsx` — header section (~lines 152-200)
+### 2. `src/components/chat/AIChatBot.tsx` — Bouton flottant (lignes 100-121)
+
+Refonte complète du bouton pour que l'icône remplisse le cercle et attire l'oeil :
+
+- **Taille** : Agrandir le bouton à `w-20 h-20` et l'icône à `w-20 h-20` pour remplir totalement
+- **Fond** : Supprimer le fond transparent, pas de cercle noir visible
+- **Animation flottante** : Ajouter une animation `y: [0, -8, 0]` en boucle (Framer Motion `animate`) pour un effet de lévitation douce
+- **Glow pulsante** : Double `drop-shadow` lime animé avec une pulsation (`animate` Framer Motion alternant entre deux intensités de glow)
+- **Anneau orbital** : Conserver mais agrandir (`inset-[-6px]`), border plus visible (`border-primary/30`), rotation lente
+- **Second anneau** : Ajouter un deuxième anneau orbital en sens inverse (`animate-[spin_12s_linear_infinite_reverse]`) pour un effet premium
+- **Hover** : Scale à 1.12 avec glow intensifié
+
+Aucun autre élément modifié.
+
