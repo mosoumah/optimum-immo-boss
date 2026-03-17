@@ -149,17 +149,17 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             }}
           >
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 flex-shrink-0 relative" style={{ background: "linear-gradient(180deg, hsl(220, 18%, 11%) 0%, hsl(220, 22%, 8%) 100%)" }}>
+            <div className="px-5 pt-5 pb-4 flex-shrink-0 relative" style={{ background: "linear-gradient(180deg, hsl(220, 16%, 14%) 0%, hsl(220, 22%, 9%) 100%)" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-primary/20 flex-shrink-0 drop-shadow-[0_0_16px_hsl(72,100%,50%,0.25)]">
+                  <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-primary/40 flex-shrink-0 drop-shadow-[0_0_20px_hsl(72,100%,50%,0.35)]">
                     <img src={chatbotIcon} alt="" className="w-full h-full object-cover object-center scale-[1.22]" />
                   </div>
                   <div>
-                    <span className="font-bold text-sm text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground/80">Assistant IA</span>
+                    <span className="font-extrabold text-base text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/90 to-accent">Assistant IA</span>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      <span className="text-[11px] text-primary/80 font-medium tracking-wide">En ligne</span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(72,100%,50%,0.6)]" />
+                      <span className="text-xs text-primary/90 font-semibold tracking-wide">En ligne</span>
                     </div>
                   </div>
                 </div>
@@ -188,21 +188,21 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
 
               {messages.length === 0 && activeTab === "discussion" && (
                 <div className="mt-1">
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-base">
                     Bonjour{" "}
-                    <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                    <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                       {firstName}
                     </span>{" "}
                     👋
                   </p>
-                  <p className="text-foreground font-semibold text-sm mt-0.5">
+                  <p className="text-foreground font-bold text-base mt-0.5">
                     Comment puis-je vous aider ?
                   </p>
                 </div>
               )}
 
               {/* Glow separator */}
-              <div className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
+              <div className="absolute bottom-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent shadow-[0_0_8px_hsl(72,100%,50%,0.2)]" />
             </div>
 
             {/* Tabs */}
