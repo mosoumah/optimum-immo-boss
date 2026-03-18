@@ -219,7 +219,11 @@ async function executeTool(
           .order("created_at", { ascending: false })
           .limit(10);
         if (args.query) {
-          query = query.or(`nom.ilike.%${args.query}%,email.ilike.%${args.query}%`);
+          // Sanitize input: strip PostgREST special chars to prevent filter injection
+          const sanitized = String(args.query).replace(/[.(),]/g, "").trim().slice(0, 100);
+          if (sanitized) {
+            query = query.or(`nom.ilike.%${sanitized}%,email.ilike.%${sanitized}%`);
+          }
         }
         const { data, error } = await query;
         if (error) return JSON.stringify({ error: error.message });
