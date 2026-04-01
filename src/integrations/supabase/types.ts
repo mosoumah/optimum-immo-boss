@@ -922,7 +922,9 @@ export type Database = {
           facture_id: string | null
           id: string
           montant: number
+          reservation_id: string | null
           source: string | null
+          source_type: string
         }
         Insert: {
           created_at?: string
@@ -931,7 +933,9 @@ export type Database = {
           facture_id?: string | null
           id?: string
           montant: number
+          reservation_id?: string | null
           source?: string | null
+          source_type?: string
         }
         Update: {
           created_at?: string
@@ -940,7 +944,9 @@ export type Database = {
           facture_id?: string | null
           id?: string
           montant?: number
+          reservation_id?: string | null
           source?: string | null
+          source_type?: string
         }
         Relationships: [
           {
@@ -976,6 +982,13 @@ export type Database = {
             columns: ["facture_id"]
             isOneToOne: false
             referencedRelation: "factures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenus_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
         ]
@@ -1384,6 +1397,7 @@ export type Database = {
         Args: { _entreprise_id: string }
         Returns: undefined
       }
+      auto_complete_reservations_all: { Args: never; Returns: undefined }
       bootstrap_current_user: { Args: never; Returns: Json }
       can_access_tache_messages: {
         Args: { _tache_id: string }
