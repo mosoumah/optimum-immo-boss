@@ -11,109 +11,6 @@ const tools = [
   {
     type: "function",
     function: {
-      name: "create_client",
-      description: "Créer un nouveau client dans la base de données",
-      parameters: {
-        type: "object",
-        properties: {
-          nom: { type: "string", description: "Nom du client" },
-          email: { type: "string", description: "Email du client" },
-          telephone: { type: "string", description: "Téléphone du client" },
-        },
-        required: ["nom"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_tache",
-      description: "Créer une nouvelle tâche",
-      parameters: {
-        type: "object",
-        properties: {
-          titre: { type: "string", description: "Titre de la tâche" },
-          description: { type: "string", description: "Description de la tâche" },
-        },
-        required: ["titre"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_facture",
-      description: "Créer une nouvelle facture. Nécessite un client_id valide.",
-      parameters: {
-        type: "object",
-        properties: {
-          client_id: { type: "string", description: "UUID du client" },
-          montant: { type: "number", description: "Montant de la facture" },
-          description: { type: "string", description: "Description de la facture" },
-        },
-        required: ["client_id", "montant"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_devis",
-      description: "Créer un nouveau devis. Nécessite un client_id valide.",
-      parameters: {
-        type: "object",
-        properties: {
-          client_id: { type: "string", description: "UUID du client" },
-          montant: { type: "number", description: "Montant du devis" },
-          description: { type: "string", description: "Description du devis" },
-        },
-        required: ["client_id", "montant"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "search_clients",
-      description: "Rechercher des clients par nom ou lister les clients récents",
-      parameters: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "Terme de recherche (nom ou email)" },
-        },
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "search_factures",
-      description: "Rechercher des factures, optionnellement filtrer par statut (paye ou non_paye)",
-      parameters: {
-        type: "object",
-        properties: {
-          statut: { type: "string", enum: ["paye", "non_paye"], description: "Filtrer par statut" },
-        },
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "search_reservations",
-      description: "Rechercher des réservations. Peut filtrer par période (semaine, mois) ou statut.",
-      parameters: {
-        type: "object",
-        properties: {
-          period: { type: "string", enum: ["semaine", "mois", "aujourdhui"], description: "Période" },
-          statut: { type: "string", description: "Statut de réservation" },
-        },
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
       name: "analyze_finances",
       description: "Analyser les données financières: revenus, dépenses, bénéfice, factures impayées",
       parameters: {
@@ -129,19 +26,6 @@ const tools = [
       },
     },
   },
-  {
-    type: "function",
-    function: {
-      name: "search_properties",
-      description: "Rechercher des biens immobiliers, optionnellement filtrer par statut",
-      parameters: {
-        type: "object",
-        properties: {
-          statut: { type: "string", description: "Statut du bien (disponible, reserve, etc.)" },
-        },
-      },
-    },
-  },
 ];
 
 async function executeTool(
@@ -152,127 +36,6 @@ async function executeTool(
 ): Promise<string> {
   try {
     switch (toolName) {
-      case "create_client": {
-        const { data, error } = await supabase
-          .from("clients")
-          .insert({
-            entreprise_id: entrepriseId,
-            nom: args.nom as string,
-            email: (args.email as string) || null,
-            telephone: (args.telephone as string) || null,
-          })
-          .select("id, nom")
-          .single();
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ success: true, client: data });
-      }
-
-      case "create_tache": {
-        const { data, error } = await supabase
-          .from("taches")
-          .insert({
-            entreprise_id: entrepriseId,
-            titre: args.titre as string,
-            description: (args.description as string) || null,
-          })
-          .select("id, titre")
-          .single();
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ success: true, tache: data });
-      }
-
-      case "create_facture": {
-        const { data, error } = await supabase
-          .from("factures")
-          .insert({
-            entreprise_id: entrepriseId,
-            client_id: args.client_id as string,
-            montant: args.montant as number,
-            description: (args.description as string) || null,
-          })
-          .select("id, montant")
-          .single();
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ success: true, facture: data });
-      }
-
-      case "create_devis": {
-        const { data, error } = await supabase
-          .from("devis")
-          .insert({
-            entreprise_id: entrepriseId,
-            client_id: args.client_id as string,
-            montant: args.montant as number,
-            description: (args.description as string) || null,
-          })
-          .select("id, montant, numero_devis")
-          .single();
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ success: true, devis: data });
-      }
-
-      case "search_clients": {
-        let query = supabase
-          .from("clients")
-          .select("id, nom, email, telephone")
-          .eq("entreprise_id", entrepriseId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        if (args.query) {
-          // Sanitize input: strip PostgREST special chars to prevent filter injection
-          const sanitized = String(args.query).replace(/[.(),]/g, "").trim().slice(0, 100);
-          if (sanitized) {
-            query = query.or(`nom.ilike.%${sanitized}%,email.ilike.%${sanitized}%`);
-          }
-        }
-        const { data, error } = await query;
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ clients: data || [] });
-      }
-
-      case "search_factures": {
-        let query = supabase
-          .from("factures")
-          .select("id, montant, statut, date, description, clients(nom)")
-          .eq("entreprise_id", entrepriseId)
-          .order("created_at", { ascending: false })
-          .limit(15);
-        if (args.statut) {
-          query = query.eq("statut", args.statut);
-        }
-        const { data, error } = await query;
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ factures: data || [] });
-      }
-
-      case "search_reservations": {
-        let query = supabase
-          .from("reservations")
-          .select("id, property_name, date_arrivee, date_depart, montant_total, statut, clients(nom)")
-          .eq("entreprise_id", entrepriseId)
-          .order("date_arrivee", { ascending: false })
-          .limit(15);
-
-        const now = new Date();
-        if (args.period === "aujourdhui") {
-          const today = now.toISOString().split("T")[0];
-          query = query.or(`date_arrivee.eq.${today},date_depart.eq.${today}`);
-        } else if (args.period === "semaine") {
-          const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString().split("T")[0];
-          const weekAhead = new Date(now.getTime() + 7 * 86400000).toISOString().split("T")[0];
-          query = query.gte("date_arrivee", weekAgo).lte("date_arrivee", weekAhead);
-        } else if (args.period === "mois") {
-          const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-          query = query.gte("date_arrivee", monthStart);
-        }
-        if (args.statut) {
-          query = query.eq("statut", args.statut);
-        }
-        const { data, error } = await query;
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ reservations: data || [] });
-      }
-
       case "analyze_finances": {
         const { data: simple } = await supabase
           .from("v_dashboard_simple")
@@ -313,21 +76,6 @@ async function executeTool(
           result.departs_aujourdhui = simple?.departs_aujourdhui || 0;
         }
         return JSON.stringify(result);
-      }
-
-      case "search_properties": {
-        let query = supabase
-          .from("properties")
-          .select("id, nom, type_bien, statut, prix, adresse, surface")
-          .eq("entreprise_id", entrepriseId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        if (args.statut) {
-          query = query.eq("statut", args.statut);
-        }
-        const { data, error } = await query;
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ properties: data || [] });
       }
 
       default:
@@ -399,23 +147,17 @@ CORE BEHAVIOR:
 - You are a professional real estate assistant. Be concise, clear, and action-oriented.
 - Do NOT behave like a general chatbot. Do NOT give long explanations unless necessary.
 
-SCOPE LIMITATION:
-- You ONLY respond to topics related to: real estate, business operations inside the app, data analysis from the platform.
-- If the user asks something unrelated, respond: "Je suis conçu pour vous aider à gérer votre activité immobilière. Veuillez poser une question pertinente."
+ SCOPE LIMITATION:
+- You ONLY respond to financial analysis from platform dashboard views.
+- You MUST NOT access or suggest actions on clients, properties, reservations, invoices, quotes, tasks, or document creation.
+- If user asks outside financial analysis, respond: "Je peux uniquement aider avec l'analyse financière du tableau de bord."
 
 DATA SECURITY:
 - You MUST NEVER access or expose data from other companies. All queries are already filtered by entreprise_id.
 
-ACTION RULES (CRITICAL):
-- You MUST NEVER execute a create action immediately.
-- ALWAYS follow this process: 1) Extract all relevant info 2) Check if required data is complete 3) If missing → ask clarification 4) Show a confirmation summary 5) WAIT for user confirmation before calling the tool.
-- Confirmation format example:
-  "Vous êtes sur le point de créer une réservation :
-  - Client : Mohamed Soumah
-  - Bien : Appartement Kaloum
-  - Dates : 10 juillet au 15 juillet
-  Confirmez-vous ?"
-- Only execute the tool if the user confirms (oui / confirmer / ok / yes).
+ ACTION RULES:
+- You can only call analyze_finances.
+- Never imply data creation or updates.
 
 SEARCH & ANALYSIS:
 - Use real data from tools. Be precise. Keep answers short.
