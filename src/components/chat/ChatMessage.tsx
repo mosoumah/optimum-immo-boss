@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { ChatMessage as ChatMessageType } from "@/hooks/useChatAssistant";
+import { escapeHtml } from "@/lib/escapeHtml";
 import chatbotIcon from "@/assets/chatbot-icon.png";
 
 interface ChatMessageProps {
