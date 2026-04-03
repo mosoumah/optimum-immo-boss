@@ -55,6 +55,10 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: F
       toast.error("Client et montant sont requis");
       return;
     }
+    if (parseFloat(montant) <= 0) {
+      toast.error("Le montant doit être supérieur à 0");
+      return;
+    }
 
     setIsLoading(true);
     const { error } = await supabase.from("factures").insert({

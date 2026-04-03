@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { ChatMessage as ChatMessageType } from "@/hooks/useChatAssistant";
+import { escapeHtml } from "@/lib/escapeHtml";
 import chatbotIcon from "@/assets/chatbot-icon.png";
 
 interface ChatMessageProps {
@@ -7,7 +8,8 @@ interface ChatMessageProps {
 }
 
 const renderContent = (text: string) => {
-  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  const safe = escapeHtml(text);
+  let html = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
   html = html.replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded text-xs font-mono" style="background: hsl(220, 18%, 15%)">$1</code>');
   html = html.replace(/\n/g, '<br/>');
