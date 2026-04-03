@@ -43,6 +43,7 @@ serve(async (req) => {
       });
     }
 
+    const body = await req.json();
     const {
       entrepriseNom, typeDocument, documentNumber, creationDate,
       agentName, agencyPhone, agencyEmail,
@@ -50,7 +51,13 @@ serve(async (req) => {
       propertyTitle, propertyAddress, propertyType,
       salePrice, rentalDuration, securityDeposit,
       clauses, signatureDate,
-    } = await req.json();
+    } = body;
+
+    if (!typeDocument || typeof typeDocument !== "string" || !typeDocument.trim()) {
+      return new Response(JSON.stringify({ error: "Le type de document est requis" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");

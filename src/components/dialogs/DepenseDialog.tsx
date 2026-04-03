@@ -54,6 +54,10 @@ export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: D
       toast.error("Type et montant sont requis");
       return;
     }
+    if (parseFloat(montant) <= 0) {
+      toast.error("Le montant doit être supérieur à 0");
+      return;
+    }
 
     const fullDescription = description.trim() 
       ? `${typeDepense} - ${description.trim()}`

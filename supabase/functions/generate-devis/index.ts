@@ -105,6 +105,7 @@ serve(async (req) => {
       });
     }
 
+    const body = await req.json();
     const { 
       entrepriseNom, 
       entrepriseLogo,
@@ -118,7 +119,18 @@ serve(async (req) => {
       montant, 
       date,
       numeroDevis
-    } = await req.json();
+    } = body;
+
+    if (!clientNom || typeof clientNom !== "string" || !clientNom.trim()) {
+      return new Response(JSON.stringify({ error: "Le nom du client est requis" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!montant || isNaN(Number(montant)) || Number(montant) <= 0) {
+      return new Response(JSON.stringify({ error: "Le montant doit être un nombre positif" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {

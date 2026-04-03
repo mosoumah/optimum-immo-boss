@@ -92,6 +92,10 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
 
   const handleSubmit = async () => {
     if (!form.client_id || !entrepriseId) return;
+    if (parseFloat(form.prix_unitaire) <= 0) {
+      toast({ title: "Erreur", description: "Le prix unitaire doit être supérieur à 0", variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
 
     const selectedProperty = properties.find((p) => p.id === form.property_id);

@@ -55,6 +55,10 @@ export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Dev
       toast.error("Client et montant sont requis");
       return;
     }
+    if (parseFloat(montant) <= 0) {
+      toast.error("Le montant doit être supérieur à 0");
+      return;
+    }
 
     setIsLoading(true);
     const { error } = await supabase.from("devis").insert({
