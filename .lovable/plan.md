@@ -1,113 +1,36 @@
 
-# Plan de correction ciblée — Architecture relationnelle (sans toucher UI/Dashboard)
 
-## Périmètre verrouillé
-- Modifications uniquement backend (DB + fonction `chat-assistant`).
-- Aucun changement UI.
-- Aucun changement Dashboard.
-- Aucun changement des autres modules hors demandes 1→4.
+# Suppression de factures (admin) + Correction revenus dashboard
 
-## 1) Fusion des triggers facture en un seul `handle_facture_paid_global`
-### Actions
-1. Créer une nouvelle fonction SQL `public.handle_facture_paid_global()` :
-   - Si `NEW.statut = 'paye'` et changement réel de statut :
-     - insérer un revenu (anti-duplication via `NOT EXISTS` sur `revenus.facture_id`)
-     - mettre à jour `reservations.montant_paye = reservations.montant_total` si `NEW.reservation_id IS NOT NULL`
-2. Supprimer les anciens triggers (si existants) :
-   - `on_facture_paid`
-   - `on_facture_paid_sync_reservation`
-3. Créer un seul trigger :
-   - `on_facture_paid_global AFTER UPDATE ON factures FOR EACH ROW EXECUTE FUNCTION handle_facture_paid_global()`
+## Problèmes identifiés
 
-### Résultat attendu
-- Une seule exécution métier à chaque paiement de facture.
-- Plus de double logique concurrente entre revenus et sync réservation.
+1. **Pas de bouton supprimer** sur la page Factures — la permission `supprimer_facture` existe mais n'est pas utilisée côté UI.
+2. **Revenus des factures payées ne s'affichent pas** sur le dashboard du mois en cours — le trigger `handle_facture_paid_global` utilise `NEW.date` (date de la facture) au lieu de `CURRENT_DATE`. Si une facture datée de mars est payée en avril, le revenu est enregistré avec une date de mars et n'apparaît pas dans les revenus d'avril.
+3. **La politique RLS DELETE** autorise aussi les agents (pour leurs factures) — l'utilisateur veut admin uniquement.
 
----
+## Plan
 
-## 2) Automatisation des réservations expirées (horaire)
-### Paramètres validés
-- Fréquence: **toutes les heures**
-- Statut à auto-clôturer: **`en_cours` uniquement**
+### Étape 1 — Migration SQL
 
-### Actions
-1. Faire évoluer `public.auto_complete_reservations(_entreprise_id uuid)` :
-   - condition temporelle : `date_depart < now()`
-   - scope statut : `statut = 'en_cours'`
-   - actions :
-     - `reservations.statut = 'terminee'`
-     - libération du bien lié (`properties.statut = 'disponible'`) si aucune autre réservation active
-2. Ajouter une fonction wrapper globale :
-   - `public.auto_complete_reservations_all()` qui boucle sur les entreprises et appelle `auto_complete_reservations`.
-3. Planifier l’exécution horaire via `pg_cron` (job SQL) :
-   - exécution de `SELECT public.auto_complete_reservations_all();`
-   - job idempotent (unschedule + schedule pour éviter doublons)
+1. **Corriger `handle_facture_paid_global`** : remplacer `NEW.date` par `CURRENT_DATE` pour que le revenu soit comptabilisé dans le mois du paiement.
+2. **Restreindre le DELETE factures à admin uniquement** : remplacer la politique RLS `Role-based factures delete`.
+3. **Ajouter un trigger `on_facture_deleted`** : quand une facture est supprimée, supprimer automatiquement le revenu associé (`revenus.facture_id = OLD.id`) pour garder la cohérence financière.
+
+### Étape 2 — UI `Factures.tsx`
+
+1. Ajouter un import `Trash2` et `useUserRole`.
+2. Ajouter une fonction `supprimerFacture` avec vérification de permission (`supprimer_facture`) + confirmation.
+3. Ajouter un bouton Supprimer (icône poubelle rouge) visible uniquement pour les admins via `PermissionGate permission="supprimer_facture"`.
+4. Après suppression : toast de succès + rafraîchir la liste.
 
 ### Résultat attendu
-- Clôture automatique sans action manuelle.
-- Cohérence continue entre `reservations` et `properties`.
 
----
+- Seul l'admin peut supprimer une facture.
+- Supprimer une facture supprime aussi le revenu associé automatiquement.
+- Payer une facture crée un revenu avec la date du jour → visible immédiatement sur le dashboard.
+- Bénéfice estimé (revenus - dépenses) se met à jour automatiquement.
 
-## 3) Limiter strictement le chatbot aux vues financières
-### Fichier impacté
-- `supabase/functions/chat-assistant/index.ts`
+### Fichiers impactés
+- 1 migration SQL
+- `src/pages/Factures.tsx`
 
-### Actions
-1. Réduire `tools` à **un seul outil** :
-   - `analyze_finances`
-2. Nettoyer `executeTool()` :
-   - conserver uniquement le case `analyze_finances`
-   - supprimer les cases qui lisent/écrivent directement `clients`, `factures`, `reservations`, `properties`, `taches`, `devis`
-3. Ajuster le system prompt :
-   - préciser que l’assistant est limité à l’analyse financière issue des vues dashboard.
-4. Conserver l’auth/JWT et le filtrage `entreprise_id` existants.
-
-### Résultat attendu
-- Suppression d’accès table direct depuis le chatbot.
-- Coût/latence réduits, surface d’erreur plus faible.
-
----
-
-## 4) Relations financières flexibles (revenus/factures)
-### État actuel confirmé
-- `factures.reservation_id` est déjà nullable → conforme, pas de rupture.
-- `revenus` n’a pas encore `source_type` ni `reservation_id`.
-
-### Actions (migration)
-1. Ajouter à `revenus` :
-   - `source_type text not null default 'manuel'` (valeurs métier: `facture`, `manuel`)
-   - `reservation_id uuid null` (référence `reservations(id)` en `ON DELETE SET NULL`)
-2. Backfill des lignes existantes :
-   - `source_type = 'facture'` si `facture_id IS NOT NULL`
-   - sinon `source_type = 'manuel'`
-3. Adapter `handle_facture_paid_global` :
-   - insertion revenus avec `source_type = 'facture'`
-   - renseigner `reservation_id = NEW.reservation_id` si présent
-4. Ne rien changer côté UI (compatibilité assurée par défaut `source_type='manuel'`).
-
-### Résultat attendu
-- Revenus manuels indépendants + revenus liés facture/réservation.
-- Modèle prêt pour location + vente + revenus libres.
-
----
-
-## 5) Validation ciblée (sans toucher les autres modules)
-1. Test DB :
-   - passer une facture `non_paye -> paye` avec/sans `reservation_id`
-   - vérifier :
-     - un seul revenu créé
-     - `reservation.montant_paye` mis à jour si liée
-2. Test auto-clôture :
-   - créer une réservation `en_cours` expirée
-   - vérifier après passage du job horaire :
-     - réservation `terminee`
-     - bien `disponible` si aucune autre active
-3. Test chatbot :
-   - requête “liste clients” doit refuser/pivoter
-   - requête “analyse bénéfice mois” doit répondre depuis `v_dashboard_simple` / `v_dashboard_advanced_finance`
-
----
-
-## Livrables prévus
-- 1 migration SQL de consolidation (triggers + colonnes + fonctions + cron
