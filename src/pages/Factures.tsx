@@ -1,7 +1,18 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer } from "lucide-react";
+import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +126,27 @@ const Factures = () => {
     } catch {
       return null;
     }
+  };
+
+  const supprimerFacture = async (facture: Facture) => {
+    const canDelete = await checkPermission("supprimer_facture");
+    if (!canDelete) {
+      toast.error("Vous n'avez pas la permission de supprimer les factures");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("factures")
+      .delete()
+      .eq("id", facture.id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
+    toast.success("Facture supprimée avec succès");
+    fetchFactures();
   };
 
   const marquerPayee = async (facture: Facture) => {
@@ -605,6 +637,32 @@ const Factures = () => {
                           <FileText className="w-4 h-4" />
                         )}
                       </Button>
+                    </PermissionGate>
+                    <PermissionGate permission="supprimer_facture">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Cette action est irréversible. La facture et le revenu associé seront définitivement supprimés.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => supprimerFacture(facture)}
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </PermissionGate>
                   </div>
                 </motion.div>
