@@ -128,6 +128,27 @@ const Factures = () => {
     }
   };
 
+  const supprimerFacture = async (facture: Facture) => {
+    const canDelete = await checkPermission("supprimer_facture");
+    if (!canDelete) {
+      toast.error("Vous n'avez pas la permission de supprimer les factures");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("factures")
+      .delete()
+      .eq("id", facture.id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
+    toast.success("Facture supprimée avec succès");
+    fetchFactures();
+  };
+
   const marquerPayee = async (facture: Facture) => {
     // Check permission before action
     const canModify = await checkPermission("modifier_facture");
