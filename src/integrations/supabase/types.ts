@@ -1443,6 +1443,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      notify_departures_today: { Args: never; Returns: undefined }
     }
     Enums: {
       app_permission:
