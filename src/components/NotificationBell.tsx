@@ -57,6 +57,8 @@ export const NotificationBell = () => {
         return "💰";
       case "alerte":
         return "⚠️";
+      case "depart_jour":
+        return "🏠";
       default:
         return "🔔";
     }
