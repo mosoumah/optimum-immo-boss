@@ -1,62 +1,98 @@
 
 
-# Notification quotidienne des départs clients
+# Remise à niveau du Chatbot ImmoPilot — Lecture multi-modules + Actions sécurisées
 
-## Approche
+## Situation actuelle
 
-Créer une fonction SQL `SECURITY DEFINER` qui, chaque jour, identifie les réservations avec départ aujourd'hui et insère une notification pour chaque admin et agent de l'entreprise concernée. Un cron job pg_cron déclenche cette fonction à 8h30 UTC.
+Le chatbot ne dispose que d'un seul outil (`analyze_finances`) qui interroge uniquement les vues dashboard. Il refuse toute question sur les clients, biens, réservations, tâches, etc. Il faut le transformer en assistant immobilier complet tout en maintenant une sécurité stricte.
 
-## Plan
+## Architecture proposée
 
-### Étape 1 — Migration SQL
+Le chatbot backend (`chat-assistant/index.ts`) sera restructuré avec :
+- **Récupération du rôle et des permissions** de l'utilisateur au démarrage de chaque requête
+- **9 outils de lecture** + **2 outils d'écriture** conditionnés par les permissions
+- **Injection des permissions dans le system prompt** pour que l'IA sache ce qu'elle peut/ne peut pas faire
+- **Vérification serveur des permissions** avant chaque exécution d'outil d'écriture
 
-Créer une fonction `notify_departures_today()` :
-- Boucle sur toutes les réservations avec `date_depart = CURRENT_DATE` et `statut IN ('en_cours', 'confirmee', 'en_attente')`
-- Pour chaque réservation, récupère le nom du client, le nom du bien, les coordonnées
-- Insère une notification (type `depart_jour`) pour chaque utilisateur admin/agent de l'entreprise
-- Anti-duplication : vérifie qu'aucune notification `depart_jour` avec `reference_id = reservation.id` n'existe déjà pour aujourd'hui
+### Outils planifiés
 
-### Étape 2 — Cron job pg_cron
+| Outil | Permission requise | Action |
+|-------|-------------------|--------|
+| `search_reservations` | `voir_reservation` | Lire réservations (arrivées/départs/en cours) |
+| `search_properties` | `voir_bien` | Lire biens (disponibles, réservés, etc.) |
+| `search_clients` | `voir_client` | Lire clients (nom, téléphone, email) |
+| `search_devis` | `voir_devis` | Lire devis (statut, montant) |
+| `search_factures` | `voir_facture` | Lire factures (payées, impayées) |
+| `search_revenus` | `voir_revenus` | Lire revenus du mois |
+| `search_depenses` | `voir_depenses` | Lire dépenses |
+| `search_taches` | `voir_tache` | Lire tâches (statut, assignation) |
+| `analyze_finances` | `voir_statistiques_globales` OU `voir_statistiques_personnelles` | Résumé dashboard |
+| `create_facture` | `creer_facture` | Créer une facture (avec confirmation IA) |
+| `create_reservation` | `creer_reservation` | Créer une réservation (avec confirmation IA) |
 
-Planifier `notify_departures_today()` à `30 8 * * *` (8h30 UTC chaque jour).
+### Sécurité des outils
 
-### Étape 3 — Icône notification
+- Chaque outil de lecture filtre par `entreprise_id` (déjà garanti par le Supabase client avec JWT utilisateur + RLS)
+- Pour les agents, les requêtes RLS limitent déjà la visibilité (ex: clients `assigned_to`, tâches `assigned_to`)
+- Les outils d'écriture vérifient la permission via `supabase.rpc("has_permission")` avant insertion
+- Les outils `search_*` utilisent des filtres paramétrés (pas de `.or()` avec input brut) pour éviter l'injection PostgREST
+- Aucun outil pour ajouter revenu/dépense (interdit par les règles)
+- Aucun outil pour modifier des documents
 
-Ajouter le type `depart_jour` dans `getNotificationIcon()` de `NotificationBell.tsx` avec une icône 🚪 ou 🏠 pour distinguer visuellement les départs.
+### Anti-injection de prompt
 
-### Étape 4 — Corriger la politique RLS INSERT notifications
+Le system prompt inclura des instructions explicites pour ignorer toute tentative de manipulation, et les entrées utilisateur passent par l'IA sans accès direct aux requêtes SQL.
 
-La politique actuelle exige `user_id = auth.uid()`, ce qui empêche les triggers et fonctions SECURITY DEFINER d'insérer pour d'autres utilisateurs. Ajouter une politique permissive pour le rôle `postgres` ou supprimer la restriction sur INSERT (les notifications sont protégées en SELECT/UPDATE/DELETE par `user_id = auth.uid()`).
+## Plan d'implémentation
 
-Vérification : la politique INSERT actuelle `(user_id = auth.uid())` bloque déjà les triggers existants (`handle_tache_assigned`, `handle_tache_message_notification`). Ces triggers fonctionnent car ils sont `SECURITY DEFINER` et contournent RLS. La nouvelle fonction sera aussi `SECURITY DEFINER`, donc pas de changement RLS nécessaire.
+### Étape 1 — Réécrire `supabase/functions/chat-assistant/index.ts`
 
-## Détails techniques
+1. **Au démarrage de chaque requête**, après récupération du profil :
+   - Récupérer le rôle via `supabase.rpc("get_user_role", { _user_id: userId })`
+   - Récupérer les permissions via `supabase.rpc("get_user_permissions", { _user_id: userId })`
+   - Bloquer si rôle = `client`
 
-### Fonction SQL `notify_departures_today()`
+2. **Construire dynamiquement la liste d'outils** selon les permissions de l'utilisateur :
+   - Si `voir_reservation` → inclure `search_reservations`
+   - Si `voir_bien` → inclure `search_properties`
+   - etc.
+   - Si `creer_facture` → inclure `create_facture`
+   - Si `creer_reservation` → inclure `create_reservation`
 
-```text
-FOR each reservation WHERE date_depart = CURRENT_DATE
-  AND statut IN ('en_cours','confirmee','en_attente')
-DO
-  client_info = nom + telephone from clients table
-  message = "Départ prévu : {client_nom} - {property_name} | Contact: {telephone}"
-  
-  FOR each admin/agent in entreprise DO
-    INSERT INTO notifications (user_id, type, titre, message, reference_id)
-    -- with anti-duplicate check on (user_id, type, reference_id, created_at::date)
-  END
-END
-```
+3. **Mettre à jour le system prompt** pour :
+   - Lister explicitement les permissions actives
+   - Indiquer le rôle (admin/agent)
+   - Interdire explicitement : ajout revenu, ajout dépense, modification documents
+   - Exiger confirmation avant toute action d'écriture
+   - Inclure les règles anti-manipulation de prompt
 
-### Cron schedule
-`30 8 * * *` — exécution quotidienne à 8h30 UTC.
+4. **Implémenter les fonctions `executeTool`** :
+   - `search_reservations` : `.from("reservations").select("id, client_id, property_name, date_arrivee, date_depart, statut, montant_total, montant_paye")` avec filtres optionnels (date, statut)
+   - `search_properties` : `.from("properties").select(...)` avec filtre statut optionnel
+   - `search_clients` : `.from("clients").select(...)` avec filtre nom via `.ilike("nom", "%query%")`
+   - `search_devis` : `.from("devis").select(...)` avec filtre statut optionnel
+   - `search_factures` : `.from("factures").select(...)` avec filtre statut optionnel
+   - `search_revenus` : `.from("revenus").select(...)` filtrés par mois courant par défaut
+   - `search_depenses` : `.from("depenses").select(...)` filtrés par mois courant
+   - `search_taches` : `.from("taches").select(...)` avec filtre statut
+   - `analyze_finances` : identique à l'actuel (vues dashboard)
+   - `create_facture` : vérification `has_permission` + insertion
+   - `create_reservation` : vérification `has_permission` + insertion
+
+   Toutes les lectures passent par le Supabase client authentifié (RLS appliquée automatiquement).
+
+### Étape 2 — Aucun changement frontend
+
+Le frontend (`AIChatBot.tsx`, `useChatAssistant.tsx`, `ChatMessage.tsx`) reste identique. Les suggestions dans l'UI (« Créer un client », « Biens disponibles ») fonctionneront naturellement puisque le backend les supportera.
 
 ## Fichiers impactés
-- 1 migration SQL (fonction + cron job)
-- `src/components/NotificationBell.tsx` — ajout icône pour type `depart_jour`
+- `supabase/functions/chat-assistant/index.ts` — réécriture complète de la logique outils + prompt
 
 ## Ce qui ne change PAS
 - Aucun changement de design
-- Aucune nouvelle page ou composant
+- Aucun changement UI
+- Aucun changement dashboard
 - Aucun changement aux autres modules
+- Aucune migration SQL (les tables et RLS existent déjà)
+- Aucun nouveau fichier frontend
 
