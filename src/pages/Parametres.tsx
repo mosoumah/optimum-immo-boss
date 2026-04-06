@@ -37,9 +37,11 @@ const Parametres = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  const { loading: authLoading } = useAuth();
+
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return;
+      if (!user || authLoading) return;
 
       const { data: profileData } = await supabase
         .from("profiles")
