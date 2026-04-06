@@ -104,16 +104,19 @@ const Dashboard = () => {
     }
   }, [entrepriseId]);
 
+  const { loading: authLoading } = useAuth();
+
   useEffect(() => {
-    if (!roleLoading && user) {
+    if (authLoading || roleLoading) return;
+    if (user) {
       fetchProfileAndClients().catch((err) => {
         console.error("Dashboard data fetch error:", err);
         setIsLoading(false);
       });
-    } else if (!user && !roleLoading) {
+    } else {
       setIsLoading(false);
     }
-  }, [user, roleLoading]);
+  }, [user, roleLoading, authLoading]);
 
 
   const handleSignOut = async () => {
