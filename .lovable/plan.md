@@ -1,98 +1,74 @@
 
+# Correction ciblée — boucle de connexion / retour au formulaire
 
-# Remise à niveau du Chatbot ImmoPilot — Lecture multi-modules + Actions sécurisées
+## Diagnostic retenu
+Le problème le plus probable est un **race condition dans `AuthProvider`** :
 
-## Situation actuelle
+- `onAuthStateChange(...)` met bien l’utilisateur en session après le login
+- mais le `getSession()` lancé juste après au montage peut revenir avec un **ancien état `null`**
+- ce résultat tardif réécrit `user/session` à `null`
+- les routes protégées voient alors “non authentifié” et renvoient vers `/connexion`
 
-Le chatbot ne dispose que d'un seul outil (`analyze_finances`) qui interroge uniquement les vues dashboard. Il refuse toute question sur les clients, biens, réservations, tâches, etc. Il faut le transformer en assistant immobilier complet tout en maintenant une sécurité stricte.
+Les indices vont dans ce sens :
+- les RPC `get_user_role` et `get_user_entreprise_id` répondent correctement
+- le dashboard semble commencer à charger
+- puis l’application retombe sur la page de connexion
 
-## Architecture proposée
+## Plan d’implémentation
 
-Le chatbot backend (`chat-assistant/index.ts`) sera restructuré avec :
-- **Récupération du rôle et des permissions** de l'utilisateur au démarrage de chaque requête
-- **9 outils de lecture** + **2 outils d'écriture** conditionnés par les permissions
-- **Injection des permissions dans le system prompt** pour que l'IA sache ce qu'elle peut/ne peut pas faire
-- **Vérification serveur des permissions** avant chaque exécution d'outil d'écriture
+### 1. Fiabiliser l’initialisation auth dans `src/hooks/useAuth.tsx`
+Remplacer la logique actuelle par une version anti-race :
 
-### Outils planifiés
+- centraliser la mise à jour `session/user/loading` dans une seule fonction
+- utiliser un `ref` du type `hasResolvedInitialAuth`
+- laisser **le premier résultat valide** (`INITIAL_SESSION` ou `getSession`) initialiser l’état
+- empêcher un `getSession()` tardif d’écraser un état déjà mis à jour par `SIGNED_IN`
+- conserver l’écoute `onAuthStateChange` pour les changements futurs
+- ne plus faire de double écrasement concurrent sur `user`
 
-| Outil | Permission requise | Action |
-|-------|-------------------|--------|
-| `search_reservations` | `voir_reservation` | Lire réservations (arrivées/départs/en cours) |
-| `search_properties` | `voir_bien` | Lire biens (disponibles, réservés, etc.) |
-| `search_clients` | `voir_client` | Lire clients (nom, téléphone, email) |
-| `search_devis` | `voir_devis` | Lire devis (statut, montant) |
-| `search_factures` | `voir_facture` | Lire factures (payées, impayées) |
-| `search_revenus` | `voir_revenus` | Lire revenus du mois |
-| `search_depenses` | `voir_depenses` | Lire dépenses |
-| `search_taches` | `voir_tache` | Lire tâches (statut, assignation) |
-| `analyze_finances` | `voir_statistiques_globales` OU `voir_statistiques_personnelles` | Résumé dashboard |
-| `create_facture` | `creer_facture` | Créer une facture (avec confirmation IA) |
-| `create_reservation` | `creer_reservation` | Créer une réservation (avec confirmation IA) |
+Objectif : après un login réussi, la session ne peut plus repasser à `null` à cause d’un retour asynchrone ancien.
 
-### Sécurité des outils
+### 2. Verrouiller le comportement de chargement auth
+Toujours dans `useAuth.tsx` :
 
-- Chaque outil de lecture filtre par `entreprise_id` (déjà garanti par le Supabase client avec JWT utilisateur + RLS)
-- Pour les agents, les requêtes RLS limitent déjà la visibilité (ex: clients `assigned_to`, tâches `assigned_to`)
-- Les outils d'écriture vérifient la permission via `supabase.rpc("has_permission")` avant insertion
-- Les outils `search_*` utilisent des filtres paramétrés (pas de `.or()` avec input brut) pour éviter l'injection PostgREST
-- Aucun outil pour ajouter revenu/dépense (interdit par les règles)
-- Aucun outil pour modifier des documents
+- garder `loading=true` tant que l’état initial n’est pas résolu proprement
+- éviter qu’une route protégée interprète trop tôt l’utilisateur comme “déconnecté”
 
-### Anti-injection de prompt
+Objectif : supprimer les redirections prématurées vers `/connexion`.
 
-Le system prompt inclura des instructions explicites pour ignorer toute tentative de manipulation, et les entrées utilisateur passent par l'IA sans accès direct aux requêtes SQL.
+### 3. Garder `Connexion.tsx` simple et non destructive
+Dans `src/pages/Connexion.tsx` :
 
-## Plan d'implémentation
+- conserver un seul flux de redirection
+- ne naviguer vers `/dashboard` qu’après disponibilité stable de `user`
+- ne réinitialiser le verrou de redirection qu’en cas de vrai échec
+- ne pas ajouter d’autre logique de session ici
 
-### Étape 1 — Réécrire `supabase/functions/chat-assistant/index.ts`
+Objectif : la page de connexion reste un point d’entrée, pas un second gestionnaire d’état auth.
 
-1. **Au démarrage de chaque requête**, après récupération du profil :
-   - Récupérer le rôle via `supabase.rpc("get_user_role", { _user_id: userId })`
-   - Récupérer les permissions via `supabase.rpc("get_user_permissions", { _user_id: userId })`
-   - Bloquer si rôle = `client`
+### 4. Durcir les écrans qui lisent le profil utilisateur
+Dans :
+- `src/pages/Dashboard.tsx`
+- `src/pages/Parametres.tsx`
 
-2. **Construire dynamiquement la liste d'outils** selon les permissions de l'utilisateur :
-   - Si `voir_reservation` → inclure `search_reservations`
-   - Si `voir_bien` → inclure `search_properties`
-   - etc.
-   - Si `creer_facture` → inclure `create_facture`
-   - Si `creer_reservation` → inclure `create_reservation`
+Adapter les chargements dépendants du profil pour qu’ils ne deviennent pas bloquants pendant la restauration de session :
 
-3. **Mettre à jour le system prompt** pour :
-   - Lister explicitement les permissions actives
-   - Indiquer le rôle (admin/agent)
-   - Interdire explicitement : ajout revenu, ajout dépense, modification documents
-   - Exiger confirmation avant toute action d'écriture
-   - Inclure les règles anti-manipulation de prompt
+- ne lancer les lectures qu’une fois l’auth réellement prête
+- traiter explicitement le cas `profileData === null` sans casser le flux
+- éviter qu’un écran donne l’impression d’une déconnexion alors qu’il s’agit d’un chargement incomplet
 
-4. **Implémenter les fonctions `executeTool`** :
-   - `search_reservations` : `.from("reservations").select("id, client_id, property_name, date_arrivee, date_depart, statut, montant_total, montant_paye")` avec filtres optionnels (date, statut)
-   - `search_properties` : `.from("properties").select(...)` avec filtre statut optionnel
-   - `search_clients` : `.from("clients").select(...)` avec filtre nom via `.ilike("nom", "%query%")`
-   - `search_devis` : `.from("devis").select(...)` avec filtre statut optionnel
-   - `search_factures` : `.from("factures").select(...)` avec filtre statut optionnel
-   - `search_revenus` : `.from("revenus").select(...)` filtrés par mois courant par défaut
-   - `search_depenses` : `.from("depenses").select(...)` filtrés par mois courant
-   - `search_taches` : `.from("taches").select(...)` avec filtre statut
-   - `analyze_finances` : identique à l'actuel (vues dashboard)
-   - `create_facture` : vérification `has_permission` + insertion
-   - `create_reservation` : vérification `has_permission` + insertion
-
-   Toutes les lectures passent par le Supabase client authentifié (RLS appliquée automatiquement).
-
-### Étape 2 — Aucun changement frontend
-
-Le frontend (`AIChatBot.tsx`, `useChatAssistant.tsx`, `ChatMessage.tsx`) reste identique. Les suggestions dans l'UI (« Créer un client », « Biens disponibles ») fonctionneront naturellement puisque le backend les supportera.
+Objectif : supprimer les effets secondaires visibles après connexion.
 
 ## Fichiers impactés
-- `supabase/functions/chat-assistant/index.ts` — réécriture complète de la logique outils + prompt
+- `src/hooks/useAuth.tsx` — correction principale
+- `src/pages/Connexion.tsx` — stabilisation du flux de redirection
+- `src/pages/Dashboard.tsx` — durcissement du chargement profil
+- `src/pages/Parametres.tsx` — durcissement du chargement profil
 
-## Ce qui ne change PAS
-- Aucun changement de design
-- Aucun changement UI
-- Aucun changement dashboard
-- Aucun changement aux autres modules
-- Aucune migration SQL (les tables et RLS existent déjà)
-- Aucun nouveau fichier frontend
+## Résultat attendu
+Après correction :
 
+- un login valide garde bien la session active
+- l’utilisateur arrive sur `/dashboard` sans rebond vers `/connexion`
+- les routes protégées n’interprètent plus un état intermédiaire comme une déconnexion
+- le problème est corrigé sans toucher au design ni aux autres modules
