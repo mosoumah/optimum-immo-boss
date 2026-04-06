@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -18,17 +18,22 @@ const Connexion = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
+  const redirectingRef = useRef(false);
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  // Redirect if already logged in
+  // Single redirect logic - only via useEffect watching user state
   useEffect(() => {
-    if (user) {
-      const checkRoleAndRedirect = async () => {
+    if (authLoading || !user || redirectingRef.current) return;
+    
+    redirectingRef.current = true;
+    
+    const checkRoleAndRedirect = async () => {
+      try {
         const { data } = await supabase.rpc("get_user_role", { _user_id: user.id });
         if (data === "client") {
           await supabase.auth.signOut();
@@ -37,13 +42,16 @@ const Connexion = () => {
             description: "Votre compte n'a pas accès à cette application.",
             variant: "destructive",
           });
+          redirectingRef.current = false;
           return;
         }
-        navigate("/dashboard");
-      };
-      checkRoleAndRedirect();
-    }
-  }, [user, navigate]);
+        navigate("/dashboard", { replace: true });
+      } catch {
+        redirectingRef.current = false;
+      }
+    };
+    checkRoleAndRedirect();
+  }, [user, authLoading, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,22 +77,7 @@ const Connexion = () => {
     });
 
     setIsLoading(false);
-    // Role-based redirect - block clients
-    const currentUser = (await supabase.auth.getUser()).data.user;
-    if (currentUser) {
-      const { data: role } = await supabase.rpc("get_user_role", { _user_id: currentUser.id });
-      if (role === "client") {
-        await supabase.auth.signOut();
-        toast({
-          title: "Accès refusé",
-          description: "Votre compte n'a pas accès à cette application.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-    }
-    navigate("/dashboard");
+    // Redirect is handled by the useEffect above when user state updates
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
