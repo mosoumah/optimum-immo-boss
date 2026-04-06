@@ -15,7 +15,7 @@ interface UseUserRoleReturn {
 }
 
 export const useUserRole = (): UseUserRoleReturn => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -31,20 +31,16 @@ export const useUserRole = (): UseUserRoleReturn => {
     try {
       setError(null);
       
-      // Fetch user role - with .limit(1) for extra safety
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
+      // Use SECURITY DEFINER RPC to bypass RLS timing issues
+      const { data, error: rpcError } = await supabase.rpc("get_user_role", {
+        _user_id: user.id,
+      });
 
-      if (roleError) {
-        throw roleError;
+      if (rpcError) {
+        throw rpcError;
       }
 
-      const userRole = roleData?.role as AppRole | null;
-      setRole(userRole);
+      setRole((data as AppRole) || null);
     } catch (err) {
       console.error("Error fetching user role:", err);
       setError(err as Error);
@@ -54,8 +50,10 @@ export const useUserRole = (): UseUserRoleReturn => {
   }, [user]);
 
   useEffect(() => {
+    // Don't fetch until auth is ready
+    if (authLoading) return;
     fetchRole();
-  }, [fetchRole]);
+  }, [fetchRole, authLoading]);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -64,7 +62,7 @@ export const useUserRole = (): UseUserRoleReturn => {
 
   return {
     role,
-    loading,
+    loading: loading || authLoading,
     error,
     isAdmin: role === "admin",
     isAgent: role === "agent",

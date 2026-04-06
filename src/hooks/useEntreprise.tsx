@@ -3,29 +3,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export const useEntreprise = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+    
     const fetchEntrepriseId = async () => {
       if (!user) {
+        setEntrepriseId(null);
         setIsLoading(false);
         return;
       }
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
+      // Use SECURITY DEFINER RPC to bypass RLS timing issues
+      const { data, error } = await supabase.rpc("get_user_entreprise_id", {
+        _user_id: user.id,
+      });
 
-      setEntrepriseId(profileData?.entreprise_id || null);
+      if (!error && data) {
+        setEntrepriseId(data as string);
+      } else {
+        setEntrepriseId(null);
+      }
       setIsLoading(false);
     };
 
     fetchEntrepriseId();
-  }, [user]);
+  }, [user, authLoading]);
 
-  return { entrepriseId, isLoading };
+  return { entrepriseId, isLoading: isLoading || authLoading };
 };
