@@ -1412,6 +1412,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_current_user_context: { Args: never; Returns: Json }
       get_top_properties: {
         Args: { _entreprise_id: string }
         Returns: {

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isReady: boolean;
   signUp: (email: string, password: string, nom: string, entrepriseNom: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -17,44 +18,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const initialResolved = useRef(false);
-
-  const applySession = useCallback((s: Session | null) => {
-    setSession(s);
-    setUser(s?.user ?? null);
-  }, []);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 1. Listen for auth changes FIRST
+    let mounted = true;
+
+    // 1. Restore session from storage first — this is the source of truth
+    supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
+      if (!mounted) return;
+      setSession(restoredSession);
+      setUser(restoredSession?.user ?? null);
+      setLoading(false);
+      setIsReady(true);
+    });
+
+    // 2. Listen for subsequent auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        // Mark as resolved on any auth event
-        if (!initialResolved.current) {
-          initialResolved.current = true;
-          applySession(currentSession);
-          setLoading(false);
-          return;
-        }
-        // For subsequent events, always apply
-        applySession(currentSession);
+      (_event, currentSession) => {
+        if (!mounted) return;
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        // Safety net: if getSession hasn't resolved yet, mark ready now
+        setLoading(false);
+        setIsReady(true);
       }
     );
 
-    // 2. Fallback: if onAuthStateChange hasn't fired within 1s, use getSession
-    const fallbackTimer = setTimeout(async () => {
-      if (!initialResolved.current) {
-        initialResolved.current = true;
-        const { data: { session: s } } = await supabase.auth.getSession();
-        applySession(s);
-        setLoading(false);
-      }
-    }, 1000);
-
     return () => {
-      clearTimeout(fallbackTimer);
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [applySession]);
+  }, []);
 
   const signUp = async (email: string, password: string, nom: string, entrepriseNom: string) => {
     try {
@@ -91,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isReady, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

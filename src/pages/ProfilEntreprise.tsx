@@ -34,12 +34,9 @@ const ProfilEntreprise = () => {
     const fetchEntreprise = async () => {
       if (!user) return;
 
-      // Get the user's profile to find entreprise_id
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data: ctx } = await supabase.rpc("get_current_user_context");
+      const ctxObj = ctx as Record<string, unknown> | null;
+      const profile = ctxObj ? { entreprise_id: ctxObj.entreprise_id as string | null } : null;
 
       if (profile?.entreprise_id) {
         setEntrepriseId(profile.entreprise_id);
@@ -140,14 +137,7 @@ const ProfilEntreprise = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Get the user's entreprise_id
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("entreprise_id")
-      .eq("id", user?.id)
-      .maybeSingle();
-
-    if (!profile?.entreprise_id) {
+    if (!entrepriseId) {
       toast({
         title: "Erreur",
         description: "Impossible de trouver votre entreprise.",
@@ -166,7 +156,7 @@ const ProfilEntreprise = () => {
         adresse: formData.adresse,
         signature: formData.signature,
       })
-      .eq("id", profile.entreprise_id);
+      .eq("id", entrepriseId);
 
     if (error) {
       toast({

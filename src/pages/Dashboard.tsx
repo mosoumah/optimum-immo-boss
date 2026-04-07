@@ -74,11 +74,9 @@ const Dashboard = () => {
   const fetchProfileAndClients = async () => {
     if (!user) return;
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("nom, entreprise_id")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: ctx } = await supabase.rpc("get_current_user_context");
+    const ctxObj = ctx as Record<string, unknown> | null;
+    const profileData = ctxObj ? { nom: ctxObj.nom as string, entreprise_id: ctxObj.entreprise_id as string | null } : null;
 
     if (profileData) {
       setProfile({ nom: profileData.nom, entreprise_id: profileData.entreprise_id });
@@ -104,10 +102,8 @@ const Dashboard = () => {
     }
   }, [entrepriseId]);
 
-  const { loading: authLoading } = useAuth();
-
   useEffect(() => {
-    if (authLoading || roleLoading) return;
+    if (roleLoading) return;
     if (user) {
       fetchProfileAndClients().catch((err) => {
         console.error("Dashboard data fetch error:", err);
@@ -116,7 +112,7 @@ const Dashboard = () => {
     } else {
       setIsLoading(false);
     }
-  }, [user, roleLoading, authLoading]);
+  }, [user, roleLoading]);
 
 
   const handleSignOut = async () => {

@@ -37,17 +37,13 @@ const Parametres = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { loading: authLoading } = useAuth();
-
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || authLoading) return;
+      if (!user) return;
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("nom, email, entreprise_id")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data: ctx } = await supabase.rpc("get_current_user_context");
+      const ctxObj = ctx as Record<string, unknown> | null;
+      const profileData = ctxObj ? { nom: ctxObj.nom as string, email: ctxObj.email as string, entreprise_id: ctxObj.entreprise_id as string | null } : null;
 
       if (profileData) {
         setProfile({ nom: profileData.nom, email: profileData.email });

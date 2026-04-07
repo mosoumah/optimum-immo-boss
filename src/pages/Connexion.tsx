@@ -18,7 +18,7 @@ const Connexion = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn, user, loading: authLoading } = useAuth();
+  const { signIn, user, isReady } = useAuth();
   const redirectingRef = useRef(false);
 
   const [formData, setFormData] = useState({
@@ -26,9 +26,8 @@ const Connexion = () => {
     password: "",
   });
 
-  // Single redirect logic - only via useEffect watching user state
   useEffect(() => {
-    if (authLoading || !user || redirectingRef.current) return;
+    if (!isReady || !user || redirectingRef.current) return;
     
     redirectingRef.current = true;
     
@@ -51,7 +50,7 @@ const Connexion = () => {
       }
     };
     checkRoleAndRedirect();
-  }, [user, authLoading, navigate, toast]);
+  }, [user, isReady, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
