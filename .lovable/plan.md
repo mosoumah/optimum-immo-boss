@@ -1,74 +1,72 @@
 
-# Correction ciblée — boucle de connexion / retour au formulaire
-
 ## Diagnostic retenu
-Le problème le plus probable est un **race condition dans `AuthProvider`** :
 
-- `onAuthStateChange(...)` met bien l’utilisateur en session après le login
-- mais le `getSession()` lancé juste après au montage peut revenir avec un **ancien état `null`**
-- ce résultat tardif réécrit `user/session` à `null`
-- les routes protégées voient alors “non authentifié” et renvoient vers `/connexion`
+Le problème ne vient ni de l’email/mot de passe, ni du rôle utilisateur.
 
-Les indices vont dans ce sens :
-- les RPC `get_user_role` et `get_user_entreprise_id` répondent correctement
-- le dashboard semble commencer à charger
-- puis l’application retombe sur la page de connexion
+Les indices sont clairs :
+- les RPC `get_user_role` et `get_user_entreprise_id` répondent bien (`admin` + entreprise trouvée)
+- en revanche, les requêtes vers `profiles` partent encore comme **anonymes** juste après connexion
+- les logs auth montrent une **tempête de refresh token** avec `429 Request rate limit reached`
+- `useAuth.tsx` considère actuellement **n’importe quel premier event auth** comme définitif, y compris un `INITIAL_SESSION` trop tôt / `null`
 
-## Plan d’implémentation
+Résultat : l’application croit être connectée côté React pendant qu’une partie des requêtes backend part encore sans vraie session stabilisée, puis la route protégée retombe sur `/connexion`.
 
-### 1. Fiabiliser l’initialisation auth dans `src/hooks/useAuth.tsx`
-Remplacer la logique actuelle par une version anti-race :
+## Plan de correction définitive
 
-- centraliser la mise à jour `session/user/loading` dans une seule fonction
-- utiliser un `ref` du type `hasResolvedInitialAuth`
-- laisser **le premier résultat valide** (`INITIAL_SESSION` ou `getSession`) initialiser l’état
-- empêcher un `getSession()` tardif d’écraser un état déjà mis à jour par `SIGNED_IN`
-- conserver l’écoute `onAuthStateChange` pour les changements futurs
-- ne plus faire de double écrasement concurrent sur `user`
+### 1. Refaire proprement l’initialisation auth dans `src/hooks/useAuth.tsx`
+- ne plus valider l’état initial sur “n’importe quel event”
+- enregistrer `onAuthStateChange` d’abord
+- lancer ensuite une initialisation explicite via `getSession()`
+- ne considérer comme état final initial que :
+  - le résultat de `getSession()`
+  - ou un vrai event `SIGNED_IN` / `SIGNED_OUT` / `TOKEN_REFRESHED`
+- empêcher qu’un état `null` précoce ou tardif écrase une session valide
 
-Objectif : après un login réussi, la session ne peut plus repasser à `null` à cause d’un retour asynchrone ancien.
+Objectif : supprimer la course critique qui laisse partir des requêtes anonymes après connexion.
 
-### 2. Verrouiller le comportement de chargement auth
-Toujours dans `useAuth.tsx` :
+### 2. Stabiliser la redirection de `src/pages/Connexion.tsx`
+- ne rediriger vers `/dashboard` qu’une fois la session réellement prête
+- baser la redirection sur un état auth stabilisé, pas seulement sur `user`
+- garder un seul flux de redirection
+- éviter toute nouvelle boucle ou double tentative
 
-- garder `loading=true` tant que l’état initial n’est pas résolu proprement
-- éviter qu’une route protégée interprète trop tôt l’utilisateur comme “déconnecté”
+Objectif : empêcher le rebond login → dashboard → login.
 
-Objectif : supprimer les redirections prématurées vers `/connexion`.
+### 3. Supprimer la dépendance fragile aux lectures directes de `profiles` au démarrage
+Le réseau montre que les lectures directes de `profiles` sont la zone fragile.
 
-### 3. Garder `Connexion.tsx` simple et non destructive
-Dans `src/pages/Connexion.tsx` :
+Je prévois de :
+- créer une fonction backend sécurisée du type `get_current_user_context()` (basée sur `auth.uid()`, sans `_user_id` passé depuis le client)
+- y récupérer `nom`, `email`, `entreprise_id`, éventuellement `role`
+- remplacer les lectures directes de `profiles` dans :
+  - `src/pages/Dashboard.tsx`
+  - `src/pages/Parametres.tsx`
+  - `src/pages/ProfilEntreprise.tsx`
 
-- conserver un seul flux de redirection
-- ne naviguer vers `/dashboard` qu’après disponibilité stable de `user`
-- ne réinitialiser le verrou de redirection qu’en cas de vrai échec
-- ne pas ajouter d’autre logique de session ici
+Objectif : fiabiliser le post-login immédiat et ne plus dépendre d’une requête RLS sensible au timing.
 
-Objectif : la page de connexion reste un point d’entrée, pas un second gestionnaire d’état auth.
+### 4. Réduire les appels redondants qui aggravent l’instabilité
+Aujourd’hui plusieurs hooks/pages redemandent très vite rôle + entreprise au montage.
 
-### 4. Durcir les écrans qui lisent le profil utilisateur
-Dans :
-- `src/pages/Dashboard.tsx`
-- `src/pages/Parametres.tsx`
+Je vais :
+- centraliser davantage le contexte utilisateur connecté
+- éviter les appels simultanés inutiles au premier rendu
+- conserver les hooks existants, mais les faire dépendre d’un état auth déjà prêt
 
-Adapter les chargements dépendants du profil pour qu’ils ne deviennent pas bloquants pendant la restauration de session :
-
-- ne lancer les lectures qu’une fois l’auth réellement prête
-- traiter explicitement le cas `profileData === null` sans casser le flux
-- éviter qu’un écran donne l’impression d’une déconnexion alors qu’il s’agit d’un chargement incomplet
-
-Objectif : supprimer les effets secondaires visibles après connexion.
+Objectif : éliminer la tempête de requêtes et réduire le risque de 429 côté auth.
 
 ## Fichiers impactés
-- `src/hooks/useAuth.tsx` — correction principale
-- `src/pages/Connexion.tsx` — stabilisation du flux de redirection
-- `src/pages/Dashboard.tsx` — durcissement du chargement profil
-- `src/pages/Parametres.tsx` — durcissement du chargement profil
+- `src/hooks/useAuth.tsx`
+- `src/pages/Connexion.tsx`
+- `src/pages/Dashboard.tsx`
+- `src/pages/Parametres.tsx`
+- `src/pages/ProfilEntreprise.tsx`
+- 1 migration SQL pour une fonction backend sécurisée de contexte utilisateur
 
 ## Résultat attendu
-Après correction :
-
-- un login valide garde bien la session active
-- l’utilisateur arrive sur `/dashboard` sans rebond vers `/connexion`
-- les routes protégées n’interprètent plus un état intermédiaire comme une déconnexion
-- le problème est corrigé sans toucher au design ni aux autres modules
+Après cette correction :
+- la session se stabilise correctement après connexion
+- les requêtes protégées ne partent plus en mode anonyme
+- l’utilisateur reste sur `/dashboard`
+- la boucle de retour vers `/connexion` disparaît durablement
+- on corrige aussi la fragilité structurelle actuelle, pas seulement le symptôme
