@@ -20,7 +20,7 @@ export const RoleProtectedRoute = ({
   allowedRoles,
   redirectTo = "/"
 }: RoleProtectedRouteProps) => {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, isReady, signOut } = useAuth();
   const { role, loading: roleLoading, refetch } = useUserRole();
   const location = useLocation();
   
@@ -69,7 +69,7 @@ export const RoleProtectedRoute = ({
   }, [user, authLoading, roleLoading, role, bootstrapAttempted, refetch]);
 
   // Loading state
-  if (authLoading || roleLoading) {
+  if (authLoading || !isReady || roleLoading) {
     return (
       <div className="h-screen flex items-center justify-center overflow-hidden">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
