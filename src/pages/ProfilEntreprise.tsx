@@ -35,7 +35,8 @@ const ProfilEntreprise = () => {
       if (!user) return;
 
       const { data: ctx } = await supabase.rpc("get_current_user_context");
-      const profile = ctx ? { entreprise_id: ctx.entreprise_id as string | null } : null;
+      const ctxObj = ctx as Record<string, unknown> | null;
+      const profile = ctxObj ? { entreprise_id: ctxObj.entreprise_id as string | null } : null;
 
       if (profile?.entreprise_id) {
         setEntrepriseId(profile.entreprise_id);
