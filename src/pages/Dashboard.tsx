@@ -74,11 +74,8 @@ const Dashboard = () => {
   const fetchProfileAndClients = async () => {
     if (!user) return;
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("nom, entreprise_id")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: ctx } = await supabase.rpc("get_current_user_context");
+    const profileData = ctx ? { nom: ctx.nom as string, entreprise_id: ctx.entreprise_id as string | null } : null;
 
     if (profileData) {
       setProfile({ nom: profileData.nom, entreprise_id: profileData.entreprise_id });
