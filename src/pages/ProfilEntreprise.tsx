@@ -137,14 +137,7 @@ const ProfilEntreprise = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Get the user's entreprise_id
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("entreprise_id")
-      .eq("id", user?.id)
-      .maybeSingle();
-
-    if (!profile?.entreprise_id) {
+    if (!entrepriseId) {
       toast({
         title: "Erreur",
         description: "Impossible de trouver votre entreprise.",
@@ -163,7 +156,7 @@ const ProfilEntreprise = () => {
         adresse: formData.adresse,
         signature: formData.signature,
       })
-      .eq("id", profile.entreprise_id);
+      .eq("id", entrepriseId);
 
     if (error) {
       toast({
