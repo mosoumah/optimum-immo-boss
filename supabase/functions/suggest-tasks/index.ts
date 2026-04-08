@@ -37,7 +37,9 @@ serve(async (req) => {
       });
     }
 
-    const { context, existingTasks } = await req.json();
+    const body = await req.json();
+    const context = typeof body.context === "string" ? body.context.slice(0, 2000) : "";
+    const existingTasks = Array.isArray(body.existingTasks) ? body.existingTasks.slice(0, 50) : [];
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

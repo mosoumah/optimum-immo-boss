@@ -121,13 +121,18 @@ serve(async (req) => {
       numeroDevis
     } = body;
 
-    if (!clientNom || typeof clientNom !== "string" || !clientNom.trim()) {
-      return new Response(JSON.stringify({ error: "Le nom du client est requis" }), {
+    if (!clientNom || typeof clientNom !== "string" || !clientNom.trim() || clientNom.length > 200) {
+      return new Response(JSON.stringify({ error: "Le nom du client est requis (max 200 caractères)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!montant || isNaN(Number(montant)) || Number(montant) <= 0) {
-      return new Response(JSON.stringify({ error: "Le montant doit être un nombre positif" }), {
+    if (!montant || isNaN(Number(montant)) || Number(montant) <= 0 || Number(montant) > 999999999999) {
+      return new Response(JSON.stringify({ error: "Le montant doit être un nombre positif valide" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (description && (typeof description !== "string" || description.length > 5000)) {
+      return new Response(JSON.stringify({ error: "Description trop longue (max 5000 caractères)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
