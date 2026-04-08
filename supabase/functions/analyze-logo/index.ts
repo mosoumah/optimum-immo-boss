@@ -39,14 +39,32 @@ serve(async (req) => {
 
     const { logoUrl } = await req.json();
     
-    if (!logoUrl) {
+    if (!logoUrl || typeof logoUrl !== "string") {
       return new Response(
         JSON.stringify({ error: "Logo URL is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Analyzing logo:", logoUrl);
+    // Validate URL format
+    try {
+      const parsed = new URL(logoUrl);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        throw new Error("Invalid protocol");
+      }
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid logo URL format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (logoUrl.length > 2048) {
+      return new Response(
+        JSON.stringify({ error: "URL too long" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
