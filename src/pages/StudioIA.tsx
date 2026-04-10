@@ -28,6 +28,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { PermissionGate } from "@/components/PermissionGate";
+import type { Database } from "@/integrations/supabase/types";
+
+type AiGeneratedImage = Database["public"]["Tables"]["ai_generated_images"]["Row"];
+type RedesignRequest = Database["public"]["Tables"]["redesign_requests"]["Row"];
 
 const PLAN_LIMITS: Record<string, number> = { standard: 10, pro: 50, premium: 100 };
 
@@ -56,7 +60,7 @@ const StudioIA = () => {
   const [format, setFormat] = useState("instagram_post");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [gallery, setGallery] = useState<any[]>([]);
+  const [gallery, setGallery] = useState<AiGeneratedImage[]>([]);
 
   // Tab 2 state
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -64,7 +68,7 @@ const StudioIA = () => {
   const [instruction, setInstruction] = useState("");
   const [redesignResult, setRedesignResult] = useState<string | null>(null);
   const [isRedesigning, setIsRedesigning] = useState(false);
-  const [redesignGallery, setRedesignGallery] = useState<any[]>([]);
+  const [redesignGallery, setRedesignGallery] = useState<RedesignRequest[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch entreprise details
@@ -151,9 +155,9 @@ const StudioIA = () => {
       if (data.quota) setQuota(data.quota);
       fetchGallery();
       toast({ title: "Visuel créé !", description: "Votre visuel a été généré avec succès." });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast({ title: "Erreur", description: err.message || "Impossible de générer le visuel.", variant: "destructive" });
+      toast({ title: "Erreur", description: err instanceof Error ? err.message : "Impossible de générer le visuel.", variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
@@ -204,9 +208,9 @@ const StudioIA = () => {
       if (data.quota) setQuota(data.quota);
       fetchRedesignGallery();
       toast({ title: "Redesign terminé !", description: "La modification a été appliquée." });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast({ title: "Erreur", description: err.message || "Impossible de modifier l'image.", variant: "destructive" });
+      toast({ title: "Erreur", description: err instanceof Error ? err.message : "Impossible de modifier l'image.", variant: "destructive" });
     } finally {
       setIsRedesigning(false);
     }

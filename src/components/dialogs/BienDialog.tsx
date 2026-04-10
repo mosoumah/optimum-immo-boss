@@ -11,10 +11,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ImagePlus, X } from "lucide-react";
 
+import type { Database } from "@/integrations/supabase/types";
+
+type Property = Database["public"]["Tables"]["properties"]["Row"];
+
 interface BienDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  property?: any | null;
+  property?: Property | null;
   onSuccess: () => void;
 }
 
@@ -170,8 +174,8 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
       toast({ title: "Succès", description: property ? "Bien modifié" : "Bien créé" });
       onOpenChange(false);
       onSuccess();
-    } catch (error: any) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erreur", description: error instanceof Error ? error.message : "Une erreur est survenue", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }

@@ -1,11 +1,8 @@
+import { getCorsHeaders } from '../_shared/cors.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+;
 
 const PLAN_LIMITS: Record<string, number> = {
   standard: 10,
@@ -15,7 +12,7 @@ const PLAN_LIMITS: Record<string, number> = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -23,7 +20,7 @@ serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -46,7 +43,7 @@ serve(async (req) => {
     if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
     const userId = claimsData.claims.sub as string;
@@ -59,7 +56,7 @@ serve(async (req) => {
     if (!profile?.entreprise_id) {
       return new Response(JSON.stringify({ error: "Profil non trouvé" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
     const entrepriseId = profile.entreprise_id;
@@ -97,7 +94,7 @@ serve(async (req) => {
           message: `Vous avez atteint votre limite de ${limit} générations/mois (plan ${quota.plan}). Passez à un plan supérieur.`,
           quota: { used: quota.generations_used, limit, plan: quota.plan },
         }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -150,13 +147,13 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
         if (aiResponse.status === 429) {
           return new Response(JSON.stringify({ error: "Trop de requêtes, réessayez dans quelques instants." }), {
             status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         if (aiResponse.status === 402) {
           return new Response(JSON.stringify({ error: "Crédits IA insuffisants." }), {
             status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         const errText = await aiResponse.text();
@@ -204,7 +201,7 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
       if (!original_image_url || !instruction) {
         return new Response(JSON.stringify({ error: "Image et instruction requises" }), {
           status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         });
       }
 
@@ -249,12 +246,12 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
         await supabaseAuth.from("redesign_requests").update({ status: "failed" }).eq("id", request.id);
         if (aiResponse.status === 429) {
           return new Response(JSON.stringify({ error: "Trop de requêtes, réessayez dans quelques instants." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 429, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         if (aiResponse.status === 402) {
           return new Response(JSON.stringify({ error: "Crédits IA insuffisants." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 402, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         throw new Error(`AI gateway error: ${aiResponse.status}`);
@@ -288,7 +285,7 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
     } else {
       return new Response(JSON.stringify({ error: "Type invalide. Utilisez 'visual' ou 'redesign'." }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -304,13 +301,13 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
         image_url: resultImageUrl,
         quota: { used: quota.generations_used + 1, limit, plan: quota.plan },
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("studio-ia-generate error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });

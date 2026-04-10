@@ -78,7 +78,7 @@ export const QuickTaskDialog = ({
       setDate(new Date());
       onSuccess();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Erreur lors de la création de la tâche");
       console.error(error);
     } finally {

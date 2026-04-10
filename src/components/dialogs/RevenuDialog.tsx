@@ -44,7 +44,7 @@ export const RevenuDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Re
       montant: parseFloat(montant),
       date: format(date, "yyyy-MM-dd"),
       entreprise_id: entrepriseId,
-    } as any);
+    });
 
     setIsLoading(false);
 

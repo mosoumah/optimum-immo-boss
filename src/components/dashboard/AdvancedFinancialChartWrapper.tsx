@@ -89,7 +89,10 @@ export const AdvancedFinancialChartWrapper = ({ entrepriseId }: Props) => {
     return String(value);
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipEntry { value: number; }
+  interface TooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload?.length) {
       return (
         <div className="bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl p-3 shadow-lg">

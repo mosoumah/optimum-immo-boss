@@ -11,10 +11,14 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays } from "date-fns";
 
+import type { Database } from "@/integrations/supabase/types";
+
+type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"];
+
 interface ReservationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  reservation?: any | null;
+  reservation?: ReservationRow | null;
   onSuccess: () => void;
 }
 
@@ -147,7 +151,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         description: `Location ${propertyName} du ${form.date_arrivee} au ${form.date_depart}${resteDesc}`,
         date: new Date().toISOString().split("T")[0],
         reservation_id: newReservationId,
-      } as any);
+      });
       if (factureError) {
         toast({ title: "Attention", description: "Réservation créée mais erreur lors de la génération de la facture : " + factureError.message, variant: "destructive" });
       } else {

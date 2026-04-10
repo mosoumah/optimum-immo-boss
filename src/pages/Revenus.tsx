@@ -66,9 +66,9 @@ const Revenus = () => {
       .from("revenus")
       .select("*, factures(description, date, clients(nom))")
       .eq("entreprise_id", entrepriseId)
-      .order("date", { ascending: false }) as any;
+      .order("date", { ascending: false });
 
-    setRevenus(data || []);
+    setRevenus((data as Revenu[]) || []);
     setIsLoading(false);
   }, [entrepriseId]);
 

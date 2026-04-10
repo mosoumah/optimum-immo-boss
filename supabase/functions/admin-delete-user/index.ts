@@ -1,9 +1,5 @@
+import { getCorsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-}
 
 interface DeleteUserRequest {
   user_id: string
@@ -12,7 +8,7 @@ interface DeleteUserRequest {
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: getCorsHeaders(req) })
   }
 
   try {
@@ -21,7 +17,7 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Non autorisé', code: 'unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -39,7 +35,7 @@ Deno.serve(async (req) => {
       console.error('JWT verification failed:', authError)
       return new Response(
         JSON.stringify({ error: 'Token invalide', code: 'invalid_token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -61,7 +57,7 @@ Deno.serve(async (req) => {
     if (!callerRole || callerRole.role !== 'admin') {
       return new Response(
         JSON.stringify({ error: "Vous n'avez pas les droits pour supprimer des utilisateurs", code: 'forbidden' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -75,7 +71,7 @@ Deno.serve(async (req) => {
     if (!callerProfile?.entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Entreprise non trouvée', code: 'no_entreprise' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -87,7 +83,7 @@ Deno.serve(async (req) => {
     if (!user_id) {
       return new Response(
         JSON.stringify({ error: 'ID utilisateur manquant', code: 'missing_user_id' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -95,7 +91,7 @@ Deno.serve(async (req) => {
     if (user_id === callerId) {
       return new Response(
         JSON.stringify({ error: 'Vous ne pouvez pas vous supprimer vous-même', code: 'cannot_delete_self' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -109,7 +105,7 @@ Deno.serve(async (req) => {
     if (!targetProfile) {
       return new Response(
         JSON.stringify({ error: 'Utilisateur non trouvé', code: 'user_not_found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -117,7 +113,7 @@ Deno.serve(async (req) => {
     if (targetProfile.entreprise_id !== callerProfile.entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Vous ne pouvez supprimer que les utilisateurs de votre entreprise', code: 'wrong_entreprise' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -130,7 +126,7 @@ Deno.serve(async (req) => {
       console.error('Error deleting user:', deleteError)
       return new Response(
         JSON.stringify({ error: deleteError.message || 'Erreur lors de la suppression', code: 'delete_error' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -141,14 +137,14 @@ Deno.serve(async (req) => {
         success: true, 
         message: 'Utilisateur supprimé avec succès'
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
     console.error('Unexpected error:', error)
     return new Response(
       JSON.stringify({ error: 'Une erreur inattendue est survenue', code: 'unexpected_error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     )
   }
 })

@@ -1,11 +1,8 @@
+import { getCorsHeaders } from '../_shared/cors.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+;
 
 // --- Tool definitions ---
 
@@ -241,15 +238,16 @@ async function executeTool(
 
         // Enrich with client names
         if (data && data.length > 0) {
-          const clientIds = [...new Set(data.map((r: any) => r.client_id))];
+          const clientIds = [...new Set(data.map((r) => (r as { client_id: string }).client_id))];
           const { data: clients } = await supabase
             .from("clients")
             .select("id, nom, telephone")
             .in("id", clientIds);
-          const clientMap = new Map((clients || []).map((c: any) => [c.id, c]));
+          const clientMap = new Map((clients || []).map((c) => [c.id, c]));
           for (const r of data) {
-            const c = clientMap.get(r.client_id);
-            if (c) { (r as any).client_nom = c.nom; (r as any).client_telephone = c.telephone; }
+            const rec = r as Record<string, unknown>;
+            const c = clientMap.get(rec.client_id as string);
+            if (c) { rec.client_nom = c.nom; rec.client_telephone = c.telephone; }
           }
         }
         return JSON.stringify({ count: data?.length || 0, reservations: data });
@@ -306,7 +304,7 @@ async function executeTool(
           .lte("date", endDate)
           .order("date", { ascending: false });
         if (error) return JSON.stringify({ error: error.message });
-        const total = (data || []).reduce((s: number, r: any) => s + Number(r.montant), 0);
+        const total = (data || []).reduce((s: number, r: { montant: number }) => s + Number(r.montant), 0);
         return JSON.stringify({ mois, total, count: data?.length || 0, revenus: data });
       }
 
@@ -321,7 +319,7 @@ async function executeTool(
           .lte("date", endDate)
           .order("date", { ascending: false });
         if (error) return JSON.stringify({ error: error.message });
-        const total = (data || []).reduce((s: number, r: any) => s + Number(r.montant), 0);
+        const total = (data || []).reduce((s: number, r: { montant: number }) => s + Number(r.montant), 0);
         return JSON.stringify({ mois, total, count: data?.length || 0, depenses: data });
       }
 
@@ -455,7 +453,7 @@ async function executeTool(
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -463,7 +461,7 @@ serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -478,7 +476,7 @@ serve(async (req) => {
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
     const userId = user.id;
@@ -493,7 +491,7 @@ serve(async (req) => {
     if (!profile?.entreprise_id) {
       return new Response(JSON.stringify({ error: "Profil non trouvé" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -502,7 +500,7 @@ serve(async (req) => {
     if (!userRole || userRole === "client") {
       return new Response(JSON.stringify({ error: "Accès refusé. Le chatbot n'est pas disponible pour les clients." }), {
         status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -533,7 +531,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "API key not configured" }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -592,10 +590,10 @@ PERSONNALITÉ:
 
     if (!aiResponse.ok) {
       const status = aiResponse.status;
-      if (status === 429) return new Response(JSON.stringify({ error: "Trop de requêtes, réessayez dans quelques instants." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (status === 402) return new Response(JSON.stringify({ error: "Crédits IA insuffisants." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (status === 429) return new Response(JSON.stringify({ error: "Trop de requêtes, réessayez dans quelques instants." }), { status: 429, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
+      if (status === 402) return new Response(JSON.stringify({ error: "Crédits IA insuffisants." }), { status: 402, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
       console.error("AI error:", status, await aiResponse.text());
-      return new Response(JSON.stringify({ error: "Erreur IA" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Erreur IA" }), { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
     }
 
     const aiResult = await aiResponse.json();
@@ -605,7 +603,7 @@ PERSONNALITÉ:
     if (!choice?.message?.tool_calls || choice.message.tool_calls.length === 0) {
       return new Response(
         JSON.stringify({ response: choice?.message?.content || "Je n'ai pas compris votre demande." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } },
       );
     }
 
@@ -639,20 +637,20 @@ PERSONNALITÉ:
 
     if (!finalResponse.ok) {
       console.error("Final AI error:", finalResponse.status);
-      return new Response(JSON.stringify({ error: "Erreur lors de la génération de la réponse" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Erreur lors de la génération de la réponse" }), { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
     }
 
     const finalResult = await finalResponse.json();
     const finalContent = finalResult.choices?.[0]?.message?.content || "Opération effectuée.";
 
     return new Response(JSON.stringify({ response: finalContent }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("chat-assistant error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } },
     );
   }
 });

@@ -1,9 +1,5 @@
+import { getCorsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-}
 
 interface CreateUserRequest {
   email: string
@@ -16,7 +12,7 @@ interface CreateUserRequest {
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: getCorsHeaders(req) })
   }
 
   try {
@@ -25,7 +21,7 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Non autorisé', code: 'unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -43,7 +39,7 @@ Deno.serve(async (req) => {
       console.error('JWT verification failed:', authError)
       return new Response(
         JSON.stringify({ error: 'Token invalide', code: 'invalid_token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -65,7 +61,7 @@ Deno.serve(async (req) => {
     if (!callerRole || callerRole.role !== 'admin') {
       return new Response(
         JSON.stringify({ error: "Vous n'avez pas les droits pour créer des utilisateurs", code: 'forbidden' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -79,7 +75,7 @@ Deno.serve(async (req) => {
     if (!callerProfile?.entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Entreprise non trouvée', code: 'no_entreprise' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -91,7 +87,7 @@ Deno.serve(async (req) => {
     if (!email || !nom || !role || !entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Champs obligatoires manquants', code: 'missing_fields' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -99,7 +95,7 @@ Deno.serve(async (req) => {
     if (callerProfile.entreprise_id !== entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Vous ne pouvez créer des utilisateurs que dans votre entreprise', code: 'wrong_entreprise' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -107,7 +103,7 @@ Deno.serve(async (req) => {
     if (role === 'client' && !client_id) {
       return new Response(
         JSON.stringify({ error: 'Un client doit être associé à un compte client', code: 'missing_client' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -135,13 +131,13 @@ Deno.serve(async (req) => {
           inviteError.message?.includes('User already registered')) {
         return new Response(
           JSON.stringify({ error: 'Cet email est déjà utilisé', code: 'email_exists' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
         )
       }
       
       return new Response(
         JSON.stringify({ error: inviteError.message || 'Erreur lors de la création', code: 'create_error' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -149,7 +145,7 @@ Deno.serve(async (req) => {
     if (!newUserId) {
       return new Response(
         JSON.stringify({ error: 'Utilisateur créé mais ID non retourné', code: 'no_user_id' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -196,7 +192,7 @@ Deno.serve(async (req) => {
       console.error('Error inserting role:', roleError)
       return new Response(
         JSON.stringify({ error: 'Erreur lors de l\'attribution du rôle', code: 'role_error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
@@ -220,14 +216,14 @@ Deno.serve(async (req) => {
         user_id: newUserId,
         message: 'Invitation envoyée avec succès'
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
     console.error('Unexpected error:', error)
     return new Response(
       JSON.stringify({ error: 'Une erreur inattendue est survenue', code: 'unexpected_error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     )
   }
 })

@@ -67,11 +67,11 @@ const Reservations = () => {
     setReservations((resData as Reservation[]) || []);
 
     const cMap: Record<string, string> = {};
-    (clientsData || []).forEach((c: any) => { cMap[c.id] = c.nom; });
+    (clientsData || []).forEach((c) => { cMap[c.id] = c.nom; });
     setClientsMap(cMap);
 
     const pMap: Record<string, string> = {};
-    (propsData || []).forEach((p: any) => { pMap[p.id] = p.nom; });
+    (propsData || []).forEach((p) => { pMap[p.id] = p.nom; });
     setPropertiesMap(pMap);
 
     setIsLoading(false);

@@ -7,6 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAgencySettings } from "@/hooks/useAgencySettings";
+import type { Database } from "@/integrations/supabase/types";
+
+type ReservationRow = Pick<Database["public"]["Tables"]["reservations"]["Row"],
+  "id" | "property_name" | "date_arrivee" | "date_depart" | "montant_total" | "statut"
+>;
+type TransactionRow = Pick<Database["public"]["Tables"]["sales_transactions"]["Row"],
+  "id" | "montant_vente" | "date_vente" | "statut"
+> & { properties: { nom: string } | null };
 
 interface Client {
   id: string;
@@ -65,8 +73,8 @@ const ClientDetail = () => {
   const [client, setClient] = useState<Client | null>(null);
   const [devis, setDevis] = useState<Devis[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
-  const [reservations, setReservations] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<ReservationRow[]>([]);
+  const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchClientData = useCallback(async () => {
@@ -240,7 +248,7 @@ const ClientDetail = () => {
                 </div>
                 {reservations.length > 0 ? (
                   <div className="space-y-2">
-                    {reservations.map((r: any) => (
+                    {reservations.map((r) => (
                       <div key={r.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
                         <div>
                           <div className="font-medium text-sm">{r.property_name}</div>
@@ -266,7 +274,7 @@ const ClientDetail = () => {
                 </div>
                 {transactions.length > 0 ? (
                   <div className="space-y-2">
-                    {transactions.map((t: any) => (
+                    {transactions.map((t) => (
                       <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
                         <div>
                           <div className="font-medium text-sm">{t.properties?.nom || "—"}</div>

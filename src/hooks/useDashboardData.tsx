@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+// Use a simple typed wrapper to avoid 'as any' on view names
+function fromView<V extends keyof Database["public"]["Views"]>(view: V) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabase as any).from(view);
+}
 
 export interface SimpleDashboardData {
   revenus_mois: number;
@@ -52,13 +59,12 @@ export const useDashboardData = (
     queryKey: ["dashboard-simple", entrepriseId],
     queryFn: async () => {
       if (!entrepriseId) return null;
-      const { data, error } = await supabase
-        .from("v_dashboard_simple" as any)
+      const { data, error } = await fromView("v_dashboard_simple")
         .select("*")
         .eq("entreprise_id", entrepriseId)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as SimpleDashboardData | null;
+      return data as SimpleDashboardData | null;
     },
     enabled: !!entrepriseId,
     staleTime: 2 * 60 * 1000,
@@ -68,13 +74,12 @@ export const useDashboardData = (
     queryKey: ["dashboard-advanced-finance", entrepriseId],
     queryFn: async () => {
       if (!entrepriseId) return null;
-      const { data, error } = await supabase
-        .from("v_dashboard_advanced_finance" as any)
+      const { data, error } = await fromView("v_dashboard_advanced_finance")
         .select("*")
         .eq("entreprise_id", entrepriseId)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as AdvancedFinanceData | null;
+      return data as AdvancedFinanceData | null;
     },
     enabled: !!entrepriseId && mode === "advanced" && isPremium,
     staleTime: 2 * 60 * 1000,
@@ -84,13 +89,12 @@ export const useDashboardData = (
     queryKey: ["dashboard-advanced-property", entrepriseId],
     queryFn: async () => {
       if (!entrepriseId) return null;
-      const { data, error } = await supabase
-        .from("v_dashboard_advanced_property" as any)
+      const { data, error } = await fromView("v_dashboard_advanced_property")
         .select("*")
         .eq("entreprise_id", entrepriseId)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as AdvancedPropertyData | null;
+      return data as AdvancedPropertyData | null;
     },
     enabled: !!entrepriseId && mode === "advanced" && isPremium,
     staleTime: 2 * 60 * 1000,
@@ -100,12 +104,11 @@ export const useDashboardData = (
     queryKey: ["dashboard-alerts", entrepriseId],
     queryFn: async () => {
       if (!entrepriseId) return null;
-      const { data, error } = await supabase
-        .from("v_dashboard_alerts" as any)
+      const { data, error } = await fromView("v_dashboard_alerts")
         .select("*")
         .eq("entreprise_id", entrepriseId);
       if (error) throw error;
-      return (data as unknown as AlertData[]) || [];
+      return (data as AlertData[]) || [];
     },
     enabled: !!entrepriseId && mode === "advanced" && isPremium,
     staleTime: 2 * 60 * 1000,

@@ -161,12 +161,15 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     return String(Math.round(value));
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipEntry { name: string; value: number; color: string; }
+  interface TooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-card/95 backdrop-blur-sm border border-border/50 rounded-xl p-3 shadow-lg">
           <p className="text-xs font-medium text-foreground mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <div key={index} className="flex items-center gap-2 text-xs">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
               <span className="text-muted-foreground">{entry.name}:</span>

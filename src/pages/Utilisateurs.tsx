@@ -188,11 +188,11 @@ const Utilisateurs = () => {
       setNewUserNom("");
       setNewUserRole("agent");
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating user:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur est survenue",
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
     } finally {
@@ -227,11 +227,11 @@ const Utilisateurs = () => {
       setDeleteDialogOpen(false);
       setUserToDelete(null);
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting user:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur est survenue",
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
     } finally {
