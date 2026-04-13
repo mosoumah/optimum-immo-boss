@@ -174,7 +174,7 @@ const Reservations = () => {
         <ReservationDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          reservation={editingReservation}
+          reservation={editingReservation as any}
           onSuccess={fetchReservations}
         />
       </main>

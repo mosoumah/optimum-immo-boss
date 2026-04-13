@@ -12,9 +12,13 @@ import type { Database } from "@/integrations/supabase/types";
 type ReservationRow = Pick<Database["public"]["Tables"]["reservations"]["Row"],
   "id" | "property_name" | "date_arrivee" | "date_depart" | "montant_total" | "statut"
 >;
-type TransactionRow = Pick<Database["public"]["Tables"]["sales_transactions"]["Row"],
-  "id" | "montant_vente" | "date_vente" | "statut"
-> & { properties: { nom: string } | null };
+interface TransactionRow {
+  id: string;
+  montant_vente: number;
+  date_vente: string;
+  statut: string;
+  property_name?: string;
+}
 
 interface Client {
   id: string;
