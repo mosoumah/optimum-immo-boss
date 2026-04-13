@@ -13,7 +13,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Property = Database["public"]["Tables"]["properties"]["Row"];
 type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"] & {
-  clients: { nom: string } | null;
+  clients: { nom: string }[] | null;
 };
 
 const statutColors: Record<string, string> = {
@@ -158,7 +158,7 @@ const BienDetail = () => {
                     {reservations.map((r) => (
                       <div key={r.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
                         <div>
-                          <div className="font-medium text-sm">{r.clients?.nom || "Client"}</div>
+                          <div className="font-medium text-sm">{r.clients?.[0]?.nom || "Client"}</div>
                           <div className="text-xs text-muted-foreground">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}</div>
                         </div>
                         <span className="font-medium">{formatCurrency(r.montant_total)}</span>
