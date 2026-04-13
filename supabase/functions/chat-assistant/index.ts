@@ -212,7 +212,7 @@ const TOOL_DEFS: Record<string, { permission: string; definition: object }> = {
 async function executeTool(
   toolName: string,
   args: Record<string, unknown>,
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   entrepriseId: string,
   userId: string,
 ): Promise<string> {
