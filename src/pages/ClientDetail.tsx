@@ -97,8 +97,18 @@ const ClientDetail = () => {
       setReservations(resRes.data || []);
     }
     if (venteEnabled) {
-      const transRes = await supabase.from("sales_transactions").select("id, montant_vente, date_vente, statut, properties(nom)").eq("client_id", id).order("date_vente", { ascending: false });
-      setTransactions(transRes.data || []);
+      const transRes = await supabase.from("sales_transactions").select("id, montant_vente, date_vente, statut, property_id").eq("client_id", id).order("date_vente", { ascending: false });
+      const transData = (transRes.data || []) as any[];
+      // Enrich with property names
+      if (transData.length > 0) {
+        const propIds = [...new Set(transData.map(t => t.property_id).filter(Boolean))];
+        if (propIds.length > 0) {
+          const { data: props } = await supabase.from("properties").select("id, nom").in("id", propIds);
+          const propMap = new Map((props || []).map(p => [p.id, p.nom]));
+          transData.forEach(t => { t.property_name = propMap.get(t.property_id) || "—"; });
+        }
+      }
+      setTransactions(transData);
     }
 
     setIsLoading(false);
@@ -281,7 +291,7 @@ const ClientDetail = () => {
                     {transactions.map((t) => (
                       <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
                         <div>
-                          <div className="font-medium text-sm">{t.properties?.nom || "—"}</div>
+                          <div className="font-medium text-sm">{t.property_name || "—"}</div>
                           <div className="text-xs text-muted-foreground">{formatDate(t.date_vente)}</div>
                         </div>
                         <div className="flex items-center gap-2">
