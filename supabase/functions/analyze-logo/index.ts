@@ -1,10 +1,9 @@
 import { getCorsHeaders } from '../_shared/cors.ts';
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 ;
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: getCorsHeaders(req) });
   }
@@ -44,11 +43,19 @@ serve(async (req) => {
       );
     }
 
-    // Validate URL format
+    // Validate URL - restrict to Supabase Storage only (prevents SSRF)
     try {
       const parsed = new URL(logoUrl);
       if (!["http:", "https:"].includes(parsed.protocol)) {
         throw new Error("Invalid protocol");
+      }
+      // Only allow Supabase Storage URLs
+      const allowedHost = Deno.env.get("SUPABASE_URL")?.replace("https://", "") ?? "";
+      if (!parsed.hostname.endsWith("supabase.co") && parsed.hostname !== allowedHost) {
+        return new Response(
+          JSON.stringify({ error: "URL non autorisée. Seules les URLs Supabase Storage sont acceptées." }),
+          { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+        );
       }
     } catch {
       return new Response(

@@ -1,5 +1,4 @@
 import { getCorsHeaders } from '../_shared/cors.ts';
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 ;
@@ -15,7 +14,7 @@ function nettoyerContenu(texte: string): string {
     .trim();
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: getCorsHeaders(req) });
   }
@@ -57,6 +56,30 @@ serve(async (req) => {
       });
     }
 
+    // Sanitize all text inputs to prevent prompt injection and limit token usage
+    const s = (v: unknown, max = 200): string =>
+      typeof v === "string" ? v.slice(0, max).trim() : "";
+
+    const safeEntrepriseNom   = s(entrepriseNom, 100);
+    const safeTypeDocument    = s(typeDocument, 80);
+    const safeDocumentNumber  = s(documentNumber, 50);
+    const safeCreationDate    = s(creationDate, 30);
+    const safeAgentName       = s(agentName, 100);
+    const safeAgencyPhone     = s(agencyPhone, 30);
+    const safeAgencyEmail     = s(agencyEmail, 100);
+    const safeClientNom       = s(clientNom, 100);
+    const safeClientPhone     = s(clientPhone, 30);
+    const safeClientEmail     = s(clientEmail, 100);
+    const safeClientAddress   = s(clientAddress, 200);
+    const safePropertyTitle   = s(propertyTitle, 150);
+    const safePropertyAddress = s(propertyAddress, 200);
+    const safePropertyType    = s(propertyType, 80);
+    const safeSalePrice       = s(salePrice, 50);
+    const safeRentalDuration  = s(rentalDuration, 50);
+    const safeSecurityDeposit = s(securityDeposit, 50);
+    const safeClauses         = s(clauses, 1000);
+    const safeSignatureDate   = s(signatureDate, 30);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -80,38 +103,38 @@ INTERDICTIONS STRICTES :
 - Pas de formules génériques ("Cher client", "Cordialement")
 - Pas d'en-tête de document (le design s'en charge)`;
 
-    const userPrompt = `Rédige un document professionnel de type "${typeDocument}" pour une agence immobilière.
+    const userPrompt = `Rédige un document professionnel de type "${safeTypeDocument}" pour une agence immobilière.
 
 INFORMATIONS DU DOCUMENT :
-Numéro : ${documentNumber || "Non spécifié"}
-Date de création : ${creationDate || "Non spécifiée"}
+Numéro : ${safeDocumentNumber || "Non spécifié"}
+Date de création : ${safeCreationDate || "Non spécifiée"}
 
 INFORMATIONS DE L'AGENCE :
-Nom de l'agence : ${entrepriseNom || "Non spécifié"}
-Nom de l'agent : ${agentName || "Non spécifié"}
-Téléphone : ${agencyPhone || "Non spécifié"}
-Email : ${agencyEmail || "Non spécifié"}
+Nom de l'agence : ${safeEntrepriseNom || "Non spécifié"}
+Nom de l'agent : ${safeAgentName || "Non spécifié"}
+Téléphone : ${safeAgencyPhone || "Non spécifié"}
+Email : ${safeAgencyEmail || "Non spécifié"}
 
 INFORMATIONS DU CLIENT :
-Nom : ${clientNom || "Non spécifié"}
-Téléphone : ${clientPhone || "Non spécifié"}
-Email : ${clientEmail || "Non spécifié"}
-Adresse : ${clientAddress || "Non spécifiée"}
+Nom : ${safeClientNom || "Non spécifié"}
+Téléphone : ${safeClientPhone || "Non spécifié"}
+Email : ${safeClientEmail || "Non spécifié"}
+Adresse : ${safeClientAddress || "Non spécifiée"}
 
 INFORMATIONS DU BIEN :
-Titre : ${propertyTitle || "Non spécifié"}
-Adresse : ${propertyAddress || "Non spécifiée"}
-Type : ${propertyType || "Non spécifié"}
+Titre : ${safePropertyTitle || "Non spécifié"}
+Adresse : ${safePropertyAddress || "Non spécifiée"}
+Type : ${safePropertyType || "Non spécifié"}
 
 INFORMATIONS DE LA TRANSACTION :
-Prix / Loyer : ${salePrice || "Non spécifié"}
-Durée de location : ${rentalDuration || "Non spécifiée"}
-Caution : ${securityDeposit || "Non spécifiée"}
+Prix / Loyer : ${safeSalePrice || "Non spécifié"}
+Durée de location : ${safeRentalDuration || "Non spécifiée"}
+Caution : ${safeSecurityDeposit || "Non spécifiée"}
 
 CLAUSES PERSONNALISÉES :
-${clauses || "Aucune clause spécifique."}
+${safeClauses || "Aucune clause spécifique."}
 
-DATE DE SIGNATURE : ${signatureDate || "Non spécifiée"}
+DATE DE SIGNATURE : ${safeSignatureDate || "Non spécifiée"}
 
 STRUCTURE ATTENDUE (en paragraphes élégants) :
 
@@ -127,9 +150,9 @@ Précise les conditions, engagements ou modalités applicables. Intègre les cla
 PARAGRAPHE 4 - Conclusion formelle :
 Termine par une formule officielle appropriée au type de document, incluant la date et le lieu de signature.
 
-Génère maintenant le document adapté au type "${typeDocument}".`;
+Génère maintenant le document adapté au type "${safeTypeDocument}".`;
 
-    console.log('Generating document:', typeDocument, 'for client:', clientNom);
+    console.log('Generating document:', safeTypeDocument, 'for client:', safeClientNom);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

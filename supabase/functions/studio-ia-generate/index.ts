@@ -1,5 +1,4 @@
 import { getCorsHeaders } from '../_shared/cors.ts';
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 ;
@@ -10,7 +9,7 @@ const PLAN_LIMITS: Record<string, number> = {
   premium: 100,
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: getCorsHeaders(req) });
   }
@@ -205,6 +204,34 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
         });
       }
 
+      // Validate input lengths to prevent prompt injection and token abuse
+      if (typeof instruction !== "string" || instruction.trim().length === 0) {
+        return new Response(JSON.stringify({ error: "Instruction invalide" }), {
+          status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+      const safeInstruction = instruction.slice(0, 500).trim();
+
+      if (typeof original_image_url !== "string" || original_image_url.length > 2048) {
+        return new Response(JSON.stringify({ error: "URL image invalide" }), {
+          status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+      // Only allow Supabase Storage URLs
+      const allowedStorageHost = Deno.env.get("SUPABASE_URL")?.replace("https://", "") ?? "";
+      try {
+        const parsedUrl = new URL(original_image_url);
+        if (!parsedUrl.hostname.endsWith("supabase.co") && parsedUrl.hostname !== allowedStorageHost) {
+          return new Response(JSON.stringify({ error: "URL image non autorisée" }), {
+            status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+      } catch {
+        return new Response(JSON.stringify({ error: "URL image invalide" }), {
+          status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+
       // Insert pending request
       const { data: request, error: reqErr } = await supabaseAuth
         .from("redesign_requests")
@@ -212,14 +239,14 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
           entreprise_id: entrepriseId,
           created_by: userId,
           original_image_url,
-          instruction,
+          instruction: safeInstruction,
           status: "pending",
         })
         .select()
         .single();
       if (reqErr) throw reqErr;
 
-      const editPrompt = `Tu es un expert en design d'intérieur et immobilier de luxe. Modifie cette photo d'intérieur selon l'instruction suivante: "${instruction}". Le résultat doit être photoréaliste et professionnel. Ultra high resolution.`;
+      const editPrompt = `Tu es un expert en design d'intérieur et immobilier de luxe. Modifie cette photo d'intérieur selon l'instruction suivante: "${safeInstruction}". Le résultat doit être photoréaliste et professionnel. Ultra high resolution.`;
 
       const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",

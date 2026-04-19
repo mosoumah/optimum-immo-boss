@@ -31,7 +31,21 @@ import GestionPermissions from "./pages/GestionPermissions";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Ne pas retry sur les erreurs auth (401/403) ni sur les erreurs client (4xx)
+      retry: (failureCount, error) => {
+        if (error instanceof Error && "status" in error) {
+          const status = (error as Error & { status: number }).status;
+          if (status === 401 || status === 403 || status === 404) return false;
+        }
+        return failureCount < 2;
+      },
+      staleTime: 1000 * 60, // 1 minute par défaut
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
