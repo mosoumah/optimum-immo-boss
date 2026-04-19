@@ -197,7 +197,7 @@ const Biens = () => {
         <BienDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          property={editingProperty as any}
+          property={editingProperty}
           onSuccess={fetchProperties}
         />
       </main>
