@@ -1,59 +1,59 @@
+## Objectif
 
+Ajouter une troisième série **Taux de réservation** (en gris) au graphique « Revenus vs Dépenses » du tableau de bord, avec sa légende en haut à droite et son indicateur en bas à gauche aux côtés des blocs Revenus / Dépenses. Améliorer subtilement le design du graphique sans toucher au reste du dashboard.
 
-# Correction de toutes les erreurs et warnings de sécurité
+## Ce qui change
 
-## Findings actifs (5 à corriger)
+### 1. Calcul du taux de réservation (`src/components/FinancialChart.tsx`)
 
-### ERREURS (2)
+- Charger les réservations de l'entreprise (table `reservations`, colonnes `date_debut`, `date_fin`, `statut`) sur les périodes courante et précédente, en parallèle des `revenus` / `depenses` existants.
+- Charger le nombre total de biens actifs de l'entreprise (table `properties`, statut ≠ archivé) — utilisé comme dénominateur.
+- Pour chaque jour affiché (7 jours en mode Semaine, N jours en mode Mois) :
+  - `biens_occupés_jour` = nombre de réservations dont `date_debut <= jour <= date_fin` et `statut ∈ ('confirmee','en_cours','en_attente')`.
+  - `taux = biens_occupés_jour / total_biens × 100` (0 si aucun bien).
+- Conserver la même logique `formatLocalDate` existante (pas de décalage UTC).
+- Souscription Realtime : ajouter `reservations` et `properties` à la liste des tables qui déclenchent un refresh (déjà géré par `realtimeTick`).
 
-**1. Realtime sans autorisation** (`realtime_messages_no_rls`)
-Les tables `factures`, `revenus`, `depenses`, `reservations`, `direct_messages`, `tache_messages`, `notifications` sont publiées en Realtime mais n'importe quel utilisateur authentifié peut écouter n'importe quel canal.
+### 2. Affichage dans le graphique
 
-**Correction :** Retirer les tables financières sensibles de la publication Realtime. Seules `direct_messages`, `tache_messages` et `notifications` ont un besoin réel de Realtime (messagerie et notifications). Les tables `factures`, `revenus`, `depenses`, `reservations` n'en ont pas besoin — les pages les rechargent déjà manuellement. Et pour les 3 tables restantes, le RLS existant filtre déjà les rows par `user_id` ou `entreprise_id`, ce qui protège les données au niveau des events Postgres Changes.
+- Ajouter une `Area` Recharts pour `taux` :
+  - Couleur ligne : `#9ca3af` (gris neutre, lisible sur fond sombre).
+  - Dégradé subtil `gradientTaux` (gris, opacité 0.15 → 0).
+  - `strokeDasharray="4 4"` pour différencier visuellement de revenus/dépenses (continus).
+  - Axe Y secondaire à droite (`yAxisId="right"`) gradué 0–100 % pour ne pas écraser les courbes monétaires.
+- Légende en haut à droite : ajouter une 3ᵉ pastille « Taux de réservation » à côté de Revenus/Dépenses (point gris).
+- Tooltip : afficher la valeur en `xx.x %` quand la série est `taux`, en GNF pour les autres.
 
-**2. Studio-IA delete sans restriction** (`studio_ia_delete_any_authenticated`)
-N'importe quel utilisateur peut supprimer les fichiers de n'importe quelle agence dans le bucket `studio-ia`.
+### 3. KPI en bas à gauche (sous Revenus / Dépenses)
 
-**Correction :** Remplacer les policies permissives par des policies scopées par `entreprise_id` dans le chemin du fichier (pattern `originals/{entreprise_id}/...`), identique au pattern utilisé pour le bucket `logos`.
+Dans le bloc résumé bénéfice (colonne gauche du chart), la grille actuelle `grid-cols-2` affiche Revenus / Dépenses. La transformer en `grid-cols-3` avec une 3ᵉ cellule :
 
-### WARNINGS (3)
+```
+Revenus      Dépenses     Taux résa
+7.4M GNF     1.0M GNF     46 %
+```
 
-**3. User roles UPDATE manquant** (`user_roles_update_missing`)
-Pas de policy UPDATE explicite → risque théorique d'escalade de privilèges.
+- Couleur valeur : gris clair (`text-muted-foreground` accentué) avec un léger glow gris.
+- Calcul affiché : moyenne du `taux` sur la période courante (et delta vs période précédente non requis ici — on reste minimaliste).
 
-**Correction :** Ajouter `CREATE POLICY ... FOR UPDATE ... USING (false)`.
+### 4. Polish design (graphique uniquement)
 
-**4. Entreprise email/phone exposés** (`entreprises_email_phone_exposed`)
-Les utilisateurs avec rôle `client` peuvent voir l'email et le téléphone de l'agence.
+Améliorations visuelles ciblées, sans toucher aux autres composants du dashboard :
 
-**Action :** Ignorer ce finding — les utilisateurs `client` ne peuvent pas se connecter à l'application (ils sont bloqués au login). Les seuls utilisateurs qui accèdent à la table `entreprises` sont admin et agent, qui ont légitimement besoin de ces informations.
+- Ajouter un très léger halo gris derrière la pastille de légende « Taux de réservation » (cohérent avec les pastilles vert/rouge existantes).
+- Adoucir le `CartesianGrid` (opacité 0.15 au lieu de 0.2) pour mieux faire ressortir les 3 courbes.
+- Animation d'entrée des courbes (`isAnimationActive` déjà par défaut, ajuster `animationDuration={900}` pour un rendu plus premium).
+- Titre du panneau (`SimpleChart.tsx`) inchangé.
 
-**5. Leaked password protection** (`SUPA_auth_leaked_password_protection`)
-La vérification HIBP est désactivée.
+## Détails techniques
 
-**Correction :** Activer via l'outil `configure_auth`.
+- Aucune migration SQL nécessaire : `reservations` et `properties` sont déjà accessibles via RLS `entreprise_id`.
+- Pas de nouvelle dépendance.
+- Garder l'ensemble des calculs côté client dans `useMemo`, comme l'existant.
+- Respecter la mémoire projet : utiliser `formatLocalDate` (déjà présent), pas de `toISOString()`, devise GNF intacte.
 
-## Plan d'exécution
+## Fichiers modifiés
 
-### Étape 1 — Migration SQL
-Une seule migration pour :
-- `ALTER PUBLICATION supabase_realtime DROP TABLE` pour `factures`, `revenus`, `depenses`, `reservations`
-- Remplacer les policies storage `studio-ia` (INSERT, DELETE) par des policies scopées par entreprise_id dans le chemin
-- Ajouter `CREATE POLICY "User roles update denied" ON user_roles FOR UPDATE USING (false)`
+- `src/components/FinancialChart.tsx` — ajout données réservations/biens, série `taux`, axe Y droit, KPI 3ᵉ colonne, polish léger.
 
-### Étape 2 — Activer HIBP
-Utiliser `configure_auth` pour activer la protection contre les mots de passe compromis.
-
-### Étape 3 — Marquer les findings résolus
-Mettre à jour le statut des findings corrigés et ignorer le finding `entreprises_email_phone_exposed` avec justification.
-
-## Fichiers impactés
-- 1 migration SQL
-- Configuration auth (HIBP)
-
-## Ce qui ne change PAS
-- Aucun changement de design
-- Aucun changement de code frontend
-- Aucun changement aux autres modules
-- La messagerie et les notifications en temps réel continuent de fonctionner
-
+Aucun autre fichier modifié.
