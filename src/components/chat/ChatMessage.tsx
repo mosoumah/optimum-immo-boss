@@ -8,13 +8,10 @@ interface ChatMessageProps {
 }
 
 const renderContent = (text: string) => {
-  // Step 1: escape the raw text first
   const safe = escapeHtml(text);
-  // Step 2: apply markdown patterns - captures are already escaped so safe to inject
-  // Use non-greedy match and prevent newlines inside captures to avoid regex abuse
-  let html = safe.replace(/\*\*([^*\n]{1,200}?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*([^*\n]{1,200}?)\*/g, '<em>$1</em>');
-  html = html.replace(/`([^`\n]{1,500}?)`/g, '<code class="px-1 py-0.5 rounded text-xs font-mono" style="background: hsl(220, 18%, 15%)">$1</code>');
+  let html = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  html = html.replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded text-xs font-mono" style="background: hsl(220, 18%, 15%)">$1</code>');
   html = html.replace(/\n/g, '<br/>');
   return html;
 };

@@ -1,5 +1,6 @@
 import { getCorsHeaders } from '../_shared/cors.ts';
-import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 ;
 
@@ -211,7 +212,7 @@ const TOOL_DEFS: Record<string, { permission: string; definition: object }> = {
 async function executeTool(
   toolName: string,
   args: Record<string, unknown>,
-  supabase: SupabaseClient,
+  supabase: any,
   entrepriseId: string,
   userId: string,
 ): Promise<string> {
@@ -450,7 +451,7 @@ async function executeTool(
 
 // --- Main handler ---
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: getCorsHeaders(req) });
   }

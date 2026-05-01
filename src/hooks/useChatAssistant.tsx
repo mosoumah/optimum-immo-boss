@@ -14,26 +14,18 @@ export interface Conversation {
   createdAt: string;
 }
 
-// Scope the history key per user so sessions don't bleed across accounts on shared devices
-const getHistoryKey = async (): Promise<string> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user ? `chat-assistant-history-${user.id}` : "chat-assistant-history-anon";
-};
+const HISTORY_KEY = "chat-assistant-history";
 
 const loadHistory = (): Conversation[] => {
   try {
-    // Load with legacy key first for backward compat, will be migrated on next save
-    return JSON.parse(localStorage.getItem("chat-assistant-history") || "[]");
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
   } catch {
     return [];
   }
 };
 
-const saveHistory = async (convos: Conversation[]) => {
-  const key = await getHistoryKey();
-  localStorage.setItem(key, JSON.stringify(convos.slice(0, 20)));
-  // Remove legacy unscoped key if present
-  localStorage.removeItem("chat-assistant-history");
+const saveHistory = (convos: Conversation[]) => {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(convos.slice(0, 20)));
 };
 
 export const useChatAssistant = () => {
@@ -89,7 +81,7 @@ export const useChatAssistant = () => {
 
       const newHistory = [convo, ...history.filter((h) => h.id !== convoId)].slice(0, 20);
       setHistory(newHistory);
-      void saveHistory(newHistory);
+      saveHistory(newHistory);
     } catch (e) {
       console.error("Chat error:", e);
       toast.error("Erreur lors de la communication avec l'assistant");

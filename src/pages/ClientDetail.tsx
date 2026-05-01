@@ -98,15 +98,14 @@ const ClientDetail = () => {
     }
     if (venteEnabled) {
       const transRes = await supabase.from("sales_transactions").select("id, montant_vente, date_vente, statut, property_id").eq("client_id", id).order("date_vente", { ascending: false });
-      type TransWithName = { id: string; montant_vente: number; date_vente: string; statut: string; property_id: string | null; property_name?: string };
-      const transData: TransWithName[] = (transRes.data || []) as TransWithName[];
+      const transData = (transRes.data || []) as any[];
       // Enrich with property names
       if (transData.length > 0) {
         const propIds = [...new Set(transData.map(t => t.property_id).filter(Boolean))];
         if (propIds.length > 0) {
           const { data: props } = await supabase.from("properties").select("id, nom").in("id", propIds);
           const propMap = new Map((props || []).map(p => [p.id, p.nom]));
-          transData.forEach(t => { t.property_name = propMap.get(t.property_id ?? "") || "—"; });
+          transData.forEach(t => { t.property_name = propMap.get(t.property_id) || "—"; });
         }
       }
       setTransactions(transData);
