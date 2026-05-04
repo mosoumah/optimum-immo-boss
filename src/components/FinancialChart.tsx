@@ -337,7 +337,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
             vs {period === "week" ? "sem." : "mois"} préc.
           </span>
 
-          <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 w-full mt-1.5 pt-1.5 border-t border-border/20">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 w-full mt-1.5 pt-1.5 border-t border-border/20">
             <div>
               <span className="text-[10px] text-muted-foreground/80 block leading-tight">Revenus</span>
               <span className="text-xs font-semibold text-success leading-tight">{formatCurrency(totals.revenus)} GNF</span>
@@ -345,15 +345,6 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
             <div>
               <span className="text-[10px] text-muted-foreground/80 block leading-tight">Dépenses</span>
               <span className="text-xs font-semibold text-destructive leading-tight">{formatCurrency(totals.depenses)} GNF</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-muted-foreground/80 block leading-tight flex items-center gap-0.5">
-                <Percent className="w-2.5 h-2.5" />
-                Taux résa
-              </span>
-              <span className="text-xs font-semibold text-muted-foreground leading-tight drop-shadow-[0_0_4px_rgba(156,163,175,0.4)]">
-                {totals.tauxMoyen.toFixed(1)} %
-              </span>
             </div>
           </div>
 
