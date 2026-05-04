@@ -49,7 +49,9 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const [prevRevenus, setPrevRevenus] = useState<Revenu[]>([]);
   const [prevDepenses, setPrevDepenses] = useState<Depense[]>([]);
   const [reservations, setReservations] = useState<ReservationRange[]>([]);
+  const [prevReservations, setPrevReservations] = useState<ReservationRange[]>([]);
   const [totalBiens, setTotalBiens] = useState<number>(0);
+  const [periodRange, setPeriodRange] = useState<{ prevStart: string; prevEnd: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [realtimeTick, setRealtimeTick] = useState(0);
 

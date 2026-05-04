@@ -1,59 +1,63 @@
 ## Objectif
 
-Ajouter une troisième série **Taux de réservation** (en gris) au graphique « Revenus vs Dépenses » du tableau de bord, avec sa légende en haut à droite et son indicateur en bas à gauche aux côtés des blocs Revenus / Dépenses. Améliorer subtilement le design du graphique sans toucher au reste du dashboard.
+Dans la colonne gauche du graphique « Revenus vs Dépenses », la zone vide entourée en bleu sur la capture est actuellement inutilisée. Y ajouter un bloc dédié **Taux de réservation** présenté de la même façon premium que le bloc **Bénéfice** au-dessus (grand chiffre, badge de variation, libellé période, détails). Aucune autre partie du dashboard n'est modifiée.
 
-## Ce qui change
-
-### 1. Calcul du taux de réservation (`src/components/FinancialChart.tsx`)
-
-- Charger les réservations de l'entreprise (table `reservations`, colonnes `date_debut`, `date_fin`, `statut`) sur les périodes courante et précédente, en parallèle des `revenus` / `depenses` existants.
-- Charger le nombre total de biens actifs de l'entreprise (table `properties`, statut ≠ archivé) — utilisé comme dénominateur.
-- Pour chaque jour affiché (7 jours en mode Semaine, N jours en mode Mois) :
-  - `biens_occupés_jour` = nombre de réservations dont `date_debut <= jour <= date_fin` et `statut ∈ ('confirmee','en_cours','en_attente')`.
-  - `taux = biens_occupés_jour / total_biens × 100` (0 si aucun bien).
-- Conserver la même logique `formatLocalDate` existante (pas de décalage UTC).
-- Souscription Realtime : ajouter `reservations` et `properties` à la liste des tables qui déclenchent un refresh (déjà géré par `realtimeTick`).
-
-### 2. Affichage dans le graphique
-
-- Ajouter une `Area` Recharts pour `taux` :
-  - Couleur ligne : `#9ca3af` (gris neutre, lisible sur fond sombre).
-  - Dégradé subtil `gradientTaux` (gris, opacité 0.15 → 0).
-  - `strokeDasharray="4 4"` pour différencier visuellement de revenus/dépenses (continus).
-  - Axe Y secondaire à droite (`yAxisId="right"`) gradué 0–100 % pour ne pas écraser les courbes monétaires.
-- Légende en haut à droite : ajouter une 3ᵉ pastille « Taux de réservation » à côté de Revenus/Dépenses (point gris).
-- Tooltip : afficher la valeur en `xx.x %` quand la série est `taux`, en GNF pour les autres.
-
-### 3. KPI en bas à gauche (sous Revenus / Dépenses)
-
-Dans le bloc résumé bénéfice (colonne gauche du chart), la grille actuelle `grid-cols-2` affiche Revenus / Dépenses. La transformer en `grid-cols-3` avec une 3ᵉ cellule :
+## Rendu visuel ciblé (colonne gauche)
 
 ```
+BÉNÉFICE SEMAINE
+6.4M GNF  +100.0%
+vs sem. préc.
+
 Revenus      Dépenses     Taux résa
-7.4M GNF     1.0M GNF     46 %
+7.4M GNF     1.0M GNF     14.3 %
+─────────────────────────────────
+TAUX DE RÉSERVATION         ◷
+14.3 %       ▲ +3.2 pts
+moyenne sur la semaine
+
+Pic       Creux     Biens occupés
+46 %      0 %       1 / 7 biens
 ```
 
-- Couleur valeur : gris clair (`text-muted-foreground` accentué) avec un léger glow gris.
-- Calcul affiché : moyenne du `taux` sur la période courante (et delta vs période précédente non requis ici — on reste minimaliste).
+Style :
+- Mêmes classes typographiques que le bloc Bénéfice (uppercase tracking-widest libellé, grand chiffre semi-bold, badge variation arrondi).
+- Couleur dominante : gris clair (cohérent avec la courbe pointillée), avec léger glow `drop-shadow-[0_0_6px_rgba(156,163,175,0.45)]`.
+- Badge variation : vert si en hausse, rouge si en baisse, gris si stable. Unité « pts » (points de pourcentage).
+- Petite icône `Percent` (lucide) à droite du libellé pour rappel visuel.
+- Séparateur fin `border-t border-border/20` au-dessus du nouveau bloc.
 
-### 4. Polish design (graphique uniquement)
+## Données et calculs
 
-Améliorations visuelles ciblées, sans toucher aux autres composants du dashboard :
+Tout reste côté client dans `src/components/FinancialChart.tsx`.
 
-- Ajouter un très léger halo gris derrière la pastille de légende « Taux de réservation » (cohérent avec les pastilles vert/rouge existantes).
-- Adoucir le `CartesianGrid` (opacité 0.15 au lieu de 0.2) pour mieux faire ressortir les 3 courbes.
-- Animation d'entrée des courbes (`isAnimationActive` déjà par défaut, ajuster `animationDuration={900}` pour un rendu plus premium).
-- Titre du panneau (`SimpleChart.tsx`) inchangé.
+1. **Période courante** — déjà calculée (`totals.tauxMoyen`). Ajouter dans le `useMemo` :
+   - `tauxPic` = max des `taux` du `chartData`.
+   - `tauxCreux` = min des `taux` du `chartData`.
+   - `biensOccupesAujourdhui` = nb réservations actives qui couvrent `formatLocalDate(now)`.
 
-## Détails techniques
+2. **Période précédente** — il faut une moyenne taux comparable :
+   - Charger en parallèle (dans le `Promise.all` existant) les réservations de la période précédente :
+     ```ts
+     supabase.from("reservations")
+       .select("date_arrivee, date_depart, statut")
+       .eq("entreprise_id", entrepriseId)
+       .lte("date_arrivee", prevEndStr)
+       .gte("date_depart", prevStartStr)
+     ```
+   - Stocker dans `prevReservations` (nouveau state).
+   - Recalculer dans le `useMemo` un `prevTauxMoyen` en bouclant sur les jours de la période précédente avec la même formule `occupes / totalBiens × 100`.
+   - `tauxVariation = tauxMoyen − prevTauxMoyen` (en points de pourcentage, pas en %).
 
-- Aucune migration SQL nécessaire : `reservations` et `properties` sont déjà accessibles via RLS `entreprise_id`.
-- Pas de nouvelle dépendance.
-- Garder l'ensemble des calculs côté client dans `useMemo`, comme l'existant.
-- Respecter la mémoire projet : utiliser `formatLocalDate` (déjà présent), pas de `toISOString()`, devise GNF intacte.
+3. **Realtime** — aucune modification, le canal `reservations` / `properties` déclenche déjà `realtimeTick`.
 
-## Fichiers modifiés
+## Modifications de code (un seul fichier)
 
-- `src/components/FinancialChart.tsx` — ajout données réservations/biens, série `taux`, axe Y droit, KPI 3ᵉ colonne, polish léger.
+`src/components/FinancialChart.tsx` :
 
-Aucun autre fichier modifié.
+- Ajouter le state `prevReservations` et son chargement dans `Promise.all`.
+- Étendre `totals` (useMemo) pour exposer `tauxMoyen`, `prevTauxMoyen`, `tauxVariation`, `tauxPic`, `tauxCreux`, `biensOccupesAujourdhui`, `totalBiens`.
+- Sous le bloc grid actuel (Revenus / Dépenses / Taux résa) dans la colonne gauche, ajouter le nouveau bloc « Taux de réservation » décrit ci-dessus.
+- Conserver l'icône `Percent` déjà importée. Importer `TrendingUp` / `TrendingDown` (déjà importés).
+
+Aucun autre fichier n'est touché. Pas de migration. Pas de dépendance ajoutée. Mémoire projet respectée (`formatLocalDate`, GNF, pas de `toISOString`).
