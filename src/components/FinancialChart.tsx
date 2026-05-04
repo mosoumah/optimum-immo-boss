@@ -410,7 +410,6 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
             );
           })()}
         </div>
-        </div>
 
         {/* Right: Line chart */}
         <div className="flex-1 min-h-0">
