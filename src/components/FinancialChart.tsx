@@ -194,6 +194,36 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     const tauxMoyen = chartData.length > 0
       ? chartData.reduce((sum, d) => sum + d.taux, 0) / chartData.length
       : 0;
+    const tauxPic = chartData.length > 0 ? Math.max(...chartData.map((d) => d.taux)) : 0;
+    const tauxCreux = chartData.length > 0 ? Math.min(...chartData.map((d) => d.taux)) : 0;
+
+    const todayStr = formatLocalDate(new Date());
+    const biensOccupesAujourdhui = reservations.filter(
+      (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= todayStr && r.date_depart >= todayStr
+    ).length;
+
+    // Prev period mean taux
+    let prevTauxMoyen = 0;
+    if (totalBiens > 0 && periodRange) {
+      const start = new Date(periodRange.prevStart);
+      const end = new Date(periodRange.prevEnd);
+      const days: string[] = [];
+      const cur = new Date(start);
+      while (cur <= end) {
+        days.push(formatLocalDate(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+      if (days.length > 0) {
+        const sum = days.reduce((acc, ds) => {
+          const occ = prevReservations.filter(
+            (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= ds && r.date_depart >= ds
+          ).length;
+          return acc + (occ / totalBiens) * 100;
+        }, 0);
+        prevTauxMoyen = sum / days.length;
+      }
+    }
+    const tauxVariation = tauxMoyen - prevTauxMoyen;
 
     const prevTotalRevenus = prevRevenus.reduce((sum, r) => sum + Number(r.montant), 0);
     const prevTotalDepenses = prevDepenses.reduce((sum, d) => sum + Number(d.montant), 0);
@@ -206,8 +236,8 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       variation = 100;
     }
 
-    return { revenus: totalRevenus, depenses: totalDepenses, benefice, variation, tauxMoyen };
-  }, [chartData, prevRevenus, prevDepenses]);
+    return { revenus: totalRevenus, depenses: totalDepenses, benefice, variation, tauxMoyen, tauxPic, tauxCreux, tauxVariation, biensOccupesAujourdhui, totalBiens };
+  }, [chartData, prevRevenus, prevDepenses, reservations, prevReservations, totalBiens, periodRange]);
 
   const formatCurrency = (value: number) => {
     if (Math.abs(value) >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
