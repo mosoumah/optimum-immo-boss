@@ -337,14 +337,14 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
             vs {period === "week" ? "sem." : "mois"} préc.
           </span>
 
-          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 w-full mt-1.5 pt-1.5 border-t border-border/20">
-            <div>
-              <span className="text-[10px] text-muted-foreground/80 block leading-tight">Revenus</span>
-              <span className="text-xs font-semibold text-success leading-tight">{formatCurrency(totals.revenus)} GNF</span>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 w-full mt-2 pt-2 border-t border-border/30">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] text-muted-foreground font-medium leading-tight">Revenus</span>
+              <span className="text-sm font-bold text-success leading-tight whitespace-nowrap">{formatCurrency(totals.revenus)} <span className="text-[10px] font-normal text-muted-foreground/80">GNF</span></span>
             </div>
-            <div>
-              <span className="text-[10px] text-muted-foreground/80 block leading-tight">Dépenses</span>
-              <span className="text-xs font-semibold text-destructive leading-tight">{formatCurrency(totals.depenses)} GNF</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] text-muted-foreground font-medium leading-tight">Dépenses</span>
+              <span className="text-sm font-bold text-destructive leading-tight whitespace-nowrap">{formatCurrency(totals.depenses)} <span className="text-[10px] font-normal text-muted-foreground/80">GNF</span></span>
             </div>
           </div>
 
