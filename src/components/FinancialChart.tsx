@@ -49,7 +49,9 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const [prevRevenus, setPrevRevenus] = useState<Revenu[]>([]);
   const [prevDepenses, setPrevDepenses] = useState<Depense[]>([]);
   const [reservations, setReservations] = useState<ReservationRange[]>([]);
+  const [prevReservations, setPrevReservations] = useState<ReservationRange[]>([]);
   const [totalBiens, setTotalBiens] = useState<number>(0);
+  const [periodRange, setPeriodRange] = useState<{ prevStart: string; prevEnd: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [realtimeTick, setRealtimeTick] = useState(0);
 
@@ -108,7 +110,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       const prevStartStr = formatLocalDate(prevStartDate);
       const prevEndStr = formatLocalDate(prevEndDate);
 
-      const [revenusRes, depensesRes, prevRevenusRes, prevDepensesRes, resaRes, biensRes] = await Promise.all([
+      const [revenusRes, depensesRes, prevRevenusRes, prevDepensesRes, resaRes, prevResaRes, biensRes] = await Promise.all([
         supabase.from("revenus").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", startDateStr),
         supabase.from("depenses").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", startDateStr),
         supabase.from("revenus").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", prevStartStr).lte("date", prevEndStr),
@@ -119,6 +121,12 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
           .eq("entreprise_id", entrepriseId)
           .lte("date_arrivee", endDateStr)
           .gte("date_depart", startDateStr),
+        supabase
+          .from("reservations")
+          .select("date_arrivee, date_depart, statut")
+          .eq("entreprise_id", entrepriseId)
+          .lte("date_arrivee", prevEndStr)
+          .gte("date_depart", prevStartStr),
         supabase.from("properties").select("id", { count: "exact", head: true }).eq("entreprise_id", entrepriseId),
       ]);
 
@@ -127,7 +135,9 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       setPrevRevenus(prevRevenusRes.data || []);
       setPrevDepenses(prevDepensesRes.data || []);
       setReservations((resaRes.data as ReservationRange[]) || []);
+      setPrevReservations((prevResaRes.data as ReservationRange[]) || []);
       setTotalBiens(biensRes.count || 0);
+      setPeriodRange({ prevStart: prevStartStr, prevEnd: prevEndStr });
       setIsLoading(false);
     };
 
@@ -184,6 +194,36 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     const tauxMoyen = chartData.length > 0
       ? chartData.reduce((sum, d) => sum + d.taux, 0) / chartData.length
       : 0;
+    const tauxPic = chartData.length > 0 ? Math.max(...chartData.map((d) => d.taux)) : 0;
+    const tauxCreux = chartData.length > 0 ? Math.min(...chartData.map((d) => d.taux)) : 0;
+
+    const todayStr = formatLocalDate(new Date());
+    const biensOccupesAujourdhui = reservations.filter(
+      (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= todayStr && r.date_depart >= todayStr
+    ).length;
+
+    // Prev period mean taux
+    let prevTauxMoyen = 0;
+    if (totalBiens > 0 && periodRange) {
+      const start = new Date(periodRange.prevStart);
+      const end = new Date(periodRange.prevEnd);
+      const days: string[] = [];
+      const cur = new Date(start);
+      while (cur <= end) {
+        days.push(formatLocalDate(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+      if (days.length > 0) {
+        const sum = days.reduce((acc, ds) => {
+          const occ = prevReservations.filter(
+            (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= ds && r.date_depart >= ds
+          ).length;
+          return acc + (occ / totalBiens) * 100;
+        }, 0);
+        prevTauxMoyen = sum / days.length;
+      }
+    }
+    const tauxVariation = tauxMoyen - prevTauxMoyen;
 
     const prevTotalRevenus = prevRevenus.reduce((sum, r) => sum + Number(r.montant), 0);
     const prevTotalDepenses = prevDepenses.reduce((sum, d) => sum + Number(d.montant), 0);
@@ -196,8 +236,8 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       variation = 100;
     }
 
-    return { revenus: totalRevenus, depenses: totalDepenses, benefice, variation, tauxMoyen };
-  }, [chartData, prevRevenus, prevDepenses]);
+    return { revenus: totalRevenus, depenses: totalDepenses, benefice, variation, tauxMoyen, tauxPic, tauxCreux, tauxVariation, biensOccupesAujourdhui, totalBiens };
+  }, [chartData, prevRevenus, prevDepenses, reservations, prevReservations, totalBiens, periodRange]);
 
   const formatCurrency = (value: number) => {
     if (Math.abs(value) >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
@@ -316,6 +356,59 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
               </span>
             </div>
           </div>
+
+          {/* Taux de réservation — bloc dédié */}
+          {(() => {
+            const tauxUp = totals.tauxVariation >= 0;
+            return (
+              <div className="w-full mt-2 pt-2 border-t border-border/20 flex flex-col gap-1 relative">
+                <div className="absolute -inset-x-1 -top-px h-px bg-gradient-to-r from-transparent via-muted-foreground/30 to-transparent" />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-widest text-muted-foreground/80 font-medium leading-none flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/70 shadow-[0_0_6px_rgba(156,163,175,0.7)]" />
+                    Taux de réservation
+                  </span>
+                  <Percent className="w-3 h-3 text-muted-foreground/70" />
+                </div>
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-base lg:text-lg font-bold leading-tight text-foreground/90 drop-shadow-[0_0_8px_rgba(156,163,175,0.45)]">
+                    {totals.tauxMoyen.toFixed(1)}
+                  </span>
+                  <span className="text-[11px] font-normal text-muted-foreground/80">%</span>
+                  <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold ${
+                    Math.abs(totals.tauxVariation) < 0.1
+                      ? "bg-muted/30 text-muted-foreground"
+                      : tauxUp
+                        ? "bg-success/10 text-success"
+                        : "bg-destructive/10 text-destructive"
+                  }`}>
+                    {Math.abs(totals.tauxVariation) < 0.1 ? null : tauxUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                    {tauxUp && Math.abs(totals.tauxVariation) >= 0.1 ? "+" : ""}{totals.tauxVariation.toFixed(1)} pts
+                  </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground/70 leading-none">
+                  moyenne sur {period === "week" ? "la semaine" : "le mois"}
+                </span>
+
+                <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 w-full mt-1">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground/80 block leading-tight">Pic</span>
+                    <span className="text-xs font-semibold text-foreground/85 leading-tight">{totals.tauxPic.toFixed(0)} %</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground/80 block leading-tight">Creux</span>
+                    <span className="text-xs font-semibold text-foreground/60 leading-tight">{totals.tauxCreux.toFixed(0)} %</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground/80 block leading-tight">Occupés</span>
+                    <span className="text-xs font-semibold text-foreground/85 leading-tight">
+                      {totals.biensOccupesAujourdhui}/{totals.totalBiens}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right: Line chart */}
