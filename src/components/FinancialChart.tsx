@@ -356,6 +356,60 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
               </span>
             </div>
           </div>
+
+          {/* Taux de réservation — bloc dédié */}
+          {(() => {
+            const tauxUp = totals.tauxVariation >= 0;
+            return (
+              <div className="w-full mt-2 pt-2 border-t border-border/20 flex flex-col gap-1 relative">
+                <div className="absolute -inset-x-1 -top-px h-px bg-gradient-to-r from-transparent via-muted-foreground/30 to-transparent" />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-widest text-muted-foreground/80 font-medium leading-none flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/70 shadow-[0_0_6px_rgba(156,163,175,0.7)]" />
+                    Taux de réservation
+                  </span>
+                  <Percent className="w-3 h-3 text-muted-foreground/70" />
+                </div>
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-base lg:text-lg font-bold leading-tight text-foreground/90 drop-shadow-[0_0_8px_rgba(156,163,175,0.45)]">
+                    {totals.tauxMoyen.toFixed(1)}
+                  </span>
+                  <span className="text-[11px] font-normal text-muted-foreground/80">%</span>
+                  <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold ${
+                    Math.abs(totals.tauxVariation) < 0.1
+                      ? "bg-muted/30 text-muted-foreground"
+                      : tauxUp
+                        ? "bg-success/10 text-success"
+                        : "bg-destructive/10 text-destructive"
+                  }`}>
+                    {Math.abs(totals.tauxVariation) < 0.1 ? null : tauxUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                    {tauxUp && Math.abs(totals.tauxVariation) >= 0.1 ? "+" : ""}{totals.tauxVariation.toFixed(1)} pts
+                  </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground/70 leading-none">
+                  moyenne sur {period === "week" ? "la semaine" : "le mois"}
+                </span>
+
+                <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 w-full mt-1">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground/80 block leading-tight">Pic</span>
+                    <span className="text-xs font-semibold text-foreground/85 leading-tight">{totals.tauxPic.toFixed(0)} %</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground/80 block leading-tight">Creux</span>
+                    <span className="text-xs font-semibold text-foreground/60 leading-tight">{totals.tauxCreux.toFixed(0)} %</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground/80 block leading-tight">Occupés</span>
+                    <span className="text-xs font-semibold text-foreground/85 leading-tight">
+                      {totals.biensOccupesAujourdhui}/{totals.totalBiens}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
         </div>
 
         {/* Right: Line chart */}
