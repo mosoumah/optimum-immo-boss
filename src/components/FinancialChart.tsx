@@ -110,7 +110,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       const prevStartStr = formatLocalDate(prevStartDate);
       const prevEndStr = formatLocalDate(prevEndDate);
 
-      const [revenusRes, depensesRes, prevRevenusRes, prevDepensesRes, resaRes, biensRes] = await Promise.all([
+      const [revenusRes, depensesRes, prevRevenusRes, prevDepensesRes, resaRes, prevResaRes, biensRes] = await Promise.all([
         supabase.from("revenus").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", startDateStr),
         supabase.from("depenses").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", startDateStr),
         supabase.from("revenus").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", prevStartStr).lte("date", prevEndStr),
@@ -121,6 +121,12 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
           .eq("entreprise_id", entrepriseId)
           .lte("date_arrivee", endDateStr)
           .gte("date_depart", startDateStr),
+        supabase
+          .from("reservations")
+          .select("date_arrivee, date_depart, statut")
+          .eq("entreprise_id", entrepriseId)
+          .lte("date_arrivee", prevEndStr)
+          .gte("date_depart", prevStartStr),
         supabase.from("properties").select("id", { count: "exact", head: true }).eq("entreprise_id", entrepriseId),
       ]);
 
@@ -129,7 +135,9 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       setPrevRevenus(prevRevenusRes.data || []);
       setPrevDepenses(prevDepensesRes.data || []);
       setReservations((resaRes.data as ReservationRange[]) || []);
+      setPrevReservations((prevResaRes.data as ReservationRange[]) || []);
       setTotalBiens(biensRes.count || 0);
+      setPeriodRange({ prevStart: prevStartStr, prevEnd: prevEndStr });
       setIsLoading(false);
     };
 
