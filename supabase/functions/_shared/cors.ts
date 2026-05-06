@@ -6,6 +6,8 @@
 const ALLOWED_ORIGINS = [
   // Production & previews Lovable
   /^https:\/\/.*\.lovable\.app$/,
+  /^https:\/\/.*\.lovableproject\.com$/,
+  /^https:\/\/.*\.lovable\.dev$/,
   // Développement local
   /^http:\/\/localhost(:\d+)?$/,
   /^http:\/\/127\.0\.0\.1(:\d+)?$/,
