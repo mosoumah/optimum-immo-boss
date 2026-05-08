@@ -1,63 +1,100 @@
-## Objectif
 
-Dans la colonne gauche du graphique « Revenus vs Dépenses », la zone vide entourée en bleu sur la capture est actuellement inutilisée. Y ajouter un bloc dédié **Taux de réservation** présenté de la même façon premium que le bloc **Bénéfice** au-dessus (grand chiffre, badge de variation, libellé période, détails). Aucune autre partie du dashboard n'est modifiée.
+# Plan — Chatbot Optimum Immo : expérience moderne type ChatGPT
 
-## Rendu visuel ciblé (colonne gauche)
+Travail **strictement limité** au chatbot. Aucun changement au dashboard, réservations, revenus, permissions, notifications, RLS, edge functions ou backend.
 
+## Fichiers concernés
+
+- `src/hooks/useChatAssistant.tsx` — refactor de la logique d'envoi (queue, états par message, retry).
+- `src/components/chat/AIChatBot.tsx` — remplacement de l'`<input>` par un `<textarea>` auto-expand, scroll intelligent, état "réfléchit".
+- `src/components/chat/ChatMessage.tsx` — bulles premium, état d'erreur + bouton réessayer, séparateurs de date dans l'historique.
+
+Aucun fichier hors `src/components/chat/**` et `src/hooks/useChatAssistant.tsx` ne sera touché.
+
+## 1. Refactor du hook `useChatAssistant`
+
+Nouveau modèle de message :
+
+```ts
+type MessageStatus = "sending" | "processing" | "completed" | "failed";
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  status: MessageStatus;
+  createdAt: string;
+  error?: string;
+}
 ```
-BÉNÉFICE SEMAINE
-6.4M GNF  +100.0%
-vs sem. préc.
 
-Revenus      Dépenses     Taux résa
-7.4M GNF     1.0M GNF     14.3 %
-─────────────────────────────────
-TAUX DE RÉSERVATION         ◷
-14.3 %       ▲ +3.2 pts
-moyenne sur la semaine
+Changements :
+- `sendMessage` n'est **plus bloquant** : il pousse immédiatement le message user dans `messages` (status `sending`), puis traite via une **queue interne** (`useRef<Array>`).
+- Un worker async dépile la queue en série : un seul appel IA en vol à la fois, mais l'utilisateur peut continuer à taper et empiler des messages.
+- L'historique envoyé à l'edge function ne contient que les messages `completed` + le message en cours (les `failed` sont exclus, conformité avec l'edge actuel inchangée).
+- Nouvel état dérivé `isAssistantThinking` (true tant qu'un message assistant est `processing`).
+- Nouvelle fonction `retryMessage(id)` : remet en queue le message user lié à un assistant `failed`.
+- En cas d'erreur réseau / 4xx / 5xx : le message user reste visible, un message assistant `failed` est ajouté avec `error` (jamais perdu).
+- LocalStorage : on continue à sauvegarder uniquement les messages `completed` (on n'écrit pas les `failed`/`processing`).
 
-Pic       Creux     Biens occupés
-46 %      0 %       1 / 7 biens
-```
+## 2. Textarea auto-expand (`AIChatBot.tsx`)
 
-Style :
-- Mêmes classes typographiques que le bloc Bénéfice (uppercase tracking-widest libellé, grand chiffre semi-bold, badge variation arrondi).
-- Couleur dominante : gris clair (cohérent avec la courbe pointillée), avec léger glow `drop-shadow-[0_0_6px_rgba(156,163,175,0.45)]`.
-- Badge variation : vert si en hausse, rouge si en baisse, gris si stable. Unité « pts » (points de pourcentage).
-- Petite icône `Percent` (lucide) à droite du libellé pour rappel visuel.
-- Séparateur fin `border-t border-border/20` au-dessus du nouveau bloc.
+Remplacer le `<input>` ligne 285 par un `<textarea>` contrôlé :
+- `min-height: 48px`, `max-height: 220px`.
+- Auto-resize via `useLayoutEffect` : reset `height = "auto"` puis `height = scrollHeight` capé à 220px.
+- `overflow-y: auto` uniquement quand `scrollHeight > 220`.
+- `Enter` = envoi, `Shift+Enter` = nouvelle ligne (`e.preventDefault()` sur Enter sans shift).
+- L'input n'est **jamais désactivé** quand `isAssistantThinking` ; seul le bouton envoyer affiche un état loading visuel mais reste cliquable (push en queue).
+- Bouton envoyer aligné en bas via `items-end` sur le conteneur flex.
 
-## Données et calculs
+## 3. Scroll intelligent
 
-Tout reste côté client dans `src/components/FinancialChart.tsx`.
+- Ref sur le viewport ScrollArea + flag `userScrolledUp` calculé via `onScroll` (seuil ~80px du bas).
+- Auto-scroll vers le bas uniquement si `!userScrolledUp` OU si le **dernier message est du user** (l'envoi propre force toujours le scroll).
+- Petit bouton flottant "↓ Nouveau message" qui apparaît quand `userScrolledUp && nouveau message assistant arrivé`.
 
-1. **Période courante** — déjà calculée (`totals.tauxMoyen`). Ajouter dans le `useMemo` :
-   - `tauxPic` = max des `taux` du `chartData`.
-   - `tauxCreux` = min des `taux` du `chartData`.
-   - `biensOccupesAujourdhui` = nb réservations actives qui couvrent `formatLocalDate(now)`.
+## 4. Indicateur "Optimum Immo AI réfléchit…"
 
-2. **Période précédente** — il faut une moyenne taux comparable :
-   - Charger en parallèle (dans le `Promise.all` existant) les réservations de la période précédente :
-     ```ts
-     supabase.from("reservations")
-       .select("date_arrivee, date_depart, statut")
-       .eq("entreprise_id", entrepriseId)
-       .lte("date_arrivee", prevEndStr)
-       .gte("date_depart", prevStartStr)
-     ```
-   - Stocker dans `prevReservations` (nouveau state).
-   - Recalculer dans le `useMemo` un `prevTauxMoyen` en bouclant sur les jours de la période précédente avec la même formule `occupes / totalBiens × 100`.
-   - `tauxVariation = tauxMoyen − prevTauxMoyen` (en points de pourcentage, pas en %).
+Étendre `TypingIndicator` :
+- Garder les 3 dots animés.
+- Ajouter le label `Optimum Immo AI réfléchit…` à côté, en `text-xs text-muted-foreground` avec animation `opacity` douce.
 
-3. **Realtime** — aucune modification, le canal `reservations` / `properties` déclenche déjà `realtimeTick`.
+## 5. États visuels des messages (`ChatMessage.tsx`)
 
-## Modifications de code (un seul fichier)
+- `sending` (user) : bulle légèrement opaque + petit spinner discret en coin.
+- `completed` : rendu actuel (conservé, identité visuelle Optimum Immo).
+- `failed` (assistant) : bulle bordure rouge subtile, icône ⚠️, texte "Échec de la réponse" + bouton **Réessayer** (appelle `retryMessage`).
+- Animations Framer Motion adoucies (déjà en place, on garde).
 
-`src/components/FinancialChart.tsx` :
+## 6. Historique : séparateurs de date
 
-- Ajouter le state `prevReservations` et son chargement dans `Promise.all`.
-- Étendre `totals` (useMemo) pour exposer `tauxMoyen`, `prevTauxMoyen`, `tauxVariation`, `tauxPic`, `tauxCreux`, `biensOccupesAujourdhui`, `totalBiens`.
-- Sous le bloc grid actuel (Revenus / Dépenses / Taux résa) dans la colonne gauche, ajouter le nouveau bloc « Taux de réservation » décrit ci-dessus.
-- Conserver l'icône `Percent` déjà importée. Importer `TrendingUp` / `TrendingDown` (déjà importés).
+Dans l'onglet Historique de `AIChatBot.tsx` :
+- Grouper `history` par date relative : "Aujourd'hui", "Hier", "Cette semaine", "Plus ancien".
+- Petit header `text-[10px] uppercase tracking-wider text-muted-foreground` au-dessus de chaque groupe.
+- Reprise de conversation inchangée (`loadConversation`).
 
-Aucun autre fichier n'est touché. Pas de migration. Pas de dépendance ajoutée. Mémoire projet respectée (`formatLocalDate`, GNF, pas de `toISOString`).
+## 7. Sécurité — inchangée
+
+- `escapeHtml` toujours appliqué avant le rendu Markdown (déjà en place dans `ChatMessage.tsx`).
+- Aucun changement à l'edge function `chat-assistant`, aux prompts système, aux RLS ni à l'isolation multi-entreprise.
+- Pas de `dangerouslySetInnerHTML` sur du contenu non-échappé.
+- Pas de nouveau secret, pas de nouvel appel réseau.
+
+## 8. Performance
+
+- `messages.map` keyé par `message.id` (stable) au lieu de l'index actuel → évite les re-renders inutiles des bulles.
+- `ChatMessage` enveloppé dans `React.memo`.
+- Throttle léger du handler `onScroll` (rAF).
+
+## Hors scope (explicitement non touché)
+
+- Edge function `chat-assistant`, CORS, prompts système.
+- Dashboard, réservations, revenus, permissions, notifications, messagerie directe.
+- Schéma DB, RLS, triggers.
+- Identité visuelle globale (couleurs primary lime, gradients existants conservés).
+
+## Validation
+
+- Vérification visuelle du chatbot en preview : envoi de plusieurs messages rapides, écriture pendant la réponse, long texte (textarea grandit), scroll vers le haut puis nouveau message (pas de scroll forcé), simulation d'erreur (retry fonctionne).
+- Console / network propres.
+- Aucune régression sur les autres pages (smoke check rapide).
