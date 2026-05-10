@@ -64,6 +64,7 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "voir_tache",
   "modifier_tache",
   "cloturer_tache",
+  "supprimer_tache",
   
   // Statistiques
   "voir_statistiques_globales",
