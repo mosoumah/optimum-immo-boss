@@ -367,6 +367,40 @@ const Taches = () => {
                         <Badge variant="outline" className="text-xs">IA</Badge>
                       )}
                       <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">{formatDate(tache.date)}</span>
+                      <PermissionGate permission="supprimer_tache">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer cette tâche ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action est irréversible. La tâche sera définitivement supprimée.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  supprimerTache(tache);
+                                }}
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </PermissionGate>
                     </div>
                   </motion.div>
                 ))}
