@@ -144,6 +144,24 @@ const Devis = () => {
     }
   };
 
+  const supprimerDevis = async (devis: Devis) => {
+    const canDelete = await checkPermission("supprimer_devis");
+    if (!canDelete) {
+      toast.error("Vous n'avez pas la permission de supprimer les devis");
+      return;
+    }
+
+    const { error } = await supabase.from("devis").delete().eq("id", devis.id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
+    toast.success("Devis supprimé avec succès");
+    fetchDevis();
+  };
+
   const transformerEnFacture = async (devis: Devis) => {
     if (!entrepriseId) return;
 
