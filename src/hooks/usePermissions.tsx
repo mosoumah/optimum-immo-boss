@@ -118,7 +118,7 @@ export const PERMISSION_CATEGORIES = {
   },
   taches: {
     label: "Tâches",
-    permissions: ["creer_tache", "assigner_tache", "voir_tache", "modifier_tache", "cloturer_tache"] as AppPermission[],
+    permissions: ["creer_tache", "assigner_tache", "voir_tache", "modifier_tache", "cloturer_tache", "supprimer_tache"] as AppPermission[],
   },
   statistiques: {
     label: "Statistiques",
