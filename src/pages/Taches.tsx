@@ -129,6 +129,24 @@ const Taches = () => {
     setTaches(taches.map(t => t.id === tache.id ? { ...t, statut: newStatut } : t));
   };
 
+  const supprimerTache = async (tache: Tache) => {
+    const canDelete = await checkPermission("supprimer_tache");
+    if (!canDelete) {
+      toast.error("Vous n'avez pas la permission de supprimer les tâches");
+      return;
+    }
+
+    const { error } = await supabase.from("taches").delete().eq("id", tache.id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
+    toast.success("Tâche supprimée avec succès");
+    setTaches(taches.filter(t => t.id !== tache.id));
+  };
+
   const generateSuggestions = async () => {
     setIsGeneratingSuggestions(true);
     setSuggestions([]);
