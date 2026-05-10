@@ -64,6 +64,7 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "voir_tache",
   "modifier_tache",
   "cloturer_tache",
+  "supprimer_tache",
   
   // Statistiques
   "voir_statistiques_globales",
@@ -117,7 +118,7 @@ export const PERMISSION_CATEGORIES = {
   },
   taches: {
     label: "Tâches",
-    permissions: ["creer_tache", "assigner_tache", "voir_tache", "modifier_tache", "cloturer_tache"] as AppPermission[],
+    permissions: ["creer_tache", "assigner_tache", "voir_tache", "modifier_tache", "cloturer_tache", "supprimer_tache"] as AppPermission[],
   },
   statistiques: {
     label: "Statistiques",
@@ -172,6 +173,7 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   voir_tache: "Voir les tâches",
   modifier_tache: "Modifier une tâche",
   cloturer_tache: "Clôturer une tâche",
+  supprimer_tache: "Supprimer une tâche",
   voir_statistiques_globales: "Voir statistiques globales",
   voir_statistiques_personnelles: "Voir statistiques personnelles",
   envoyer_message: "Envoyer des messages",

@@ -1,7 +1,18 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, Plus, ArrowLeft, Receipt, Download, Loader2, Printer } from "lucide-react";
+import { FileText, Plus, ArrowLeft, Receipt, Download, Loader2, Printer, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -131,6 +142,24 @@ const Devis = () => {
     } catch {
       return null;
     }
+  };
+
+  const supprimerDevis = async (devis: Devis) => {
+    const canDelete = await checkPermission("supprimer_devis");
+    if (!canDelete) {
+      toast.error("Vous n'avez pas la permission de supprimer les devis");
+      return;
+    }
+
+    const { error } = await supabase.from("devis").delete().eq("id", devis.id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
+    toast.success("Devis supprimé avec succès");
+    fetchDevis();
   };
 
   const transformerEnFacture = async (devis: Devis) => {
@@ -615,6 +644,32 @@ const Devis = () => {
                           Transformer
                         </Button>
                       )}
+                    </PermissionGate>
+                    <PermissionGate permission="supprimer_devis">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer ce devis ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Cette action est irréversible. Le devis sera définitivement supprimé.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => supprimerDevis(devis)}
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </PermissionGate>
                     <PermissionGate permission="voir_devis">
                       <Button

@@ -1,7 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2, MessageCircle, Mail } from "lucide-react";
+import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2, MessageCircle, Mail, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -116,6 +127,24 @@ const Taches = () => {
       .eq("id", tache.id);
 
     setTaches(taches.map(t => t.id === tache.id ? { ...t, statut: newStatut } : t));
+  };
+
+  const supprimerTache = async (tache: Tache) => {
+    const canDelete = await checkPermission("supprimer_tache");
+    if (!canDelete) {
+      toast.error("Vous n'avez pas la permission de supprimer les tâches");
+      return;
+    }
+
+    const { error } = await supabase.from("taches").delete().eq("id", tache.id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
+    toast.success("Tâche supprimée avec succès");
+    setTaches(taches.filter(t => t.id !== tache.id));
   };
 
   const generateSuggestions = async () => {
@@ -338,6 +367,40 @@ const Taches = () => {
                         <Badge variant="outline" className="text-xs">IA</Badge>
                       )}
                       <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">{formatDate(tache.date)}</span>
+                      <PermissionGate permission="supprimer_tache">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer cette tâche ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action est irréversible. La tâche sera définitivement supprimée.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  supprimerTache(tache);
+                                }}
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </PermissionGate>
                     </div>
                   </motion.div>
                 ))}

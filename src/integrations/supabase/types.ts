@@ -1490,6 +1490,7 @@ export type Database = {
         | "voir_image_ia"
         | "redesigner_bien_ia"
         | "envoyer_message"
+        | "supprimer_tache"
       app_role: "admin" | "agent" | "client"
       devis_statut: "brouillon" | "envoye" | "accepte" | "refuse"
       facture_statut: "paye" | "non_paye"
@@ -1664,6 +1665,7 @@ export const Constants = {
         "voir_image_ia",
         "redesigner_bien_ia",
         "envoyer_message",
+        "supprimer_tache",
       ],
       app_role: ["admin", "agent", "client"],
       devis_statut: ["brouillon", "envoye", "accepte", "refuse"],
