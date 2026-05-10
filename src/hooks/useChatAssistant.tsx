@@ -148,15 +148,18 @@ export const useChatAssistant = () => {
 
       const responseText = data?.response || "Je n'ai pas pu traiter votre demande.";
 
+      let snapshot: ChatMessage[] = [];
       setMessages((prev) => {
         const updated = prev.map((m) =>
           m.id === assistantId
             ? { ...m, content: responseText, status: "completed" as MessageStatus }
             : m
         );
-        persistConvo(updated);
+        snapshot = updated;
         return updated;
       });
+      // Persist outside the updater to avoid setState-in-render warnings
+      setTimeout(() => persistConvo(snapshot), 0);
     } catch (e: any) {
       console.error("Chat error:", e);
       const errMsg = e?.message || "Erreur inconnue";

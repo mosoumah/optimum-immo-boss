@@ -32,6 +32,7 @@ import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MessageBell } from "@/components/MessageBell";
 import { AIChatBot } from "@/components/chat/AIChatBot";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Dashboard components
 import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummary";
@@ -301,7 +302,9 @@ const Dashboard = () => {
       </main>
 
       {/* AI Chatbot */}
-      <AIChatBot userName={profile?.nom || undefined} />
+      <ErrorBoundary name="AIChatBot">
+        <AIChatBot userName={profile?.nom || undefined} />
+      </ErrorBoundary>
 
       {/* Dialogs */}
       {profile?.entreprise_id && (
