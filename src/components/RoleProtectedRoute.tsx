@@ -45,19 +45,18 @@ export const RoleProtectedRoute = ({
       setBootstrapError(null);
 
       try {
-        console.log("Bootstrapping user account...");
         const { data, error } = await supabase.rpc("bootstrap_current_user");
         
         if (error) {
-          console.error("Bootstrap error:", error);
+          console.error("Bootstrap error:", error.message);
           setBootstrapError(error.message);
         } else {
-          console.log("Bootstrap result:", data);
+          void data;
           // Refetch the role after bootstrap
           await refetch();
         }
       } catch (err) {
-        console.error("Bootstrap exception:", err);
+        console.error("Bootstrap exception:", err instanceof Error ? err.message : "Unknown error");
         setBootstrapError((err as Error).message);
       } finally {
         setIsBootstrapping(false);

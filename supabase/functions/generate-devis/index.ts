@@ -94,9 +94,8 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user: authedUser }, error: authedError } = await userClient.auth.getUser();
+    if (authedError || !authedUser) {
       return new Response(JSON.stringify({ error: "Token invalide" }), {
         status: 401,
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
@@ -193,7 +192,7 @@ Ce devis est valable pour une durée de trente (30) jours à compter de sa date 
 
 Maintenant, génère le texte pour cette proposition spécifique. Adapte le premier paragraphe selon la description fournie : "${description || 'Service immobilier'}". Ne répète PAS le mot "Description" ou les informations brutes.`;
 
-    console.log('Generating premium quote for:', clientNom, 'Amount:', montant, 'Amount in words:', montantEnLettres);
+    console.log('Generating premium quote...');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -242,9 +241,8 @@ Maintenant, génère le texte pour cette proposition spécifique. Adapte le prem
 
   } catch (error: unknown) {
     console.error('Error generating quote:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la génération du devis';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Une erreur est survenue lors de la génération du devis' }),
       { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     );
   }

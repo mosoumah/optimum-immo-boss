@@ -527,6 +527,33 @@ serve(async (req) => {
     }
 
     const { messages } = await req.json();
+
+    // --- Input validation ---
+    if (!Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: "Format de messages invalide" }), {
+        status: 400,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    if (messages.length > 50) {
+      return new Response(JSON.stringify({ error: "Trop de messages dans la conversation (max 50)" }), {
+        status: 400,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    const ALLOWED_ROLES = new Set(["user", "assistant"]);
+    for (const msg of messages) {
+      if (!msg || typeof msg !== "object") {
+        return new Response(JSON.stringify({ error: "Message invalide" }), { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
+      }
+      if (!ALLOWED_ROLES.has(msg.role)) {
+        return new Response(JSON.stringify({ error: "Rôle de message non autorisé" }), { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
+      }
+      if (typeof msg.content !== "string" || msg.content.length > 8000) {
+        return new Response(JSON.stringify({ error: "Contenu de message invalide ou trop long (max 8000 caractères)" }), { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "API key not configured" }), {

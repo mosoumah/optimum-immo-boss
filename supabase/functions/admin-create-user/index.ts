@@ -83,10 +83,36 @@ Deno.serve(async (req) => {
     const body: CreateUserRequest = await req.json()
     const { email, nom, role, entreprise_id, client_id } = body
 
-    // Validate required fields
+    // Validate required fields with strict checks
     if (!email || !nom || !role || !entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Champs obligatoires manquants', code: 'missing_fields' }),
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email) || email.length > 254) {
+      return new Response(
+        JSON.stringify({ error: 'Adresse email invalide', code: 'invalid_email' }),
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate nom length
+    if (typeof nom !== 'string' || nom.trim().length < 2 || nom.length > 100) {
+      return new Response(
+        JSON.stringify({ error: 'Nom invalide (2-100 caractères)', code: 'invalid_nom' }),
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate role is one of the allowed values
+    const ALLOWED_ROLES = new Set(['admin', 'agent', 'client'])
+    if (!ALLOWED_ROLES.has(role)) {
+      return new Response(
+        JSON.stringify({ error: 'Rôle invalide', code: 'invalid_role' }),
         { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
@@ -109,9 +135,9 @@ Deno.serve(async (req) => {
 
     console.log(`Admin ${callerId} inviting user: ${email} with role ${role}`)
 
-    // Get redirect URL from request origin or use default
-    const origin = req.headers.get('origin') || 'https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app'
-    const redirectTo = `${origin}/connexion`
+    // Get redirect URL from env or request origin (never trust raw origin for security)
+    const appUrl = Deno.env.get('APP_URL') || 'https://optimum-immo.lovable.app'
+    const redirectTo = `${appUrl}/connexion`
 
     // Invite user via email (sends confirmation email automatically!)
     const { data: newUserData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {

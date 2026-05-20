@@ -26,9 +26,8 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user: authedUser }, error: authedError } = await userClient.auth.getUser();
+    if (authedError || !authedUser) {
       return new Response(JSON.stringify({ error: "Token invalide" }), {
         status: 401,
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
@@ -36,8 +35,18 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const context = typeof body.context === "string" ? body.context.slice(0, 2000) : "";
-    const existingTasks = Array.isArray(body.existingTasks) ? body.existingTasks.slice(0, 50) : [];
+    const context = typeof body.context === "string" ? body.context.slice(0, 2000).replace(/[`${}\\]/g, "") : "";
+    const rawTasks = Array.isArray(body.existingTasks) ? body.existingTasks.slice(0, 50) : [];
+    // Sanitize each task: keep only safe string fields
+    const existingTasks = rawTasks.map((t: unknown) => {
+      if (!t || typeof t !== "object") return null;
+      const task = t as Record<string, unknown>;
+      return {
+        titre: typeof task.titre === "string" ? task.titre.slice(0, 200) : "",
+        statut: typeof task.statut === "string" ? task.statut.slice(0, 50) : "",
+        priorite: typeof task.priorite === "string" ? task.priorite.slice(0, 20) : "",
+      };
+    }).filter(Boolean);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

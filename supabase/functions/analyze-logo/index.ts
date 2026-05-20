@@ -26,9 +26,8 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user: authedUser }, error: authedError } = await userClient.auth.getUser();
+    if (authedError || !authedUser) {
       return new Response(JSON.stringify({ error: "Token invalide" }), {
         status: 401,
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
@@ -47,8 +46,8 @@ serve(async (req) => {
     // Validate URL format
     try {
       const parsed = new URL(logoUrl);
-      if (!["http:", "https:"].includes(parsed.protocol)) {
-        throw new Error("Invalid protocol");
+      if (parsed.protocol !== "https:") {
+        throw new Error("HTTPS required");
       }
     } catch {
       return new Response(

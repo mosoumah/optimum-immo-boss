@@ -38,15 +38,14 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     // Service role client for storage and DB writes
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
@@ -101,24 +100,49 @@ serve(async (req) => {
     const body = await req.json();
     const { type } = body;
 
+    // --- Input validation ---
+    const ALLOWED_TYPES = new Set(["visual", "redesign"]);
+    if (!type || !ALLOWED_TYPES.has(type)) {
+      return new Response(JSON.stringify({ error: "Type de génération invalide" }), {
+        status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     let resultImageUrl = "";
 
     if (type === "visual") {
       const { bien_description, prix, mention, include_logo, include_phone, format, entreprise_nom, entreprise_phone, couleur_primaire } = body;
 
-      const dimension = format === "instagram_story" ? "1080x1920 (9:16 portrait story)" : "1080x1080 (1:1 square)";
-      const priceText = prix ? `Prix affiché bien visible: ${prix}` : "Ne pas afficher de prix";
-      const mentionText = mention || "Disponible";
-      const phoneText = include_phone && entreprise_phone ? `Numéro de téléphone: ${entreprise_phone}` : "";
-      const logoText = include_logo ? `Inclure le nom de l'agence: ${entreprise_nom || "Agence Immobilière"}` : "";
-      const brandColor = couleur_primaire || "#E97451";
+      // Validate and sanitize all fields used in AI prompt
+      const safeDesc = typeof bien_description === "string" ? bien_description.slice(0, 500).replace(/[`${}\\]/g, "") : "";
+      const safePrix = typeof prix === "string" ? prix.slice(0, 50).replace(/[^0-9\s.,FCFAGN]/g, "") : "";
+      const safeMention = typeof mention === "string" ? mention.slice(0, 50).replace(/[`${}\\]/g, "") : "Disponible";
+      const safeNom = typeof entreprise_nom === "string" ? entreprise_nom.slice(0, 100).replace(/[`${}\\]/g, "") : "Agence Immobilière";
+      const safePhone = typeof entreprise_phone === "string" ? entreprise_phone.slice(0, 30).replace(/[^0-9+\s()-]/g, "") : "";
+      const ALLOWED_FORMATS = new Set(["instagram_square", "instagram_story"]);
+      const safeFormat = ALLOWED_FORMATS.has(format) ? format : "instagram_square";
+      const colorRegex = /^#[0-9A-Fa-f]{3,6}$/;
+      const safeColor = typeof couleur_primaire === "string" && colorRegex.test(couleur_primaire.trim()) ? couleur_primaire.trim() : "#E97451";
+
+      if (!safeDesc) {
+        return new Response(JSON.stringify({ error: "Description du bien requise (max 500 caractères)" }), {
+          status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+
+      const dimension = safeFormat === "instagram_story" ? "1080x1920 (9:16 portrait story)" : "1080x1080 (1:1 square)";
+      const priceText = safePrix ? `Prix affiché bien visible: ${safePrix}` : "Ne pas afficher de prix";
+      const mentionText = safeMention;
+      const phoneText = include_phone && safePhone ? `Numéro de téléphone: ${safePhone}` : "";
+      const logoText = include_logo ? `Inclure le nom de l'agence: ${safeNom}` : "";
+      const brandColor = safeColor;
 
       const prompt = `Créer un visuel immobilier professionnel et premium pour les réseaux sociaux.
 Format: ${dimension}
 Style: Design moderne immobilier haut de gamme, élégant et professionnel.
 Couleur d'accent de la marque: ${brandColor}
 
-Bien immobilier: ${bien_description}
+Bien immobilier: ${safeDesc}
 
 Éléments à inclure:
 - Mention "${mentionText}" bien visible
@@ -186,11 +210,11 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
       await supabaseAuth.from("ai_generated_images").insert({
         entreprise_id: entrepriseId,
         created_by: userId,
-        format,
+        format: safeFormat,
         prompt_used: prompt,
         image_url: resultImageUrl,
-        bien_description,
-        prix: prix || null,
+        bien_description: safeDesc,
+        prix: safePrix || null,
         mention: mentionText,
         include_logo: include_logo || false,
         include_phone: include_phone || false,
@@ -205,21 +229,43 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
         });
       }
 
+      // Validate URL format (must be https)
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(original_image_url);
+        if (parsedUrl.protocol !== "https:") throw new Error();
+      } catch {
+        return new Response(JSON.stringify({ error: "URL d'image invalide (HTTPS requis)" }), {
+          status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+      const safeImageUrl = parsedUrl.toString().slice(0, 2048);
+
+      // Sanitize instruction for prompt injection
+      const safeInstruction = typeof instruction === "string"
+        ? instruction.slice(0, 500).replace(/[`${}\\]/g, "")
+        : "";
+      if (!safeInstruction) {
+        return new Response(JSON.stringify({ error: "Instruction invalide ou trop longue (max 500 caractères)" }), {
+          status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+
       // Insert pending request
       const { data: request, error: reqErr } = await supabaseAuth
         .from("redesign_requests")
         .insert({
           entreprise_id: entrepriseId,
           created_by: userId,
-          original_image_url,
-          instruction,
+          original_image_url: safeImageUrl,
+          instruction: safeInstruction,
           status: "pending",
         })
         .select()
         .single();
       if (reqErr) throw reqErr;
 
-      const editPrompt = `Tu es un expert en design d'intérieur et immobilier de luxe. Modifie cette photo d'intérieur selon l'instruction suivante: "${instruction}". Le résultat doit être photoréaliste et professionnel. Ultra high resolution.`;
+      const editPrompt = `Tu es un expert en design d'intérieur et immobilier de luxe. Modifie cette photo d'intérieur selon l'instruction suivante: "${safeInstruction}". Le résultat doit être photoréaliste et professionnel. Ultra high resolution.`;
 
       const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -234,7 +280,7 @@ L'image doit donner envie de visiter le bien. Ultra high resolution.`;
               role: "user",
               content: [
                 { type: "text", text: editPrompt },
-                { type: "image_url", image_url: { url: original_image_url } },
+                { type: "image_url", image_url: { url: safeImageUrl } },
               ],
             },
           ],

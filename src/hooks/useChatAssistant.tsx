@@ -21,21 +21,30 @@ export interface Conversation {
 }
 
 const HISTORY_KEY = "chat-assistant-history";
+const MAX_HISTORY = 20;
+const MAX_MESSAGES_PER_CONV = 100;
+const MAX_CONTENT_LENGTH = 10000;
+
+const isValidRole = (r: unknown): r is "user" | "assistant" =>
+  r === "user" || r === "assistant";
 
 const loadHistory = (): Conversation[] => {
   try {
     const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-    // Backfill missing fields from older format
-    return raw.map((c: Record<string, unknown>) => ({
+    if (!Array.isArray(raw)) return [];
+    return raw.slice(0, MAX_HISTORY).map((c: Record<string, unknown>) => ({
       ...c,
-      messages: ((c.messages as Record<string, unknown>[] | undefined) || []).map((m: Record<string, unknown>) => ({
-        id: m.id || crypto.randomUUID(),
-        role: m.role,
-        content: m.content,
-        status: m.status || "completed",
-        createdAt: m.createdAt || c.createdAt || new Date().toISOString(),
-        error: m.error,
-      })),
+      messages: ((c.messages as Record<string, unknown>[] | undefined) || [])
+        .slice(0, MAX_MESSAGES_PER_CONV)
+        .filter((m: Record<string, unknown>) => isValidRole(m.role))
+        .map((m: Record<string, unknown>) => ({
+          id: typeof m.id === "string" ? m.id : crypto.randomUUID(),
+          role: m.role,
+          content: typeof m.content === "string" ? m.content.slice(0, MAX_CONTENT_LENGTH) : "",
+          status: m.status || "completed",
+          createdAt: m.createdAt || c.createdAt || new Date().toISOString(),
+          error: typeof m.error === "string" ? m.error : undefined,
+        })),
     }));
   } catch {
     return [];
@@ -43,7 +52,7 @@ const loadHistory = (): Conversation[] => {
 };
 
 const saveHistory = (convos: Conversation[]) => {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(convos.slice(0, 20)));
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(convos.slice(0, MAX_HISTORY)));
 };
 
 export const useChatAssistant = () => {

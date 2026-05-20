@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Admin ${callerId} deleting user: ${user_id} (${targetProfile.email})`)
+    console.log(`Admin ${callerId} deleting user: ${user_id}`)
 
     // Delete the user from auth (cascades will clean up profiles, roles, etc.)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id)

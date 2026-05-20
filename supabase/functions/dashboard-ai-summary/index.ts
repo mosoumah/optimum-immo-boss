@@ -29,16 +29,15 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Token invalide" }), {
         status: 401,
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     // 2. Get entreprise_id from profile (server-side)
     const adminClient = createClient(supabaseUrl, serviceRoleKey);

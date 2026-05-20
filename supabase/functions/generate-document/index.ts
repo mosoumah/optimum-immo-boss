@@ -129,7 +129,7 @@ Termine par une formule officielle appropriée au type de document, incluant la 
 
 Génère maintenant le document adapté au type "${typeDocument}".`;
 
-    console.log('Generating document:', typeDocument, 'for client:', clientNom);
+    console.log('Generating document:', typeDocument);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -177,7 +177,7 @@ Génère maintenant le document adapté au type "${typeDocument}".`;
     });
   } catch (error) {
     console.error("generate-document error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erreur inconnue" }), {
+    return new Response(JSON.stringify({ error: "Une erreur est survenue lors de la génération du document" }), {
       status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
