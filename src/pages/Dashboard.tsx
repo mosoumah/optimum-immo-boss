@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -9,7 +9,6 @@ import {
   CheckSquare,
   Sparkles,
   Plus,
-  BarChart3,
   CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,7 @@ interface Client {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin, isAgent, loading: roleLoading } = useUserRole();
+  const { isAdmin, isAgent: _isAgent, loading: roleLoading } = useUserRole();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const { locationEnabled } = useAgencySettings();
   const navigate = useNavigate();
@@ -72,7 +71,7 @@ const Dashboard = () => {
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
 
-  const fetchProfileAndClients = async () => {
+  const fetchProfileAndClients = useCallback(async () => {
     if (!user) return;
 
     const { data: ctx } = await supabase.rpc("get_current_user_context");
@@ -94,7 +93,7 @@ const Dashboard = () => {
       }
     }
     setIsLoading(false);
-  };
+  }, [user]);
 
   // Auto-complete expired reservations
   useEffect(() => {
@@ -113,7 +112,7 @@ const Dashboard = () => {
     } else {
       setIsLoading(false);
     }
-  }, [user, roleLoading]);
+  }, [user, roleLoading, fetchProfileAndClients]);
 
 
   const handleSignOut = async () => {

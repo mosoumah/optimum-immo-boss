@@ -38,7 +38,7 @@ const getContrastColor = (hexColor: string): string => {
 };
 
 // Lighten a hex color
-const lightenColor = (hexColor: string, percent: number): string => {
+const _lightenColor = (hexColor: string, percent: number): string => {
   const hex = hexColor.replace("#", "");
   const r = Math.min(255, parseInt(hex.substr(0, 2), 16) + Math.round(255 * percent));
   const g = Math.min(255, parseInt(hex.substr(2, 2), 16) + Math.round(255 * percent));
@@ -435,7 +435,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     }}
                   >
                     {aiContent.split('\n').map((line, idx) => {
-                      const cleanLine = line.replace(/^[\s•\-\*]+/, '').trim();
+                      const cleanLine = line.replace(/^[\s•\-*]+/, '').trim();
                       if (!cleanLine) return <div key={idx} className="h-4" />;
                       return (
                         <p 

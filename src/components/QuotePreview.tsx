@@ -436,7 +436,7 @@ export const QuotePreview = forwardRef<HTMLDivElement, QuotePreviewProps>(
                     }}
                   >
                     {aiContent.split('\n').map((line, idx) => {
-                      const cleanLine = line.replace(/^[\s•\-\*]+/, '').trim();
+                      const cleanLine = line.replace(/^[\s•\-*]+/, '').trim();
                       if (!cleanLine) return <div key={idx} className="h-4" />;
                       return (
                         <p 

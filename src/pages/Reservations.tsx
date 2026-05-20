@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
 import { CalendarCheck, Plus, LogIn, LogOut as LogOutIcon, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,19 +9,9 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { PermissionGate } from "@/components/PermissionGate";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Reservation {
-  id: string;
-  property_name: string;
-  property_id: string | null;
-  type_location: string;
-  date_arrivee: string;
-  date_depart: string;
-  montant_total: number;
-  montant_paye: number;
-  statut: string;
-  client_id: string;
-}
+type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
 
 const statutColors: Record<string, string> = {
   en_attente: "bg-muted text-muted-foreground",
@@ -174,7 +163,7 @@ const Reservations = () => {
         <ReservationDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          reservation={editingReservation as any}
+          reservation={editingReservation}
           onSuccess={fetchReservations}
         />
       </main>

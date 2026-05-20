@@ -131,8 +131,8 @@ export const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
         }
 
         // Detect bullet/list items
-        if (/^[\-•]\s+/.test(trimmed)) {
-          const cleanLine = trimmed.replace(/^[\-•]\s+/, '').replace(/\*\*/g, '');
+        if (/^[-•]\s+/.test(trimmed)) {
+          const cleanLine = trimmed.replace(/^[-•]\s+/, '').replace(/\*\*/g, '');
           return (
             <div key={idx} className="flex items-start gap-3 mb-2 ml-4">
               <span className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: primaryColor }} />

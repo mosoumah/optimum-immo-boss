@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Building, Plus, Search, MapPin, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Database } from "@/integrations/supabase/types";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,18 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BienDialog } from "@/components/dialogs/BienDialog";
 import { PermissionGate } from "@/components/PermissionGate";
 
-interface Property {
-  id: string;
-  nom: string;
-  adresse: string | null;
-  type_bien: string;
-  surface: number | null;
-  prix: number;
-  statut: string;
-  nombre_pieces: number | null;
-  created_at: string;
-  cover_image_url: string | null;
-}
+type Property = Database["public"]["Tables"]["properties"]["Row"];
 
 const statutColors: Record<string, string> = {
   disponible: "bg-success/20 text-success",
@@ -197,7 +187,7 @@ const Biens = () => {
         <BienDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          property={editingProperty as any}
+          property={editingProperty}
           onSuccess={fetchProperties}
         />
       </main>

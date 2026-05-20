@@ -105,18 +105,18 @@ serve(async (req) => {
 
     const body = await req.json();
     const { 
-      entrepriseNom, 
-      entrepriseLogo,
-      entrepriseAdresse,
-      entrepriseTelephone,
-      entrepriseEmail,
+      entrepriseNom: _entrepriseNom, 
+      entrepriseLogo: _entrepriseLogo,
+      entrepriseAdresse: _entrepriseAdresse,
+      entrepriseTelephone: _entrepriseTelephone,
+      entrepriseEmail: _entrepriseEmail,
       clientNom,
-      clientTelephone,
-      clientEmail,
+      clientTelephone: _clientTelephone,
+      clientEmail: _clientEmail,
       description, 
       montant, 
       date,
-      numeroDevis
+      numeroDevis: _numeroDevis
     } = body;
 
     if (!clientNom || typeof clientNom !== "string" || !clientNom.trim() || clientNom.length > 200) {

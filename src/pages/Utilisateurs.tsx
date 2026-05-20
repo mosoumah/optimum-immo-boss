@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   UserPlus,
-  Users,
   Shield,
   User,
   MoreVertical,
@@ -84,7 +83,7 @@ const Utilisateurs = () => {
   const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -125,11 +124,11 @@ const Utilisateurs = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [user, fetchData]);
 
   const handleSignOut = async () => {
     await signOut();

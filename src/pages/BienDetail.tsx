@@ -31,7 +31,7 @@ const BienDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
-  const { venteEnabled, locationEnabled } = useAgencySettings();
+  const { venteEnabled: _venteEnabled, locationEnabled } = useAgencySettings();
   const [property, setProperty] = useState<Property | null>(null);
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);

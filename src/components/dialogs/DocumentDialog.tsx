@@ -200,7 +200,7 @@ export const DocumentDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: 
       setPropertyAddress("");
       setPropertyType("");
     }
-  }, [propertyId, properties]);
+  }, [propertyId, properties, salePrice]);
 
   const selectedClient = clients.find(c => c.id === clientId);
 

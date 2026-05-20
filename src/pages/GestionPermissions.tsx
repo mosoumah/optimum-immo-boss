@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, ArrowLeft, Save, Loader2, User, Check, X } from "lucide-react";
+import { Shield, ArrowLeft, Save, Loader2, User } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import {
   PERMISSION_CATEGORIES,
   PERMISSION_LABELS,
-  ALL_PERMISSIONS,
   type AppPermission,
 } from "@/hooks/usePermissions";
 import type { Database } from "@/integrations/supabase/types";

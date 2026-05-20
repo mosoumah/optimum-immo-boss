@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,

@@ -98,7 +98,8 @@ const ClientDetail = () => {
     }
     if (venteEnabled) {
       const transRes = await supabase.from("sales_transactions").select("id, montant_vente, date_vente, statut, property_id").eq("client_id", id).order("date_vente", { ascending: false });
-      const transData = (transRes.data || []) as any[];
+      type TransRow = { id: string; montant_vente: number | null; date_vente: string | null; statut: string | null; property_id: string | null; property_name?: string };
+      const transData: TransRow[] = (transRes.data || []) as TransRow[];
       // Enrich with property names
       if (transData.length > 0) {
         const propIds = [...new Set(transData.map(t => t.property_id).filter(Boolean))];

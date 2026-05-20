@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { ReactNode } from "react";
 import { usePermissions, AppPermission } from "@/hooks/usePermissions";
 

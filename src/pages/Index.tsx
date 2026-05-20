@@ -20,8 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FeatureCard } from "@/components/FeatureCard";
-import { StatCard } from "@/components/StatCard";
-import { Logo } from "@/components/Logo";
 
 const features = [
   {

@@ -26,9 +26,9 @@ const loadHistory = (): Conversation[] => {
   try {
     const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
     // Backfill missing fields from older format
-    return raw.map((c: any) => ({
+    return raw.map((c: Record<string, unknown>) => ({
       ...c,
-      messages: (c.messages || []).map((m: any) => ({
+      messages: ((c.messages as Record<string, unknown>[] | undefined) || []).map((m: Record<string, unknown>) => ({
         id: m.id || crypto.randomUUID(),
         role: m.role,
         content: m.content,
@@ -160,9 +160,9 @@ export const useChatAssistant = () => {
       });
       // Persist outside the updater to avoid setState-in-render warnings
       setTimeout(() => persistConvo(snapshot), 0);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Chat error:", e);
-      const errMsg = e?.message || "Erreur inconnue";
+      const errMsg = (e instanceof Error ? e.message : null) || "Erreur inconnue";
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId

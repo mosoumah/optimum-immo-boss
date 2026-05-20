@@ -51,7 +51,7 @@ export const DirectMessagePanel = ({
   open,
   onOpenChange,
   isEmbedded = false,
-  onClose,
+  _onClose,
 }: DirectMessagePanelProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [roleFilter, setRoleFilter] = useState<AppRole | "all">("all");
