@@ -28,6 +28,9 @@ const MAX_CONTENT_LENGTH = 10000;
 const isValidRole = (r: unknown): r is "user" | "assistant" =>
   r === "user" || r === "assistant";
 
+const isValidStatus = (s: unknown): s is MessageStatus =>
+  s === "sending" || s === "processing" || s === "completed" || s === "failed";
+
 const loadHistory = (): Conversation[] => {
   try {
     const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
@@ -39,9 +42,9 @@ const loadHistory = (): Conversation[] => {
         .filter((m: Record<string, unknown>) => isValidRole(m.role))
         .map((m: Record<string, unknown>) => ({
           id: typeof m.id === "string" ? m.id : crypto.randomUUID(),
-          role: m.role,
+          role: m.role as "user" | "assistant",
           content: typeof m.content === "string" ? m.content.slice(0, MAX_CONTENT_LENGTH) : "",
-          status: m.status || "completed",
+          status: isValidStatus(m.status) ? m.status : "completed",
           createdAt: typeof m.createdAt === "string" ? m.createdAt : createdAt,
           error: typeof m.error === "string" ? m.error : undefined,
         }));
