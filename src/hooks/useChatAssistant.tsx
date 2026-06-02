@@ -32,9 +32,9 @@ const loadHistory = (): Conversation[] => {
   try {
     const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
     if (!Array.isArray(raw)) return [];
-    return raw.slice(0, MAX_HISTORY).map((c: Record<string, unknown>) => ({
-      ...c,
-      messages: ((c.messages as Record<string, unknown>[] | undefined) || [])
+    return raw.slice(0, MAX_HISTORY).map((c: Record<string, unknown>) => {
+      const createdAt = typeof c.createdAt === "string" ? c.createdAt : new Date().toISOString();
+      const messages = ((c.messages as Record<string, unknown>[] | undefined) || [])
         .slice(0, MAX_MESSAGES_PER_CONV)
         .filter((m: Record<string, unknown>) => isValidRole(m.role))
         .map((m: Record<string, unknown>) => ({
@@ -42,10 +42,16 @@ const loadHistory = (): Conversation[] => {
           role: m.role,
           content: typeof m.content === "string" ? m.content.slice(0, MAX_CONTENT_LENGTH) : "",
           status: m.status || "completed",
-          createdAt: m.createdAt || c.createdAt || new Date().toISOString(),
+          createdAt: typeof m.createdAt === "string" ? m.createdAt : createdAt,
           error: typeof m.error === "string" ? m.error : undefined,
-        })),
-    }));
+        }));
+      return {
+        id: typeof c.id === "string" ? c.id : crypto.randomUUID(),
+        title: typeof c.title === "string" ? c.title : messages.find((m) => m.role === "user")?.content?.slice(0, 40) || "Conversation",
+        messages,
+        createdAt,
+      };
+    });
   } catch {
     return [];
   }
