@@ -51,7 +51,7 @@ const Biens = () => {
     if (!entrepriseId) return;
     const { data } = await supabase
       .from("properties")
-      .select("id, nom, adresse, type_bien, surface, prix, statut, nombre_pieces, created_at, cover_image_url")
+      .select("*")
       .eq("entreprise_id", entrepriseId)
       .order("created_at", { ascending: false });
     setProperties(data || []);

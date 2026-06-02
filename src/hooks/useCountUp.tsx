@@ -18,6 +18,27 @@ export const useCountUp = (
   // Easing function - easeOutQuart for smooth deceleration
   const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
 
+  const animateCount = useCallback(() => {
+    const startTime = performance.now();
+
+    const updateCount = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeOutQuart(progress);
+      const currentValue = Math.floor(easedProgress * endValue);
+
+      setCount(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(updateCount);
+      } else {
+        setCount(endValue);
+      }
+    };
+
+    requestAnimationFrame(updateCount);
+  }, [endValue, duration]);
+
   useEffect(() => {
     if (!startOnView) {
       // Animate immediately if not waiting for view
@@ -48,27 +69,6 @@ export const useCountUp = (
       }
     };
   }, [endValue, hasAnimated, startOnView, threshold, animateCount]);
-
-  const animateCount = useCallback(() => {
-    const startTime = performance.now();
-
-    const updateCount = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeOutQuart(progress);
-      const currentValue = Math.floor(easedProgress * endValue);
-
-      setCount(currentValue);
-
-      if (progress < 1) {
-        requestAnimationFrame(updateCount);
-      } else {
-        setCount(endValue);
-      }
-    };
-
-    requestAnimationFrame(updateCount);
-  }, [endValue, duration]);
 
   return { count, ref };
 };
