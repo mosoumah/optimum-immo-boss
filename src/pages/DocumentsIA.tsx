@@ -142,8 +142,8 @@ const DocumentsIA = () => {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Documents IA</h1>
-            <p className="text-muted-foreground">Documents générés par l'IA</p>
+            <h1 className="text-3xl font-bold">Documents</h1>
+            <p className="text-muted-foreground">Documents générés</p>
           </div>
         </motion.div>
 
@@ -227,7 +227,7 @@ const DocumentsIA = () => {
           ) : (
             <div className="p-12 text-center">
               <Sparkles className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Aucun document IA généré</p>
+              <p className="text-muted-foreground">Aucun document généré</p>
             </div>
           )}
         </motion.div>
