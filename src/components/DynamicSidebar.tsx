@@ -46,7 +46,7 @@ const sidebarItems: SidebarItem[] = [
   { icon: TrendingDown, label: "Dépenses", path: "/depenses", roles: ["admin"] },
   { icon: CheckSquare, label: "Tâches", path: "/taches", roles: ["admin", "agent"] },
   { icon: Sparkles, label: "Documents IA", path: "/documents-ia", roles: ["admin", "agent"] },
-  { icon: ImagePlus, label: "Studio IA", path: "/studio-ia", roles: ["admin", "agent"] },
+  
   { icon: UserCog, label: "Utilisateurs", path: "/utilisateurs", roles: ["admin"] },
   { icon: Shield, label: "Permissions", path: "/gestion-permissions", roles: ["admin"] },
 ];

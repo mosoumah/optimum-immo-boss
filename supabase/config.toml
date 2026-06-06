@@ -21,8 +21,6 @@ verify_jwt = false
 [functions.admin-delete-user]
 verify_jwt = false
 
-[functions.studio-ia-generate]
-verify_jwt = false
 
 [functions.dashboard-ai-summary]
 verify_jwt = false
