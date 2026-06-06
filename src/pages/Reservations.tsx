@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { CalendarCheck, Plus, LogIn, LogOut as LogOutIcon, Clock, AlertCircle } from "lucide-react";
+import { CalendarCheck, Plus, LogIn, LogOut as LogOutIcon, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
@@ -80,7 +80,7 @@ const Reservations = () => {
   const arriveesToday = reservations.filter((r) => r.date_arrivee === today && ["en_attente", "en_cours"].includes(r.statut)).length;
   const departsToday = reservations.filter((r) => r.date_depart === today && ["en_attente", "en_cours"].includes(r.statut)).length;
   const enCours = reservations.filter((r) => ["en_cours", "en_attente"].includes(r.statut) && r.date_arrivee <= today && r.date_depart >= today).length;
-  const paiementsRetard = reservations.filter((r) => r.montant_paye < r.montant_total && r.date_depart < today && r.statut === "terminee").length;
+  
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
@@ -104,12 +104,12 @@ const Reservations = () => {
             </PermissionGate>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             {[
               { label: "Arrivées aujourd'hui", value: arriveesToday, Icon: LogIn },
               { label: "Départs aujourd'hui", value: departsToday, Icon: LogOutIcon },
               { label: "Séjours en cours", value: enCours, Icon: Clock },
-              { label: "Paiements en retard", value: paiementsRetard, Icon: AlertCircle },
+              
             ].map(({ label, value, Icon }) => (
               <div key={label} className="p-4 rounded-xl border border-border/50 bg-card">
                 <div className="flex items-center gap-2 mb-2"><Icon className="w-4 h-4 text-primary" /><span className="text-xs text-muted-foreground">{label}</span></div>
