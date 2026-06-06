@@ -143,7 +143,7 @@ const DocumentsIA = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Documents</h1>
-            <p className="text-muted-foreground">Documents générés</p>
+            <p className="text-muted-foreground">Documents </p>
           </div>
         </motion.div>
 
