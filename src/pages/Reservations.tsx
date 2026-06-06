@@ -1,7 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
-import { CalendarCheck, Plus, LogIn, LogOut as LogOutIcon, Clock } from "lucide-react";
+import { CalendarCheck, Plus, LogIn, LogOut as LogOutIcon, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +20,8 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { PermissionGate } from "@/components/PermissionGate";
+import { checkPermission } from "@/lib/checkPermission";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
