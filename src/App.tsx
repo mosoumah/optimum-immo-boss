@@ -136,14 +136,6 @@ const App = () => (
                 </RoleProtectedRoute>
               }
             />
-            <Route
-              path="/studio-ia"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <StudioIA />
-                </RoleProtectedRoute>
-              }
-            />
             {/* Admin only routes */}
             <Route
               path="/revenus"
