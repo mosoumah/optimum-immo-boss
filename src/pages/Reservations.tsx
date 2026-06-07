@@ -1,18 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import { CalendarCheck, Plus, LogIn, LogOut as LogOutIcon, Clock, Trash2 } from "lucide-react";
+import { CalendarCheck, Plus, LogIn, LogOut as LogOutIcon, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,8 +9,6 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { PermissionGate } from "@/components/PermissionGate";
-import { checkPermission } from "@/lib/checkPermission";
-import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
@@ -99,21 +86,6 @@ const Reservations = () => {
     new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
   const formatDate = (date: string) => new Date(date).toLocaleDateString("fr-FR");
 
-  const supprimerReservation = async (r: Reservation) => {
-    const canDelete = await checkPermission("supprimer_reservation");
-    if (!canDelete) {
-      toast.error("Vous n'avez pas la permission de supprimer les réservations");
-      return;
-    }
-    const { error } = await supabase.from("reservations").delete().eq("id", r.id);
-    if (error) {
-      toast.error("Erreur lors de la suppression");
-      return;
-    }
-    toast.success("Réservation supprimée");
-    fetchReservations();
-  };
-
   return (
     <div className="min-h-screen bg-background flex">
       <FloatingParticles />
@@ -166,7 +138,6 @@ const Reservations = () => {
                     <th className="text-left p-3 text-sm font-medium hidden md:table-cell">Dates</th>
                     <th className="text-left p-3 text-sm font-medium hidden md:table-cell">Montant</th>
                     <th className="text-left p-3 text-sm font-medium">Statut</th>
-                    <th className="text-right p-3 text-sm font-medium w-12"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,36 +152,6 @@ const Reservations = () => {
                       <td className="p-3 text-sm hidden md:table-cell">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatCurrency(r.montant_total)}</td>
                       <td className="p-3"><Badge className={statutColors[r.statut]}>{statutLabels[r.statut] || r.statut}</Badge></td>
-                      <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
-                        {r.statut === "terminee" && (
-                          <PermissionGate permission="supprimer_reservation">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Supprimer cette réservation ?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Cette action est irréversible. La réservation terminée sera définitivement supprimée.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => supprimerReservation(r)}
-                                  >
-                                    Supprimer
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </PermissionGate>
-                        )}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

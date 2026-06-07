@@ -13,20 +13,10 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { checkPermission } from "@/lib/checkPermission";
 
 interface Client {
   id: string;
   nom: string;
-}
-
-interface FactureToEdit {
-  id: string;
-  client_id?: string | null;
-  description: string | null;
-  montant: number;
-  date: string;
-  statut?: string;
 }
 
 interface FactureDialogProps {
@@ -34,11 +24,9 @@ interface FactureDialogProps {
   onOpenChange: (open: boolean) => void;
   entrepriseId: string;
   onSuccess: () => void;
-  facture?: FactureToEdit | null;
 }
 
-export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, facture }: FactureDialogProps) => {
-  const isEdit = !!facture;
+export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: FactureDialogProps) => {
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [montant, setMontant] = useState("");
@@ -61,22 +49,6 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
     }
   }, [open, entrepriseId]);
 
-  useEffect(() => {
-    if (open) {
-      if (facture) {
-        setClientId(facture.client_id || "");
-        setDescription(facture.description || "");
-        setMontant(facture.montant?.toString() || "");
-        setDate(facture.date ? new Date(facture.date) : new Date());
-      } else {
-        setClientId("");
-        setDescription("");
-        setMontant("");
-        setDate(new Date());
-      }
-    }
-  }, [open, facture]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientId || !montant) {
@@ -89,48 +61,27 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
     }
 
     setIsLoading(true);
+    const { error } = await supabase.from("factures").insert({
+      client_id: clientId,
+      description: description.trim() || null,
+      montant: parseFloat(montant),
+      date: format(date, "yyyy-MM-dd"),
+      entreprise_id: entrepriseId,
+      statut: "non_paye",
+    });
 
-    if (isEdit && facture) {
-      const canEdit = await checkPermission("modifier_facture");
-      if (!canEdit) {
-        setIsLoading(false);
-        toast.error("Vous n'avez pas la permission de modifier les factures");
-        return;
-      }
-      const { error } = await supabase
-        .from("factures")
-        .update({
-          client_id: clientId,
-          description: description.trim() || null,
-          montant: parseFloat(montant),
-          date: format(date, "yyyy-MM-dd"),
-        })
-        .eq("id", facture.id);
+    setIsLoading(false);
 
-      setIsLoading(false);
-      if (error) {
-        toast.error("Erreur lors de la modification de la facture");
-        return;
-      }
-      toast.success("Facture modifiée avec succès");
-    } else {
-      const { error } = await supabase.from("factures").insert({
-        client_id: clientId,
-        description: description.trim() || null,
-        montant: parseFloat(montant),
-        date: format(date, "yyyy-MM-dd"),
-        entreprise_id: entrepriseId,
-        statut: "non_paye",
-      });
-
-      setIsLoading(false);
-      if (error) {
-        toast.error("Erreur lors de la création de la facture");
-        return;
-      }
-      toast.success("Facture créée avec succès");
+    if (error) {
+      toast.error("Erreur lors de la création de la facture");
+      return;
     }
 
+    toast.success("Facture créée avec succès");
+    setClientId("");
+    setDescription("");
+    setMontant("");
+    setDate(new Date());
     onOpenChange(false);
     onSuccess();
   };
@@ -139,10 +90,8 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Modifier la facture" : "Nouvelle facture"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Modifiez les informations de la facture." : "Créez une nouvelle facture pour un client."}
-          </DialogDescription>
+          <DialogTitle>Nouvelle facture</DialogTitle>
+          <DialogDescription>Créez une nouvelle facture pour un client.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -167,7 +116,6 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description de la facture"
-              rows={5}
             />
           </div>
           <div className="space-y-2">
@@ -206,7 +154,7 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
               Annuler
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Enregistrement..." : isEdit ? "Modifier" : "Enregistrer"}
+              {isLoading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>

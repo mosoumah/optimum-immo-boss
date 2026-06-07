@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, Plus, ArrowLeft, Receipt, Download, Loader2, Printer, Trash2, Pencil } from "lucide-react";
+import { FileText, Plus, ArrowLeft, Receipt, Download, Loader2, Printer, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,7 +81,6 @@ const Devis = () => {
   const [devisList, setDevisList] = useState<Devis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingDevis, setEditingDevis] = useState<Devis | null>(null);
   const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState("");
@@ -603,7 +602,7 @@ const Devis = () => {
             transition={{ delay: 0.1 }}
             className="flex justify-end mb-6"
           >
-            <Button onClick={() => { setEditingDevis(null); setDialogOpen(true); }} className="premium-button">
+            <Button onClick={() => setDialogOpen(true)} className="premium-button">
               <Plus className="w-4 h-4 mr-2" />
               Nouveau devis
             </Button>
@@ -638,16 +637,6 @@ const Devis = () => {
                     <Badge className={statutColors[devis.statut]}>{statutLabels[devis.statut]}</Badge>
                   </div>
                   <div className="flex gap-2">
-                    <PermissionGate permission="modifier_devis">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { setEditingDevis(devis); setDialogOpen(true); }}
-                        title="Modifier le devis"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    </PermissionGate>
                     <PermissionGate permission="creer_facture">
                       {devis.statut !== "accepte" && devis.statut !== "refuse" && (
                         <Button variant="outline" size="sm" onClick={() => transformerEnFacture(devis)}>
@@ -712,10 +701,9 @@ const Devis = () => {
       {entrepriseId && (
         <DevisDialog
           open={dialogOpen}
-          onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditingDevis(null); }}
+          onOpenChange={setDialogOpen}
           entrepriseId={entrepriseId}
           onSuccess={fetchDevis}
-          devis={editingDevis}
         />
       )}
 

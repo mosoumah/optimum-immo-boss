@@ -13,20 +13,10 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { checkPermission } from "@/lib/checkPermission";
 
 interface Client {
   id: string;
   nom: string;
-}
-
-interface DevisToEdit {
-  id: string;
-  client_id?: string | null;
-  description: string | null;
-  montant: number;
-  date: string;
-  statut?: string;
 }
 
 interface DevisDialogProps {
@@ -34,11 +24,9 @@ interface DevisDialogProps {
   onOpenChange: (open: boolean) => void;
   entrepriseId: string;
   onSuccess: () => void;
-  devis?: DevisToEdit | null;
 }
 
-export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess, devis }: DevisDialogProps) => {
-  const isEdit = !!devis;
+export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: DevisDialogProps) => {
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [montant, setMontant] = useState("");
@@ -61,22 +49,6 @@ export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess, devis
     }
   }, [open, entrepriseId]);
 
-  useEffect(() => {
-    if (open) {
-      if (devis) {
-        setClientId(devis.client_id || "");
-        setDescription(devis.description || "");
-        setMontant(devis.montant?.toString() || "");
-        setDate(devis.date ? new Date(devis.date) : new Date());
-      } else {
-        setClientId("");
-        setDescription("");
-        setMontant("");
-        setDate(new Date());
-      }
-    }
-  }, [open, devis]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientId || !montant) {
@@ -89,48 +61,27 @@ export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess, devis
     }
 
     setIsLoading(true);
+    const { error } = await supabase.from("devis").insert({
+      client_id: clientId,
+      description: description.trim() || null,
+      montant: parseFloat(montant),
+      date: format(date, "yyyy-MM-dd"),
+      entreprise_id: entrepriseId,
+      statut: "brouillon",
+    });
 
-    if (isEdit && devis) {
-      const canEdit = await checkPermission("modifier_devis");
-      if (!canEdit) {
-        setIsLoading(false);
-        toast.error("Vous n'avez pas la permission de modifier les devis");
-        return;
-      }
-      const { error } = await supabase
-        .from("devis")
-        .update({
-          client_id: clientId,
-          description: description.trim() || null,
-          montant: parseFloat(montant),
-          date: format(date, "yyyy-MM-dd"),
-        })
-        .eq("id", devis.id);
+    setIsLoading(false);
 
-      setIsLoading(false);
-      if (error) {
-        toast.error("Erreur lors de la modification du devis");
-        return;
-      }
-      toast.success("Devis modifié avec succès");
-    } else {
-      const { error } = await supabase.from("devis").insert({
-        client_id: clientId,
-        description: description.trim() || null,
-        montant: parseFloat(montant),
-        date: format(date, "yyyy-MM-dd"),
-        entreprise_id: entrepriseId,
-        statut: "brouillon",
-      });
-
-      setIsLoading(false);
-      if (error) {
-        toast.error("Erreur lors de la création du devis");
-        return;
-      }
-      toast.success("Devis créé avec succès");
+    if (error) {
+      toast.error("Erreur lors de la création du devis");
+      return;
     }
 
+    toast.success("Devis créé avec succès");
+    setClientId("");
+    setDescription("");
+    setMontant("");
+    setDate(new Date());
     onOpenChange(false);
     onSuccess();
   };
@@ -139,10 +90,8 @@ export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess, devis
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Modifier le devis" : "Nouveau devis"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Modifiez les informations du devis." : "Créez un nouveau devis pour un client."}
-          </DialogDescription>
+          <DialogTitle>Nouveau devis</DialogTitle>
+          <DialogDescription>Créez un nouveau devis pour un client.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -167,7 +116,6 @@ export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess, devis
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description du devis"
-              rows={5}
             />
           </div>
           <div className="space-y-2">
@@ -206,7 +154,7 @@ export const DevisDialog = ({ open, onOpenChange, entrepriseId, onSuccess, devis
               Annuler
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Enregistrement..." : isEdit ? "Modifier" : "Enregistrer"}
+              {isLoading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>
