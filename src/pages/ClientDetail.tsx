@@ -28,14 +28,6 @@ interface Client {
   created_at: string;
 }
 
-interface Devis {
-  id: string;
-  description: string | null;
-  montant: number;
-  statut: string;
-  date: string;
-}
-
 interface Facture {
   id: string;
   description: string | null;
