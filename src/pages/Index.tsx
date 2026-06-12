@@ -28,11 +28,6 @@ const features = [
     description: "Centralisez toutes les informations de vos clients avec leur historique complet de transactions.",
   },
   {
-    icon: FileText,
-    title: "Devis Professionnels",
-    description: "Créez et envoyez des devis en quelques clics. Transformez-les en factures instantanément.",
-  },
-  {
     icon: Receipt,
     title: "Facturation Simplifiée",
     description: "Générez des factures conformes et suivez les paiements en temps réel.",
