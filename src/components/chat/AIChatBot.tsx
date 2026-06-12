@@ -222,7 +222,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full overflow-hidden flex items-center justify-center group ring-1 ring-primary/25"
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden flex items-center justify-center group ring-1 ring-primary/30 backdrop-blur-xl"
           >
             <span className="absolute inset-[-3px] rounded-full border border-primary/25 animate-[spin_8s_linear_infinite] opacity-50 group-hover:opacity-100 group-hover:border-primary/50 transition-opacity" />
             <span className="absolute inset-[-7px] rounded-full border border-primary/10 animate-[spin_12s_linear_infinite_reverse] opacity-30 group-hover:opacity-70 group-hover:border-primary/25 transition-opacity" />
@@ -243,7 +243,7 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.92 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-6 right-6 z-50 w-[440px] max-w-[calc(100vw-1rem)] h-[640px] max-h-[calc(100vh-2rem)] rounded-3xl flex flex-col overflow-hidden"
+            className="fixed inset-x-2 bottom-2 top-2 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto z-50 sm:w-[440px] sm:max-w-[calc(100vw-1rem)] sm:h-[640px] sm:max-h-[calc(100vh-2rem)] rounded-3xl flex flex-col overflow-hidden"
             style={{
               background:
                 "linear-gradient(180deg, hsl(220, 22%, 8%) 0%, hsl(220, 28%, 4%) 100%)",

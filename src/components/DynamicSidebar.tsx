@@ -169,7 +169,8 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
           variant="ghost"
           size="icon"
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-4 z-50 lg:hidden bg-card/80 backdrop-blur-sm border border-border/30 shadow-lg hover:bg-primary/10"
+          aria-label="Ouvrir le menu"
+          className="fixed top-2.5 left-3 z-40 lg:hidden h-11 w-11 bg-card/80 backdrop-blur-md border border-border/40 shadow-lg hover:bg-primary/10 rounded-xl"
         >
           <Menu className="w-5 h-5" />
         </Button>
@@ -190,7 +191,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="w-72 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50"
+                className="w-[85vw] max-w-sm sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50 pb-[env(safe-area-inset-bottom)] overflow-y-auto"
               >
                 {sidebarContent}
               </motion.aside>
