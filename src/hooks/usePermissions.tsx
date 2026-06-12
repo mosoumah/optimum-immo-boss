@@ -53,10 +53,6 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "voir_document_ia",
   "telecharger_document_ia",
   
-  // Studio IA
-  "generer_image_ia",
-  "voir_image_ia",
-  "redesigner_bien_ia",
   
   // Tâches
   "creer_tache",
