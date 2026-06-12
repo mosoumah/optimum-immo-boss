@@ -7,7 +7,7 @@ import {
   Receipt,
   TrendingDown,
   CheckSquare,
-  Sparkles,
+  
   Plus,
   CalendarCheck,
 } from "lucide-react";
@@ -24,7 +24,7 @@ import { ClientDialog } from "@/components/dialogs/ClientDialog";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
-import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
+
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
@@ -71,7 +71,7 @@ const Dashboard = () => {
   const [factureDialogOpen, setFactureDialogOpen] = useState(false);
   const [depenseDialogOpen, setDepenseDialogOpen] = useState(false);
   const [tacheDialogOpen, setTacheDialogOpen] = useState(false);
-  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
 
   const fetchProfileAndClients = useCallback(async () => {
@@ -127,7 +127,6 @@ const Dashboard = () => {
   const getQuickActions = () => {
     const actions = [
       { label: "Nouvelle facture", icon: Receipt, onClick: () => setFactureDialogOpen(true) },
-      { label: "Document IA", icon: Sparkles, onClick: () => setDocumentDialogOpen(true) },
     ];
 
     if (locationEnabled) {
@@ -345,12 +344,6 @@ const Dashboard = () => {
           <TacheDialog
             open={tacheDialogOpen}
             onOpenChange={setTacheDialogOpen}
-            entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
-          />
-          <DocumentDialog
-            open={documentDialogOpen}
-            onOpenChange={setDocumentDialogOpen}
             entrepriseId={profile.entreprise_id}
             onSuccess={fetchProfileAndClients}
           />

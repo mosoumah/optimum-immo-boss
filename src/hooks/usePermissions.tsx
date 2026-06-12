@@ -95,10 +95,6 @@ export const PERMISSION_CATEGORIES = {
     label: "Réservations",
     permissions: ["creer_reservation", "voir_reservation", "modifier_reservation", "supprimer_reservation"] as AppPermission[],
   },
-  documents: {
-    label: "Documents IA",
-    permissions: ["creer_document_ia", "voir_document_ia", "telecharger_document_ia"] as AppPermission[],
-  },
   taches: {
     label: "Tâches",
     permissions: ["creer_tache", "assigner_tache", "voir_tache", "modifier_tache", "cloturer_tache", "supprimer_tache"] as AppPermission[],

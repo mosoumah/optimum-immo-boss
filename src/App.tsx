@@ -21,7 +21,7 @@ import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
 import Depenses from "./pages/Depenses";
 import Taches from "./pages/Taches";
-import DocumentsIA from "./pages/DocumentsIA";
+
 
 import Parametres from "./pages/Parametres";
 import Utilisateurs from "./pages/Utilisateurs";
@@ -117,14 +117,6 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Taches />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/documents-ia"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <DocumentsIA />
                 </RoleProtectedRoute>
               }
             />

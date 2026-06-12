@@ -6,7 +6,7 @@ import {
   Receipt, 
   TrendingUp, 
   CheckSquare, 
-  Sparkles,
+  
   ArrowRight,
   Building2,
   Shield,
@@ -41,11 +41,6 @@ const features = [
     icon: CheckSquare,
     title: "Tâches Intelligentes",
     description: "Ne manquez plus aucune relance grâce aux rappels automatiques alimentés par l'IA.",
-  },
-  {
-    icon: Sparkles,
-    title: "Documents IA",
-    description: "Générez contrats, attestations et documents personnalisés en quelques secondes.",
   },
 ];
 
@@ -97,7 +92,7 @@ const Index = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
             >
               <Zap className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Nouveau: Génération de documents IA</span>
+              <span className="text-sm font-medium text-primary">Nouveau: Gestion immobilière simplifiée</span>
             </motion.div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
@@ -107,7 +102,7 @@ const Index = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-              Gérez vos clients, factures et documents facilement avec Optimum Immo. 
+              Gérez vos clients, biens et factures facilement avec Optimum Immo. 
               La solution tout-en-un pour les professionnels de l'immobilier.
             </p>
 
