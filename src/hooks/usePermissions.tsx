@@ -79,10 +79,6 @@ export const PERMISSION_CATEGORIES = {
     label: "Biens",
     permissions: ["creer_bien", "voir_bien", "modifier_bien", "supprimer_bien"] as AppPermission[],
   },
-  devis: {
-    label: "Devis",
-    permissions: ["creer_devis", "voir_devis", "modifier_devis", "supprimer_devis", "envoyer_devis"] as AppPermission[],
-  },
   factures: {
     label: "Factures",
     permissions: ["creer_facture", "voir_facture", "modifier_facture", "supprimer_facture", "generer_pdf_facture"] as AppPermission[],
