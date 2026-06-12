@@ -1,117 +1,74 @@
+# Correction visibilité mobile (preview)
 
-# Refonte Mobile Premium — Optimum Immo
+## Diagnostic
 
-Objectif : transformer l'expérience mobile (≤768px) en une vraie app native premium, sans toucher aux tables, triggers, edge functions, permissions ni logique métier. Uniquement présentation (JSX/CSS/Tailwind/Framer).
+J'ai testé la preview sur 390px (iPhone) :
 
-## Périmètre
+- **Page d'accueil** : OK, s'affiche correctement.
+- **Dashboard** : la carte "Revenus vs Dépenses" déborde — les onglets (Semaine/Mois/Tabs) sont coupés à droite, le FAB et l'icône chatbot recouvrent le graphique.
+- **Pages internes (Clients, Devis, Factures, Dépenses, Revenus, Utilisateurs, Paramètres, Documents IA, Détail client, Détail bien, Réservations, Biens)** : **contenu invisible / décalé hors écran**. Le wrapper utilise `flex-1 ml-64 ... p-8` sans préfixe responsive — la marge gauche de 256 px et le padding 32 px poussent le contenu hors du viewport mobile.
 
-- Cible primaire : `src/pages/Dashboard.tsx` + composants `src/components/dashboard/*`
-- Cible secondaire : header mobile, chatbot flottant, sidebar mobile, NotificationBell/MessageBell, conteneur de scroll
-- Pas de changement : hooks de données (`useDashboardData`, `useAuth`...), dialogs, RPC, RLS, Supabase
+## Cause
 
-## 1. Conteneur & Scroll mobile
+Le layout interne a été pensé desktop-only. La sidebar est cachée en mobile (drawer) mais le `<main>` garde `ml-64` fixe → le contenu commence à 256 px de la gauche d'un viewport de 390 px.
 
-Dashboard.tsx
-- Sur mobile : remplacer `h-screen overflow-hidden` par `min-h-screen overflow-y-auto` (les contraintes desktop restent via breakpoints lg).
-- Ajouter safe-area iOS : `pb-[env(safe-area-inset-bottom)]`.
-- Padding mobile généreux : `px-4 py-3`, espacement vertical `gap-4` entre sections.
-- Aucun élément ne doit forcer une largeur > viewport : ajouter `min-w-0` et `overflow-hidden` sur conteneurs flex/grid concernés.
+## Plan d'implémentation (UI/UX uniquement — aucune logique métier touchée)
 
-## 2. Header mobile compact
+### 1. Wrapper standard responsive pour pages internes
 
-- Hauteur réduite (~56px), sticky top avec glassmorphism (`backdrop-blur-xl bg-background/70 border-b border-border/30`).
-- Contenu mobile : [hamburger (déjà fourni par DynamicSidebar) — espace — Salutation courte "Bonjour Mohamed 👋" — NotificationBell + MessageBell].
-- Sous-titre "Voici un aperçu…" masqué en mobile (`hidden sm:block`).
-- Cibles tactiles 44×44 min pour cloches (ajuster les classes des bells si besoin, visuel uniquement).
+Remplacer le pattern fautif sur chaque page :
 
-## 3. Actions rapides — FAB mobile (Solution B)
+```text
+AVANT : <main className="flex-1 ml-64 mesh-gradient min-h-screen p-8">
+APRÈS : <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
+```
 
-- Sur mobile uniquement, masquer la barre de boutons actuelle (`hidden sm:flex`).
-- Nouveau composant présentationnel `src/components/dashboard/QuickActionsFab.tsx` :
-  - Bouton flottant rond (56px), `fixed bottom-20 right-4 z-40`, gradient lime + glow.
-  - Tap → menu radial/bottom-sheet (Sheet shadcn) listant les mêmes actions déjà calculées par `getQuickActions()` dans Dashboard (passées en props).
-  - Les `onClick` existants restent inchangés (ouvrent les mêmes dialogs).
-- Desktop : conserver la grille de boutons actuelle.
+- `lg:ml-64` au lieu de `ml-64` → pas de marge à gauche en mobile.
+- `p-4 sm:p-6 lg:p-8` → padding progressif.
+- `pt-16 lg:pt-8` → réserve l'espace du bouton hamburger fixe (sidebar mobile).
+- `pb-24` → évite que le FAB / chatbot ne masquent le bas.
 
-## 4. KPI Cards mobile
+Et sur la `<div>` interne : remplacer `max-w-6xl mx-auto relative z-10` (OK) — pas de changement, juste vérifier qu'aucun `min-w` ou largeur fixe ne casse.
 
-`SimpleFinanceSummary` + `SimpleDailyActivity`
-- Grille mobile : `grid-cols-2` strict, `gap-3`.
-- Hauteur uniforme (`min-h-[110px]`), padding `p-4`, coins `rounded-2xl`.
-- Typo : label `text-xs uppercase tracking-wide`, valeur `text-xl font-bold` ; troncature intelligente (formatter compact GNF si > 1M : `6,2M GNF`).
-- Icône en haut-droite dans pastille colorée (44×44).
-- Ordre logique mobile : Revenus, Dépenses, Bénéfice, Impayés, puis Arrivées, Départs, Séjours, Paiements attendus.
+### 2. Pages à modifier (même correctif wrapper)
 
-## 5. Graphique mobile
+| Fichier | Lignes |
+|---|---|
+| `src/pages/Clients.tsx` | wrapper + headers internes (`p-4`, gaps, taille texte responsive) |
+| `src/pages/Devis.tsx` | wrapper |
+| `src/pages/Factures.tsx` | wrapper |
+| `src/pages/Depenses.tsx` | wrapper |
+| `src/pages/Revenus.tsx` | wrapper |
+| `src/pages/Utilisateurs.tsx` | wrapper (`p-8` → responsive) |
+| `src/pages/Parametres.tsx` | ajouter sidebar + wrapper responsive |
+| `src/pages/DocumentsIA.tsx` | wrapper (`p-8` → responsive) |
+| `src/pages/ClientDetail.tsx` | `p-8` → `p-4 sm:p-6 lg:p-8` + ajout sidebar si manquant |
+| `src/pages/BienDetail.tsx` | idem |
+| `src/pages/Biens.tsx` | vérifier responsive |
+| `src/pages/Reservations.tsx` | vérifier responsive |
 
-`SimpleChart`
-- Pleine largeur, hauteur fixe `h-[240px]` en mobile.
-- Réduire la densité : marges Recharts compactes, ticks axe X au format court (déjà côté présentation FinancialChart — uniquement props/CSS).
-- Légende sous le graphique en mobile, dots simplifiés.
+Ajustements complémentaires sur les en-têtes de page : `text-3xl` → `text-2xl sm:text-3xl`, boutons `Plus` plus compacts en mobile, tableaux scrollables horizontalement (`overflow-x-auto`).
 
-## 6. Clients récents — Cartes mobiles
+### 3. Dashboard — fix chart card
 
-- En mobile, transformer la liste en cartes empilées (`flex flex-col gap-2`) :
-  - Avatar initiale, Nom (bold), téléphone/email (muted), badge statut si dispo.
-  - Bouton "Voir détail" pleine largeur en bas de carte (44px), pas de hover-only.
-- Conserver le rendu actuel desktop.
+Dans `src/components/FinancialChart.tsx` (et `SimpleChart.tsx`) :
+- Ajouter `overflow-hidden` sur la carte parent.
+- Onglets de période (Semaine/Mois/Tabs) : permettre `flex-wrap` + `text-xs` en mobile.
+- Légende (Revenus / Dépenses) : `flex-wrap gap-2`.
+- Container chart : `min-w-0` pour permettre au Recharts ResponsiveContainer de bien rétrécir.
 
-## 7. Chatbot flottant (`AIChatBot`)
+Repositionner pour ne pas chevaucher le graphique :
+- `QuickActionsFab` : déjà `bottom-24 right-4` → OK.
+- `AIChatBot` FAB : vérifier qu'il est `bottom-4 right-4` et ne recouvre pas la carte ; sinon ajouter `pb-28` sur le conteneur dashboard mobile (déjà présent — vérifier).
 
-- Bouton flottant mobile : 52px (au lieu de plus gros), `bottom-4 right-4`, glassmorphism (`backdrop-blur-xl bg-primary/20 border border-primary/30 shadow-glow-sm`).
-- Décaler le FAB Quick Actions au-dessus (`bottom-20`) pour ne pas se chevaucher.
-- Panneau ouvert : full-screen mobile (sheet bottom 90vh) au lieu de carte fixe qui masque le contenu.
-- Aucune modification de logique chat — seulement layout/positions.
+### 4. Vérification
 
-## 8. Sidebar mobile (DynamicSidebar)
+Après modifs, retester en preview sur 320 / 375 / 390 / 414 / 768 :
+- Aucun débordement horizontal.
+- Toutes les pages affichent leur contenu dès le rendu.
+- Chart dashboard entièrement visible, FAB ne masque rien d'essentiel.
 
-- Déjà drawer overlay ✅ — petits ajustements :
-  - Largeur `w-[85vw] max-w-sm`.
-  - Ajouter swipe-to-close (simple : tap overlay déjà OK ; on garde).
-  - Hamburger : déplacer dans le header sticky (au lieu de `fixed top-4 left-4`) pour cohérence et éviter superposition avec contenu.
+## Hors scope (rappel)
 
-## 9. NotificationBell / MessageBell
-
-- Garantir min 44×44, badge bien lisible (≥16px, contraste accentué).
-- Uniquement classes ; pas de changement de logique de comptage.
-
-## 10. Performance présentation
-
-- `motion.div` listes : `viewport={{ once: true }}` (déjà partiellement) + réduire les `delay` cascade sur mobile.
-- Réduire `FloatingParticles count` à 12 sur mobile (prop conditionnelle via `useIsMobile`).
-- `will-change` retiré des éléments non animés ; vérifier qu'aucune animation infinie n'est sur des éléments hors viewport.
-
-## 11. Responsive QA
-
-Breakpoints à tester visuellement : 320, 375, 390, 414, 768.
-- Aucun scroll horizontal (`overflow-x-hidden` sur `body`/root si nécessaire — via `index.css`).
-- Pas de texte coupé : `break-words` sur valeurs longues GNF.
-- Pas de carte cassée : tester avec et sans données.
-
-## Détails techniques
-
-Fichiers modifiés :
-- `src/pages/Dashboard.tsx` — conteneur scrollable mobile, header compact, intégration FAB, masquer barre actions en mobile.
-- `src/components/dashboard/SimpleFinanceSummary.tsx` — grille 2 cols mobile, typo, formatter compact.
-- `src/components/dashboard/SimpleDailyActivity.tsx` — idem.
-- `src/components/dashboard/SimpleChart.tsx` — hauteur mobile, densité.
-- `src/components/DynamicSidebar.tsx` — largeur mobile, hamburger dans flux header.
-- `src/components/chat/AIChatBot.tsx` — taille bouton mobile, sheet plein écran.
-- `src/components/NotificationBell.tsx` / `MessageBell.tsx` — tailles tactiles.
-- `src/components/FloatingParticles.tsx` — count adaptatif mobile (prop).
-- `src/index.css` — `overflow-x: hidden` global, utilitaire `.safe-bottom`.
-
-Fichiers créés :
-- `src/components/dashboard/QuickActionsFab.tsx` — bouton flottant + Sheet d'actions (présentation pure, reçoit `actions: {label, icon, onClick}[]`).
-
-Aucune modification :
-- Hooks (`useDashboardData`, `useAuth`, `useUserRole`, `useEntreprise`, `usePermissions`...)
-- Dialogs (`ClientDialog`, `FactureDialog`, etc.)
-- Supabase (tables, RLS, triggers, edge functions)
-- Routes, permissions, rôles
-
-## Hors scope (à confirmer si souhaité plus tard)
-
-- Pages Clients/Biens/Réservations/Factures/Devis/Dépenses/Tâches : mêmes principes responsive applicables dans un second lot.
-- Documents IA, Paramètres : second lot.
-
+- Aucune table Supabase, trigger, edge function, permission, ou hook métier modifié.
+- Uniquement classes Tailwind / structure JSX présentation.

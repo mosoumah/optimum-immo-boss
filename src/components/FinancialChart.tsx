@@ -279,7 +279,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header: period toggle */}
-      <div className="flex items-center justify-between mb-1 flex-shrink-0">
+      <div className="flex items-center justify-between gap-2 mb-1 flex-shrink-0 flex-wrap">
         <div className="flex items-center gap-1 bg-secondary/30 rounded-lg p-0.5">
           <Button
             variant={period === "week" ? "default" : "ghost"}
@@ -300,7 +300,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
             Mois
           </Button>
         </div>
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs flex-wrap">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-success shadow-[0_0_6px_hsl(var(--success)/0.6)]" />
             <span className="text-muted-foreground">Revenus</span>
@@ -311,15 +311,17 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-muted-foreground/70 shadow-[0_0_6px_rgba(156,163,175,0.6)]" />
-            <span className="text-muted-foreground">Taux de réservation</span>
+            <span className="text-muted-foreground hidden sm:inline">Taux de réservation</span>
+            <span className="text-muted-foreground sm:hidden">Taux</span>
           </span>
         </div>
       </div>
 
       {/* Main content: left summary + right chart */}
-      <div className="flex flex-1 min-h-0 gap-2">
+      <div className="flex flex-col sm:flex-row flex-1 min-h-0 gap-2">
         {/* Left: Benefice summary */}
-        <div className="flex flex-col justify-start items-start w-1/4 min-w-[140px] pr-3 border-r border-border/30 overflow-hidden gap-1">
+        <div className="flex flex-col justify-start items-start w-full sm:w-1/4 sm:min-w-[140px] sm:pr-3 sm:border-r border-border/30 overflow-hidden gap-1">
+
           <span className="text-[11px] uppercase tracking-widest text-muted-foreground/80 font-medium leading-none">
             Bénéfice {period === "week" ? "semaine" : "mois"}
           </span>
@@ -403,7 +405,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
         </div>
 
         {/* Right: Line chart */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-[220px] sm:min-h-0 min-w-0">
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
               <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
