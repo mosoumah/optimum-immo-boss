@@ -1,74 +1,107 @@
-# Correction visibilité mobile (preview)
 
-## Diagnostic
+# Plan — Fiche bien professionnelle
 
-J'ai testé la preview sur 390px (iPhone) :
+Scope strict : module **Biens uniquement**. Aucune modification de Réservations, Factures, Revenus, Dashboard, Notifications. Les statuts restent `disponible` / `réservé`. Pas de "Vente" ni "Type d'opération" (règles projet conservées).
 
-- **Page d'accueil** : OK, s'affiche correctement.
-- **Dashboard** : la carte "Revenus vs Dépenses" déborde — les onglets (Semaine/Mois/Tabs) sont coupés à droite, le FAB et l'icône chatbot recouvrent le graphique.
-- **Pages internes (Clients, Devis, Factures, Dépenses, Revenus, Utilisateurs, Paramètres, Documents IA, Détail client, Détail bien, Réservations, Biens)** : **contenu invisible / décalé hors écran**. Le wrapper utilise `flex-1 ml-64 ... p-8` sans préfixe responsive — la marge gauche de 256 px et le padding 32 px poussent le contenu hors du viewport mobile.
+---
 
-## Cause
+## 1. Base de données (migration)
 
-Le layout interne a été pensé desktop-only. La sidebar est cachée en mobile (drawer) mais le `<main>` garde `ml-64` fixe → le contenu commence à 256 px de la gauche d'un viewport de 390 px.
+Extension de la table `properties` (champs nullable, rétro-compatible) :
 
-## Plan d'implémentation (UI/UX uniquement — aucune logique métier touchée)
+- `description_longue` (text)
+- `quartier`, `commune`, `ville` (text) — `adresse` existant conservé
+- `chambres`, `salons`, `salles_bain` (int)
+- `cuisine`, `parking`, `balcon`, `piscine`, `internet`, `climatisation`, `meuble` (boolean, default false)
+- `video_url` (text) — YouTube/Vimeo ou URL bucket
+- `type_bien` : élargi côté UI à appartement, villa, maison, terrain, bureau, magasin, entrepôt (champ text existant, pas de contrainte enum à ajouter)
 
-### 1. Wrapper standard responsive pour pages internes
+Nouvelle table `property_media` (galerie + documents + vidéos uploadées) :
+- `property_id`, `entreprise_id`, `media_type` ('image' | 'document' | 'video'), `url`, `storage_path`, `nom_fichier`, `is_cover` (bool), `ordre` (int)
+- RLS : SELECT/INSERT/UPDATE/DELETE scopés à `entreprise_id` via `get_user_entreprise_id(auth.uid())`
+- GRANT authenticated + service_role
+- Trigger : si `is_cover=true`, mettre tous les autres media images du même bien à `is_cover=false` et synchroniser `properties.cover_image_url`
 
-Remplacer le pattern fautif sur chaque page :
+## 2. Storage
 
-```text
-AVANT : <main className="flex-1 ml-64 mesh-gradient min-h-screen p-8">
-APRÈS : <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
-```
+3 nouveaux buckets privés :
+- `property-gallery` (images)
+- `property-documents` (PDF)
+- `property-videos` (mp4/webm)
 
-- `lg:ml-64` au lieu de `ml-64` → pas de marge à gauche en mobile.
-- `p-4 sm:p-6 lg:p-8` → padding progressif.
-- `pt-16 lg:pt-8` → réserve l'espace du bouton hamburger fixe (sidebar mobile).
-- `pb-24` → évite que le FAB / chatbot ne masquent le bas.
+RLS storage.objects : accès limité au dossier `{entreprise_id}/...` (même pattern que `property-covers`). URLs signées pour affichage.
 
-Et sur la `<div>` interne : remplacer `max-w-6xl mx-auto relative z-10` (OK) — pas de changement, juste vérifier qu'aucun `min-w` ou largeur fixe ne casse.
+## 3. UI — Liste `/biens`
 
-### 2. Pages à modifier (même correctif wrapper)
+Aucun changement majeur. Carte affiche cover (déjà OK), badge statut, prix, surface, pièces.
 
-| Fichier | Lignes |
-|---|---|
-| `src/pages/Clients.tsx` | wrapper + headers internes (`p-4`, gaps, taille texte responsive) |
-| `src/pages/Devis.tsx` | wrapper |
-| `src/pages/Factures.tsx` | wrapper |
-| `src/pages/Depenses.tsx` | wrapper |
-| `src/pages/Revenus.tsx` | wrapper |
-| `src/pages/Utilisateurs.tsx` | wrapper (`p-8` → responsive) |
-| `src/pages/Parametres.tsx` | ajouter sidebar + wrapper responsive |
-| `src/pages/DocumentsIA.tsx` | wrapper (`p-8` → responsive) |
-| `src/pages/ClientDetail.tsx` | `p-8` → `p-4 sm:p-6 lg:p-8` + ajout sidebar si manquant |
-| `src/pages/BienDetail.tsx` | idem |
-| `src/pages/Biens.tsx` | vérifier responsive |
-| `src/pages/Reservations.tsx` | vérifier responsive |
+## 4. UI — Dialog création/édition `BienDialog`
 
-Ajustements complémentaires sur les en-têtes de page : `text-3xl` → `text-2xl sm:text-3xl`, boutons `Plus` plus compacts en mobile, tableaux scrollables horizontalement (`overflow-x-auto`).
+Réorganisé en onglets (Tabs shadcn) :
+1. **Général** : nom, catégorie (select élargi), prix, statut
+2. **Localisation** : adresse, quartier, commune, ville
+3. **Caractéristiques** : surface, chambres, salons, salles de bain, + switches (cuisine, parking, balcon, piscine, internet, climatisation, meublé)
+4. **Description** : description courte + description longue (Textarea, support retours ligne)
+5. **Médias** : galerie images (drag-drop multi-upload, miniatures, bouton "définir principale", suppression), URL vidéo + upload vidéo, upload PDF documents
 
-### 3. Dashboard — fix chart card
+Composants nouveaux :
+- `PropertyGalleryUpload.tsx` — multi-upload images, sélection cover
+- `PropertyDocumentsUpload.tsx` — PDF list + upload
+- `PropertyVideoField.tsx` — URL externe ou upload
 
-Dans `src/components/FinancialChart.tsx` (et `SimpleChart.tsx`) :
-- Ajouter `overflow-hidden` sur la carte parent.
-- Onglets de période (Semaine/Mois/Tabs) : permettre `flex-wrap` + `text-xs` en mobile.
-- Légende (Revenus / Dépenses) : `flex-wrap gap-2`.
-- Container chart : `min-w-0` pour permettre au Recharts ResponsiveContainer de bien rétrécir.
+## 5. UI — Fiche détail `/biens/:id`
 
-Repositionner pour ne pas chevaucher le graphique :
-- `QuickActionsFab` : déjà `bottom-24 right-4` → OK.
-- `AIChatBot` FAB : vérifier qu'il est `bottom-4 right-4` et ne recouvre pas la carte ; sinon ajouter `pb-28` sur le conteneur dashboard mobile (déjà présent — vérifier).
+Refonte responsive mobile-first avec sections :
 
-### 4. Vérification
+1. **Header** : retour, nom, badge statut, boutons Modifier / Supprimer
+2. **Galerie** : carousel principal + miniatures cliquables + **lightbox plein écran** (composant `PropertyLightbox`)
+3. **Infos clés** (grid responsive) : prix, surface, catégorie, localisation complète
+4. **Caractéristiques** : grille d'icônes pour chaque équipement présent (chambres, parking, piscine, etc.)
+5. **Description longue** (whitespace-pre-wrap)
+6. **Vidéo** : iframe YouTube/Vimeo embed ou `<video>` natif si bucket
+7. **Documents** : liste PDF téléchargeables (icône, nom, taille)
+8. **Statistiques** (cards) :
+   - Revenus générés = `SUM(montant_total)` des reservations liées
+   - Nb réservations totales
+   - Taux d'occupation = jours réservés (status `en_cours`+`terminee`) / jours depuis création du bien
+   - Dernière réservation (date + client)
+9. **Historique réservations** : tabs En cours / Passées / À venir, liste actuelle conservée et enrichie
 
-Après modifs, retester en preview sur 320 / 375 / 390 / 414 / 768 :
-- Aucun débordement horizontal.
-- Toutes les pages affichent leur contenu dès le rendu.
-- Chart dashboard entièrement visible, FAB ne masque rien d'essentiel.
+Toutes les statistiques calculées **client-side** à partir de `reservations` déjà chargées (respect règle "pas de FK entre modules").
 
-## Hors scope (rappel)
+## 6. Hooks
 
-- Aucune table Supabase, trigger, edge function, permission, ou hook métier modifié.
-- Uniquement classes Tailwind / structure JSX présentation.
+- `usePropertyMedia(propertyId)` — fetch + mutations sur `property_media`
+- `usePropertyStats(propertyId)` — calcule stats depuis réservations
+
+## 7. Composants partagés nouveaux
+
+- `src/components/biens/PropertyLightbox.tsx` (visionneuse plein écran clavier + swipe)
+- `src/components/biens/PropertyGallery.tsx` (carousel + miniatures)
+- `src/components/biens/PropertyFeatures.tsx` (grille icônes)
+- `src/components/biens/PropertyStatsCards.tsx`
+- `src/components/biens/PropertyMediaTab.tsx` (utilisé dans BienDialog)
+
+## 8. Sécurité
+
+- Validation zod côté formulaire (longueur, formats URL, taille fichier)
+- Limite upload : images 5 Mo, PDF 10 Mo, vidéo 50 Mo
+- Sanitization description longue à l'affichage (pas de HTML)
+- RLS stricte sur les 3 buckets et `property_media`
+
+## 9. Hors scope (confirmé)
+
+- Pas de "Vente" / "Type d'opération" qui modifierait la logique financière
+- Aucune modification de Réservations, Factures, Revenus, Dashboard, Notifications
+- Statuts biens inchangés (`disponible` / `réservé`)
+- Tarification réservations reste journalière
+
+---
+
+## Détails techniques
+
+- Migration unique pour : ALTER `properties` (colonnes), CREATE `property_media` + GRANT + RLS + trigger cover sync
+- Buckets via `supabase--storage_create_bucket` (privés)
+- URLs signées générées à la volée (`createSignedUrl`, TTL 1h)
+- Lightbox sans dépendance externe (Dialog shadcn + framer-motion)
+- Tabs shadcn déjà installé
