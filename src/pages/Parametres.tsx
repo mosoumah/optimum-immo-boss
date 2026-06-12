@@ -281,54 +281,5 @@ const Parametres = () => {
   );
 };
 
-const AgencyModeSection = () => {
-  const { venteEnabled, locationEnabled, updateSettings } = useAgencySettings();
-  const { toast } = useToast();
-
-  const handleToggle = (field: "vente_enabled" | "location_enabled", value: boolean) => {
-    // At least one must remain active
-    if (field === "vente_enabled" && !value && !locationEnabled) {
-      toast({ title: "Attention", description: "Au moins un module doit rester actif", variant: "destructive" });
-      return;
-    }
-    if (field === "location_enabled" && !value && !venteEnabled) {
-      toast({ title: "Attention", description: "Au moins un module doit rester actif", variant: "destructive" });
-      return;
-    }
-    updateSettings.mutate({ [field]: value });
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="p-6 rounded-xl border border-border/50 card-gradient"
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <ToggleLeft className="w-5 h-5 text-primary" />
-        </div>
-        <h2 className="text-lg font-semibold">Mode d'activité de l'agence</h2>
-      </div>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label className="text-sm font-medium">Vente immobilière</Label>
-            <p className="text-xs text-muted-foreground">Active le module Transactions</p>
-          </div>
-          <Switch checked={venteEnabled} onCheckedChange={(v) => handleToggle("vente_enabled", v)} />
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <Label className="text-sm font-medium">Location immobilière</Label>
-            <p className="text-xs text-muted-foreground">Active le module Réservations</p>
-          </div>
-          <Switch checked={locationEnabled} onCheckedChange={(v) => handleToggle("location_enabled", v)} />
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 export default Parametres;
