@@ -60,23 +60,6 @@ const TOOL_DEFS: Record<string, { permission: string; definition: object }> = {
       },
     },
   },
-  search_devis: {
-    permission: "voir_devis",
-    definition: {
-      type: "function",
-      function: {
-        name: "search_devis",
-        description: "Rechercher les devis par statut",
-        parameters: {
-          type: "object",
-          properties: {
-            statut: { type: "string", enum: ["brouillon", "envoye", "accepte", "refuse"], description: "Filtrer par statut" },
-            limit: { type: "number", description: "Nombre max de résultats (défaut 20)" },
-          },
-        },
-      },
-    },
-  },
   search_factures: {
     permission: "voir_facture",
     definition: {
