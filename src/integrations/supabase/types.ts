@@ -198,94 +198,6 @@ export type Database = {
           },
         ]
       }
-      devis: {
-        Row: {
-          client_id: string
-          created_at: string
-          created_by: string | null
-          date: string
-          description: string | null
-          entreprise_id: string
-          id: string
-          montant: number
-          numero_devis: string | null
-          pdf_url: string | null
-          statut: Database["public"]["Enums"]["devis_statut"]
-          updated_at: string
-        }
-        Insert: {
-          client_id: string
-          created_at?: string
-          created_by?: string | null
-          date?: string
-          description?: string | null
-          entreprise_id: string
-          id?: string
-          montant?: number
-          numero_devis?: string | null
-          pdf_url?: string | null
-          statut?: Database["public"]["Enums"]["devis_statut"]
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string
-          created_at?: string
-          created_by?: string | null
-          date?: string
-          description?: string | null
-          entreprise_id?: string
-          id?: string
-          montant?: number
-          numero_devis?: string | null
-          pdf_url?: string | null
-          statut?: Database["public"]["Enums"]["devis_statut"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "devis_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "devis_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "devis_entreprise_id_fkey"
-            columns: ["entreprise_id"]
-            isOneToOne: false
-            referencedRelation: "entreprises"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "devis_entreprise_id_fkey"
-            columns: ["entreprise_id"]
-            isOneToOne: false
-            referencedRelation: "v_dashboard_advanced_finance"
-            referencedColumns: ["entreprise_id"]
-          },
-          {
-            foreignKeyName: "devis_entreprise_id_fkey"
-            columns: ["entreprise_id"]
-            isOneToOne: false
-            referencedRelation: "v_dashboard_advanced_property"
-            referencedColumns: ["entreprise_id"]
-          },
-          {
-            foreignKeyName: "devis_entreprise_id_fkey"
-            columns: ["entreprise_id"]
-            isOneToOne: false
-            referencedRelation: "v_dashboard_simple"
-            referencedColumns: ["entreprise_id"]
-          },
-        ]
-      }
       direct_messages: {
         Row: {
           created_at: string | null
@@ -480,7 +392,6 @@ export type Database = {
           created_by: string | null
           date: string
           description: string | null
-          devis_id: string | null
           entreprise_id: string
           id: string
           montant: number
@@ -494,7 +405,6 @@ export type Database = {
           created_by?: string | null
           date?: string
           description?: string | null
-          devis_id?: string | null
           entreprise_id: string
           id?: string
           montant?: number
@@ -508,7 +418,6 @@ export type Database = {
           created_by?: string | null
           date?: string
           description?: string | null
-          devis_id?: string | null
           entreprise_id?: string
           id?: string
           montant?: number
@@ -529,13 +438,6 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "factures_devis_id_fkey"
-            columns: ["devis_id"]
-            isOneToOne: false
-            referencedRelation: "devis"
             referencedColumns: ["id"]
           },
           {
@@ -1390,7 +1292,6 @@ export type Database = {
         | "envoyer_message"
         | "supprimer_tache"
       app_role: "admin" | "agent" | "client"
-      devis_statut: "brouillon" | "envoye" | "accepte" | "refuse"
       facture_statut: "paye" | "non_paye"
       tache_statut: "a_faire" | "fait"
     }
@@ -1566,7 +1467,6 @@ export const Constants = {
         "supprimer_tache",
       ],
       app_role: ["admin", "agent", "client"],
-      devis_statut: ["brouillon", "envoye", "accepte", "refuse"],
       facture_statut: ["paye", "non_paye"],
       tache_statut: ["a_faire", "fait"],
     },
