@@ -197,40 +197,6 @@ const Taches = () => {
             </PermissionGate>
           </motion.div>
 
-          {/* AI Suggestions */}
-          <PermissionGate permission="creer_tache">
-            {suggestions.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 rounded-xl border border-primary/30 bg-primary/5"
-              >
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold">Suggestions IA</h3>
-                </div>
-                <div className="space-y-3">
-                  {suggestions.map((suggestion, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-background/50 flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-medium break-words">{suggestion.titre}</span>
-                          <Badge className={getPriorityColor(suggestion.priorite)}>
-                            {suggestion.priorite}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground break-words">{suggestion.description}</p>
-                      </div>
-                      <Button size="sm" onClick={() => addSuggestionAsTask(suggestion)} className="shrink-0">
-                        <Plus className="w-4 h-4 mr-1" />
-                        Ajouter
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </PermissionGate>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
