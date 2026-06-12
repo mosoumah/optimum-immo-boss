@@ -120,14 +120,6 @@ const App = () => (
                 </RoleProtectedRoute>
               }
             />
-            <Route
-              path="/documents-ia"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <DocumentsIA />
-                </RoleProtectedRoute>
-              }
-            />
             {/* Admin only routes */}
             <Route
               path="/revenus"
