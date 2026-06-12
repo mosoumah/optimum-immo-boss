@@ -6,7 +6,7 @@ import {
   Receipt, 
   TrendingUp, 
   CheckSquare, 
-  Sparkles,
+  
   ArrowRight,
   Building2,
   Shield,
