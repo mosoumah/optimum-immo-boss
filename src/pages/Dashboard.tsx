@@ -347,12 +347,6 @@ const Dashboard = () => {
             entrepriseId={profile.entreprise_id}
             onSuccess={fetchProfileAndClients}
           />
-          <DocumentDialog
-            open={documentDialogOpen}
-            onOpenChange={setDocumentDialogOpen}
-            entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
-          />
           <ReservationDialog
             open={reservationDialogOpen}
             onOpenChange={setReservationDialogOpen}
