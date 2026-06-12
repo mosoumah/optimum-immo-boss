@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { ImagePlus, X } from "lucide-react";
-
+import { PropertyMediaTab } from "@/components/biens/PropertyMediaTab";
 import type { Database } from "@/integrations/supabase/types";
 
 type Property = Database["public"]["Tables"]["properties"]["Row"];
@@ -22,33 +23,30 @@ interface BienDialogProps {
   onSuccess: () => void;
 }
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
-
-const resizeImage = (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const maxWidth = 1200;
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width);
-        width = maxWidth;
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Canvas context error"));
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Blob error"))),
-        "image/jpeg",
-        0.85
-      );
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
+const defaultForm = {
+  nom: "",
+  type_bien: "appartement",
+  statut: "disponible",
+  prix: "",
+  surface: "",
+  nombre_pieces: "",
+  chambres: "",
+  salons: "",
+  salles_bain: "",
+  adresse: "",
+  quartier: "",
+  commune: "",
+  ville: "",
+  description: "",
+  description_longue: "",
+  video_url: "",
+  cuisine: false,
+  parking: false,
+  balcon: false,
+  piscine: false,
+  internet: false,
+  climatisation: false,
+  meuble: false,
 };
 
 export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDialogProps) => {
@@ -56,236 +54,280 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
   const { entrepriseId } = useEntreprise();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [removeImage, setRemoveImage] = useState(false);
-
-  const [form, setForm] = useState({
-    nom: "",
-    adresse: "",
-    type_bien: "appartement",
-    surface: "",
-    prix: "",
-    statut: "disponible",
-    description: "",
-    nombre_pieces: "",
-  });
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [form, setForm] = useState(defaultForm);
 
   useEffect(() => {
     if (property) {
       setForm({
         nom: property.nom || "",
-        adresse: property.adresse || "",
         type_bien: property.type_bien || "appartement",
-        surface: property.surface?.toString() || "",
-        prix: property.prix?.toString() || "",
         statut: property.statut || "disponible",
-        description: property.description || "",
+        prix: property.prix?.toString() || "",
+        surface: property.surface?.toString() || "",
         nombre_pieces: property.nombre_pieces?.toString() || "",
+        chambres: property.chambres?.toString() || "",
+        salons: property.salons?.toString() || "",
+        salles_bain: property.salles_bain?.toString() || "",
+        adresse: property.adresse || "",
+        quartier: property.quartier || "",
+        commune: property.commune || "",
+        ville: property.ville || "",
+        description: property.description || "",
+        description_longue: property.description_longue || "",
+        video_url: property.video_url || "",
+        cuisine: !!property.cuisine,
+        parking: !!property.parking,
+        balcon: !!property.balcon,
+        piscine: !!property.piscine,
+        internet: !!property.internet,
+        climatisation: !!property.climatisation,
+        meuble: !!property.meuble,
       });
-      setPreviewUrl(property.cover_image_url || null);
+      setCreatedId(property.id);
     } else {
-      setForm({ nom: "", adresse: "", type_bien: "appartement", surface: "", prix: "", statut: "disponible", description: "", nombre_pieces: "" });
-      setPreviewUrl(null);
+      setForm(defaultForm);
+      setCreatedId(null);
     }
-    setSelectedFile(null);
-    setRemoveImage(false);
   }, [property, open]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
-      toast({ title: "Erreur", description: "L'image ne doit pas dépasser 2 Mo", variant: "destructive" });
-      return;
-    }
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setRemoveImage(false);
-  };
+  const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
-  const handleRemoveImage = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setRemoveImage(true);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const uploadImage = async (propertyId: string) => {
-    if (!entrepriseId || !selectedFile) return null;
-    const blob = await resizeImage(selectedFile);
-    const filePath = `${entrepriseId}/${propertyId}.jpg`;
-
-    // Remove old file if exists (ignore errors)
-    await supabase.storage.from("property-covers").remove([filePath]);
-
-    const { error } = await supabase.storage.from("property-covers").upload(filePath, blob, {
-      contentType: "image/jpeg",
-      upsert: true,
-    });
-    if (error) throw error;
-
-    const { data: urlData } = supabase.storage.from("property-covers").getPublicUrl(filePath);
-    return urlData.publicUrl + "?t=" + Date.now();
-  };
-
-  const handleSubmit = async () => {
+  const save = async () => {
     if (!form.nom || !entrepriseId) return;
     setIsSubmitting(true);
-
     try {
       const payload = {
         entreprise_id: entrepriseId,
         created_by: user?.id || null,
         nom: form.nom,
-        adresse: form.adresse || null,
         type_bien: form.type_bien,
-        surface: form.surface ? parseFloat(form.surface) : null,
-        prix: form.prix ? parseFloat(form.prix) : 0,
         statut: form.statut,
-        description: form.description || null,
+        prix: form.prix ? parseFloat(form.prix) : 0,
+        surface: form.surface ? parseFloat(form.surface) : null,
         nombre_pieces: form.nombre_pieces ? parseInt(form.nombre_pieces) : null,
+        chambres: form.chambres ? parseInt(form.chambres) : null,
+        salons: form.salons ? parseInt(form.salons) : null,
+        salles_bain: form.salles_bain ? parseInt(form.salles_bain) : null,
+        adresse: form.adresse || null,
+        quartier: form.quartier || null,
+        commune: form.commune || null,
+        ville: form.ville || null,
+        description: form.description || null,
+        description_longue: form.description_longue || null,
+        video_url: form.video_url || null,
+        cuisine: form.cuisine,
+        parking: form.parking,
+        balcon: form.balcon,
+        piscine: form.piscine,
+        internet: form.internet,
+        climatisation: form.climatisation,
+        meuble: form.meuble,
       };
 
-      let propertyId = property?.id;
-
-      if (property) {
-        const { error } = await supabase.from("properties").update(payload).eq("id", property.id);
+      let id = createdId;
+      if (id) {
+        const { error } = await supabase.from("properties").update(payload).eq("id", id);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from("properties").insert(payload).select("id").single();
+        const { data, error } = await supabase
+          .from("properties")
+          .insert(payload)
+          .select("id")
+          .single();
         if (error) throw error;
-        propertyId = data.id;
+        id = data.id;
+        setCreatedId(id);
       }
 
-      // Handle image upload/removal
-      if (selectedFile && propertyId) {
-        const imageUrl = await uploadImage(propertyId);
-        if (imageUrl) {
-          await supabase.from("properties").update({ cover_image_url: imageUrl }).eq("id", propertyId);
-        }
-      } else if (removeImage && propertyId && property?.cover_image_url) {
-        const filePath = `${entrepriseId}/${propertyId}.jpg`;
-        await supabase.storage.from("property-covers").remove([filePath]);
-        await supabase.from("properties").update({ cover_image_url: null }).eq("id", propertyId);
-      }
-
-      toast({ title: "Succès", description: property ? "Bien modifié" : "Bien créé" });
-      onOpenChange(false);
+      toast({ title: "Succès", description: property || createdId ? "Bien enregistré" : "Bien créé" });
       onSuccess();
-    } catch (error: unknown) {
-      toast({ title: "Erreur", description: error instanceof Error ? error.message : "Une erreur est survenue", variant: "destructive" });
+      if (!property && !createdId) {
+        toast({
+          title: "Astuce",
+          description: "Ajoutez maintenant des photos et documents dans l'onglet Médias.",
+        });
+      } else {
+        onOpenChange(false);
+      }
+    } catch (e) {
+      toast({
+        title: "Erreur",
+        description: e instanceof Error ? e.message : "Une erreur est survenue",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const switches: { key: keyof typeof defaultForm; label: string }[] = [
+    { key: "cuisine", label: "Cuisine" },
+    { key: "parking", label: "Parking" },
+    { key: "balcon", label: "Balcon" },
+    { key: "piscine", label: "Piscine" },
+    { key: "internet", label: "Internet" },
+    { key: "climatisation", label: "Climatisation" },
+    { key: "meuble", label: "Meublé" },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{property ? "Modifier le bien" : "Nouveau bien"}</DialogTitle>
-          <DialogDescription>Remplissez les informations du bien ci-dessous.</DialogDescription>
+          <DialogDescription>
+            Renseignez toutes les informations puis ajoutez vos médias.
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          {/* Image upload */}
-          <div>
-            <Label>Image de couverture</Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            {previewUrl ? (
-              <div className="relative mt-2 rounded-lg overflow-hidden">
-                <img src={previewUrl} alt="Aperçu" className="w-full h-40 object-cover rounded-lg" />
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="absolute top-2 right-2 p-1 rounded-full bg-background/80 hover:bg-background text-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-2 w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 transition-colors"
-              >
-                <ImagePlus className="w-6 h-6" />
-                <span className="text-sm">Ajouter une image (max 2 Mo)</span>
-              </button>
-            )}
-            {previewUrl && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-1"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Remplacer l'image
-              </Button>
-            )}
-          </div>
 
-          <div>
-            <Label>Nom du bien *</Label>
-            <Input value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} placeholder="Ex: Appartement T3 Centre" />
-          </div>
-          <div>
-            <Label>Adresse</Label>
-            <Input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="general">Général</TabsTrigger>
+            <TabsTrigger value="localisation">Localisation</TabsTrigger>
+            <TabsTrigger value="caracteristiques">Caract.</TabsTrigger>
+            <TabsTrigger value="description">Description</TabsTrigger>
+            <TabsTrigger value="medias" disabled={!createdId}>
+              Médias
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="space-y-4 pt-4">
             <div>
-              <Label>Type de bien</Label>
-              <Select value={form.type_bien} onValueChange={(v) => setForm({ ...form, type_bien: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="appartement">Appartement</SelectItem>
-                  <SelectItem value="maison">Maison</SelectItem>
-                  <SelectItem value="terrain">Terrain</SelectItem>
-                  <SelectItem value="bureau">Bureau</SelectItem>
-                  <SelectItem value="commercial">Commercial</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Nom du bien *</Label>
+              <Input value={form.nom} onChange={(e) => update("nom", e.target.value)} placeholder="Ex: Villa Almadies" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Catégorie</Label>
+                <Select value={form.type_bien} onValueChange={(v) => update("type_bien", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="appartement">Appartement</SelectItem>
+                    <SelectItem value="villa">Villa</SelectItem>
+                    <SelectItem value="maison">Maison</SelectItem>
+                    <SelectItem value="terrain">Terrain</SelectItem>
+                    <SelectItem value="bureau">Bureau</SelectItem>
+                    <SelectItem value="magasin">Magasin</SelectItem>
+                    <SelectItem value="entrepot">Entrepôt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Statut</Label>
+                <Select value={form.statut} onValueChange={(v) => update("statut", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="disponible">Disponible</SelectItem>
+                    <SelectItem value="reserve">Réservé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Prix (GNF)</Label>
+                <Input type="number" min="0" value={form.prix} onChange={(e) => update("prix", e.target.value)} />
+              </div>
+              <div>
+                <Label>Surface (m²)</Label>
+                <Input type="number" min="0" value={form.surface} onChange={(e) => update("surface", e.target.value)} />
+              </div>
+              <div>
+                <Label>Pièces</Label>
+                <Input type="number" min="0" value={form.nombre_pieces} onChange={(e) => update("nombre_pieces", e.target.value)} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="localisation" className="space-y-4 pt-4">
+            <div>
+              <Label>Adresse</Label>
+              <Input value={form.adresse} onChange={(e) => update("adresse", e.target.value)} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <Label>Quartier</Label>
+                <Input value={form.quartier} onChange={(e) => update("quartier", e.target.value)} />
+              </div>
+              <div>
+                <Label>Commune</Label>
+                <Input value={form.commune} onChange={(e) => update("commune", e.target.value)} />
+              </div>
+              <div>
+                <Label>Ville</Label>
+                <Input value={form.ville} onChange={(e) => update("ville", e.target.value)} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="caracteristiques" className="space-y-4 pt-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Chambres</Label>
+                <Input type="number" min="0" value={form.chambres} onChange={(e) => update("chambres", e.target.value)} />
+              </div>
+              <div>
+                <Label>Salons</Label>
+                <Input type="number" min="0" value={form.salons} onChange={(e) => update("salons", e.target.value)} />
+              </div>
+              <div>
+                <Label>Salles de bain</Label>
+                <Input type="number" min="0" value={form.salles_bain} onChange={(e) => update("salles_bain", e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+              {switches.map((s) => (
+                <div key={s.key} className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-secondary/20">
+                  <span className="text-sm">{s.label}</span>
+                  <Switch
+                    checked={form[s.key] as boolean}
+                    onCheckedChange={(v) => update(s.key, v as never)}
+                  />
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="description" className="space-y-4 pt-4">
+            <div>
+              <Label>Description courte</Label>
+              <Textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={2} />
             </div>
             <div>
-              <Label>Statut</Label>
-              <Select value={form.statut} onValueChange={(v) => setForm({ ...form, statut: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="disponible">Disponible</SelectItem>
-                  <SelectItem value="reserve">Réservé</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Description détaillée</Label>
+              <Textarea
+                value={form.description_longue}
+                onChange={(e) => update("description_longue", e.target.value)}
+                rows={8}
+                placeholder="Décrivez en détail le bien, ses atouts, son environnement…"
+              />
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label>Surface (m²)</Label>
-              <Input type="number" value={form.surface} onChange={(e) => setForm({ ...form, surface: e.target.value })} />
-            </div>
-            <div>
-              <Label>Prix (GNF)</Label>
-              <Input type="number" value={form.prix} onChange={(e) => setForm({ ...form, prix: e.target.value })} />
-            </div>
-            <div>
-              <Label>Pièces</Label>
-              <Input type="number" value={form.nombre_pieces} onChange={(e) => setForm({ ...form, nombre_pieces: e.target.value })} />
-            </div>
-          </div>
-          <div>
-            <Label>Description</Label>
-            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
-          </div>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !form.nom} className="w-full">
-            {isSubmitting ? "Enregistrement..." : property ? "Modifier" : "Créer le bien"}
+          </TabsContent>
+
+          <TabsContent value="medias" className="pt-4">
+            {createdId && entrepriseId ? (
+              <PropertyMediaTab
+                propertyId={createdId}
+                entrepriseId={entrepriseId}
+                videoUrl={form.video_url}
+                onVideoUrlChange={(v) => update("video_url", v)}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                Enregistrez d'abord le bien pour ajouter des médias.
+              </p>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+          <Button onClick={save} disabled={isSubmitting || !form.nom}>
+            {isSubmitting ? "Enregistrement..." : property || createdId ? "Enregistrer" : "Créer le bien"}
           </Button>
         </div>
       </DialogContent>

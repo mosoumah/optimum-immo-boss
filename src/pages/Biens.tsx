@@ -29,9 +29,12 @@ const statutLabels: Record<string, string> = {
 
 const typeBienLabels: Record<string, string> = {
   appartement: "Appartement",
+  villa: "Villa",
   maison: "Maison",
   terrain: "Terrain",
   bureau: "Bureau",
+  magasin: "Magasin",
+  entrepot: "Entrepôt",
   commercial: "Commercial",
 };
 
@@ -110,10 +113,12 @@ const Biens = () => {
               <SelectContent>
                 <SelectItem value="all">Tous les types</SelectItem>
                 <SelectItem value="appartement">Appartement</SelectItem>
+                <SelectItem value="villa">Villa</SelectItem>
                 <SelectItem value="maison">Maison</SelectItem>
                 <SelectItem value="terrain">Terrain</SelectItem>
                 <SelectItem value="bureau">Bureau</SelectItem>
-                <SelectItem value="commercial">Commercial</SelectItem>
+                <SelectItem value="magasin">Magasin</SelectItem>
+                <SelectItem value="entrepot">Entrepôt</SelectItem>
               </SelectContent>
             </Select>
           </div>
