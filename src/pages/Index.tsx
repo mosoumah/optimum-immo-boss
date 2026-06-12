@@ -92,7 +92,7 @@ const Index = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
             >
               <Zap className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Nouveau: Génération de documents IA</span>
+              <span className="text-sm font-medium text-primary">Nouveau: Gestion immobilière simplifiée</span>
             </motion.div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
