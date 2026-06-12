@@ -179,7 +179,7 @@ const Utilisateurs = () => {
 
       toast({
         title: "Invitation envoyée",
-        description: `Un email d'invitation a été envoyé à ${newUserEmail}`,
+        description: `Un email d'invitation a été envoyé à ${newUserEmail}. Il pourra définir son mot de passe et accéder au tableau de bord.`,
       });
 
       setCreateDialogOpen(false);

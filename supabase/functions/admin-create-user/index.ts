@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
 
     // Get redirect URL from env or request origin (never trust raw origin for security)
     const appUrl = Deno.env.get('APP_URL') || 'https://optimum-immo.lovable.app'
-    const redirectTo = `${appUrl}/connexion`
+    const redirectTo = `${appUrl}/accept-invitation`
 
     // Invite user via email (sends confirmation email automatically!)
     const { data: newUserData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {

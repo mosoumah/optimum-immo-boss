@@ -28,6 +28,7 @@ import Utilisateurs from "./pages/Utilisateurs";
 import GestionPermissions from "./pages/GestionPermissions";
 
 import ResetPassword from "./pages/ResetPassword";
+import AcceptInvitation from "./pages/AcceptInvitation";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/inscription" element={<Inscription />} />
             <Route path="/connexion" element={<Connexion />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/accept-invitation" element={<AcceptInvitation />} />
             <Route
               path="/profil-entreprise"
               element={
