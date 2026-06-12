@@ -111,6 +111,7 @@ const App = () => (
                   <Factures />
                 </RoleProtectedRoute>
               }
+            />
             <Route
               path="/taches"
               element={
