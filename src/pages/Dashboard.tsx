@@ -71,7 +71,7 @@ const Dashboard = () => {
   const [factureDialogOpen, setFactureDialogOpen] = useState(false);
   const [depenseDialogOpen, setDepenseDialogOpen] = useState(false);
   const [tacheDialogOpen, setTacheDialogOpen] = useState(false);
-  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
 
   const fetchProfileAndClients = useCallback(async () => {
