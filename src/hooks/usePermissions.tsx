@@ -20,12 +20,7 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "modifier_bien",
   "supprimer_bien",
   
-  // Devis
-  "creer_devis",
-  "voir_devis",
-  "modifier_devis",
-  "supprimer_devis",
-  "envoyer_devis",
+  
   
   // Factures
   "creer_facture",
