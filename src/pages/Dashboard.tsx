@@ -7,7 +7,7 @@ import {
   Receipt,
   TrendingDown,
   CheckSquare,
-  Sparkles,
+  
   Plus,
   CalendarCheck,
 } from "lucide-react";
