@@ -257,7 +257,7 @@ const Parametres = () => {
           </motion.div>
 
           {/* Agency Mode Section */}
-          <AgencyModeSection />
+          
 
           {/* Actions */}
           <motion.div
