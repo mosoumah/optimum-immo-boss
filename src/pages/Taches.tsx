@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckSquare, Plus, ArrowLeft, Check, Sparkles, Loader2, MessageCircle, Mail, Trash2 } from "lucide-react";
+import { CheckSquare, Plus, ArrowLeft, Check, MessageCircle, Mail, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,11 +39,6 @@ interface Tache {
   assignee_name?: string;
 }
 
-interface Suggestion {
-  titre: string;
-  description: string;
-  priorite: string;
-}
 
 const Taches = () => {
   const { signOut } = useAuth();
@@ -56,8 +51,6 @@ const Taches = () => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [messagePanelOpen, setMessagePanelOpen] = useState(false);
   const [selectedTache, setSelectedTache] = useState<Tache | null>(null);
-  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   const handleSignOut = async () => {
     await signOut();
