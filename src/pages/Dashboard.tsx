@@ -330,12 +330,6 @@ const Dashboard = () => {
             entrepriseId={profile.entreprise_id}
             onSuccess={fetchProfileAndClients}
           />
-          <DevisDialog
-            open={devisDialogOpen}
-            onOpenChange={setDevisDialogOpen}
-            entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
-          />
           <FactureDialog
             open={factureDialogOpen}
             onOpenChange={setFactureDialogOpen}
