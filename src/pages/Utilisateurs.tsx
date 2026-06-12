@@ -344,7 +344,7 @@ const Utilisateurs = () => {
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

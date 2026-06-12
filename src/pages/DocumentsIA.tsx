@@ -128,7 +128,7 @@ const DocumentsIA = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8 relative mesh-gradient">
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8 relative mesh-gradient">
       <FloatingParticles count={25} />
       <div className="max-w-6xl mx-auto relative z-10">
         <motion.div 

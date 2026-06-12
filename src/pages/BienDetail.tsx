@@ -60,7 +60,7 @@ const BienDetail = () => {
 
   if (!property) {
     return (
-      <div className="min-h-screen bg-background p-8 text-center">
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8 text-center">
         <Building className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
         <h1 className="text-2xl font-bold mb-2">Bien non trouvé</h1>
         <Button asChild><Link to="/biens">Retour aux biens</Link></Button>
@@ -69,7 +69,7 @@ const BienDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="icon" asChild><Link to="/biens"><ArrowLeft className="w-5 h-5" /></Link></Button>
