@@ -111,14 +111,6 @@ const App = () => (
                   <Factures />
                 </RoleProtectedRoute>
               }
-            />
-              path="/factures"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Factures />
-                </RoleProtectedRoute>
-              }
-            />
             <Route
               path="/taches"
               element={
