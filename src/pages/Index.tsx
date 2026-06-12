@@ -42,11 +42,6 @@ const features = [
     title: "Tâches Intelligentes",
     description: "Ne manquez plus aucune relance grâce aux rappels automatiques alimentés par l'IA.",
   },
-  {
-    icon: Sparkles,
-    title: "Documents IA",
-    description: "Générez contrats, attestations et documents personnalisés en quelques secondes.",
-  },
 ];
 
 const benefits = [
