@@ -17,7 +17,6 @@ import Biens from "./pages/Biens";
 import BienDetail from "./pages/BienDetail";
 import Reservations from "./pages/Reservations";
 
-import Devis from "./pages/Devis";
 import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
 import Depenses from "./pages/Depenses";
@@ -102,14 +101,6 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Reservations />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/devis"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Devis />
                 </RoleProtectedRoute>
               }
             />

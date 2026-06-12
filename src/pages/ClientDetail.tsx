@@ -28,14 +28,6 @@ interface Client {
   created_at: string;
 }
 
-interface Devis {
-  id: string;
-  description: string | null;
-  montant: number;
-  statut: string;
-  date: string;
-}
-
 interface Facture {
   id: string;
   description: string | null;
@@ -75,7 +67,6 @@ const ClientDetail = () => {
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const { venteEnabled, locationEnabled } = useAgencySettings();
   const [client, setClient] = useState<Client | null>(null);
-  const [devis, setDevis] = useState<Devis[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
@@ -85,11 +76,9 @@ const ClientDetail = () => {
     if (!entrepriseId || !id) return;
 
     const clientRes = await supabase.from("clients").select("*").eq("id", id).eq("entreprise_id", entrepriseId).maybeSingle();
-    const devisRes = await supabase.from("devis").select("id, description, montant, statut, date").eq("client_id", id).order("date", { ascending: false });
     const facturesRes = await supabase.from("factures").select("id, description, montant, statut, date").eq("client_id", id).order("date", { ascending: false });
 
     setClient(clientRes.data);
-    setDevis(devisRes.data || []);
     setFactures(facturesRes.data || []);
 
     if (locationEnabled) {
@@ -205,31 +194,7 @@ const ClientDetail = () => {
             className="lg:col-span-2 space-y-6"
           >
             <div className="p-6 rounded-xl border border-border/50 bg-card">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-semibold">Devis ({devis.length})</h3>
-              </div>
-              {devis.length > 0 ? (
-                <div className="space-y-2">
-                  {devis.map((d) => (
-                    <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                      <div>
-                        <div className="font-medium text-sm">{d.description || "Sans description"}</div>
-                        <div className="text-xs text-muted-foreground">{formatDate(d.date)}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{formatCurrency(d.montant)}</span>
-                        <Badge className={statutColors[d.statut]}>{statutLabels[d.statut]}</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Aucun devis pour ce client</p>
-              )}
-            </div>
 
-            <div className="p-6 rounded-xl border border-border/50 bg-card">
               <div className="flex items-center gap-2 mb-4">
                 <Receipt className="w-5 h-5 text-primary" />
                 <h3 className="text-lg font-semibold">Factures ({factures.length})</h3>

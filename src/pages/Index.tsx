@@ -28,11 +28,6 @@ const features = [
     description: "Centralisez toutes les informations de vos clients avec leur historique complet de transactions.",
   },
   {
-    icon: FileText,
-    title: "Devis Professionnels",
-    description: "Créez et envoyez des devis en quelques clics. Transformez-les en factures instantanément.",
-  },
-  {
     icon: Receipt,
     title: "Facturation Simplifiée",
     description: "Générez des factures conformes et suivez les paiements en temps réel.",
@@ -112,7 +107,7 @@ const Index = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-              Gérez vos clients, devis, factures et documents facilement avec Optimum Immo. 
+              Gérez vos clients, factures et documents facilement avec Optimum Immo. 
               La solution tout-en-un pour les professionnels de l'immobilier.
             </p>
 

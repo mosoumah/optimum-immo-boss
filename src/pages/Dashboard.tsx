@@ -20,7 +20,7 @@ import { useAgencySettings } from "@/hooks/useAgencySettings";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
-import { DevisDialog } from "@/components/dialogs/DevisDialog";
+
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
@@ -67,7 +67,7 @@ const Dashboard = () => {
 
   // Dialog states
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
-  const [devisDialogOpen, setDevisDialogOpen] = useState(false);
+  
   const [factureDialogOpen, setFactureDialogOpen] = useState(false);
   const [depenseDialogOpen, setDepenseDialogOpen] = useState(false);
   const [tacheDialogOpen, setTacheDialogOpen] = useState(false);
@@ -126,7 +126,6 @@ const Dashboard = () => {
   // Build quick actions based on role
   const getQuickActions = () => {
     const actions = [
-      { label: "Nouveau devis", icon: FileText, onClick: () => setDevisDialogOpen(true) },
       { label: "Nouvelle facture", icon: Receipt, onClick: () => setFactureDialogOpen(true) },
       { label: "Document IA", icon: Sparkles, onClick: () => setDocumentDialogOpen(true) },
     ];
@@ -328,12 +327,6 @@ const Dashboard = () => {
           <ClientDialog
             open={clientDialogOpen}
             onOpenChange={setClientDialogOpen}
-            entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
-          />
-          <DevisDialog
-            open={devisDialogOpen}
-            onOpenChange={setDevisDialogOpen}
             entrepriseId={profile.entreprise_id}
             onSuccess={fetchProfileAndClients}
           />

@@ -60,23 +60,6 @@ const TOOL_DEFS: Record<string, { permission: string; definition: object }> = {
       },
     },
   },
-  search_devis: {
-    permission: "voir_devis",
-    definition: {
-      type: "function",
-      function: {
-        name: "search_devis",
-        description: "Rechercher les devis par statut",
-        parameters: {
-          type: "object",
-          properties: {
-            statut: { type: "string", enum: ["brouillon", "envoye", "accepte", "refuse"], description: "Filtrer par statut" },
-            limit: { type: "number", description: "Nombre max de résultats (défaut 20)" },
-          },
-        },
-      },
-    },
-  },
   search_factures: {
     permission: "voir_facture",
     definition: {
@@ -275,14 +258,6 @@ async function executeTool(
         return JSON.stringify({ count: data?.length || 0, clients: data });
       }
 
-      case "search_devis": {
-        let q = supabase.from("devis").select("id, numero_devis, client_id, montant, statut, date, description");
-        if (args.statut) q = q.eq("statut", args.statut);
-        q = q.order("date", { ascending: false }).limit(Number(args.limit) || 20);
-        const { data, error } = await q;
-        if (error) return JSON.stringify({ error: error.message });
-        return JSON.stringify({ count: data?.length || 0, devis: data });
-      }
 
       case "search_factures": {
         let q = supabase.from("factures").select("id, client_id, montant, statut, date, description, reservation_id");

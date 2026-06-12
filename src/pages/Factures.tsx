@@ -221,40 +221,176 @@ const Factures = () => {
   };
 
   const downloadAsPdf = async () => {
-    if (!invoiceRef.current || !previewFacture) return;
+    if (!previewFacture || !entreprise) return;
 
     setIsDownloadingPdf(true);
 
+    // Render the safe print HTML in a hidden iframe and capture it.
+    // This avoids html2canvas crashes caused by modern CSS (oklch, gradients) in the live DOM.
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.left = "-10000px";
+    iframe.style.top = "0";
+    iframe.style.width = "800px";
+    iframe.style.height = "1200px";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
     try {
-      const canvas = await html2canvas(invoiceRef.current, {
+      const logoSrc = logoDataUrl || "";
+      const primaryColor = sanitizeHexColor(entreprise.couleur_primaire, "#E97451");
+      const secondaryColor = sanitizeHexColor(entreprise.couleur_secondaire, "#FFF5F2");
+      const accentColor = sanitizeHexColor(entreprise.couleur_accent, "#1a1a2e");
+
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; padding: 40px; color: #1a1a1a; background: #fff; width: 800px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #e5e5e5; padding-bottom: 20px; }
+        .logo-section { display: flex; align-items: center; gap: 16px; }
+        .logo { width: 80px; height: 80px; object-fit: contain; }
+        .company-info h1 { font-size: 24px; font-weight: bold; margin-bottom: 4px; color: ${accentColor}; }
+        .company-info p { font-size: 13px; color: #666; line-height: 1.5; }
+        .invoice-title { text-align: right; }
+        .invoice-title h2 { font-size: 32px; font-weight: bold; color: ${primaryColor}; }
+        .invoice-title p { font-size: 13px; color: #666; margin-top: 8px; }
+        .client-section { margin-bottom: 30px; }
+        .client-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: ${accentColor}; }
+        .client-box { background: #f9f9f9; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; }
+        .client-box p { font-size: 14px; line-height: 1.6; }
+        .client-box .name { font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        thead tr { background: ${primaryColor}; }
+        th { padding: 14px; text-align: left; color: white; font-weight: 600; font-size: 14px; }
+        th:last-child { text-align: right; }
+        td { padding: 14px; font-size: 14px; border-bottom: 1px solid #e5e5e5; }
+        td:last-child { text-align: right; font-weight: 500; }
+        tfoot tr { background: ${secondaryColor}; }
+        tfoot td { font-weight: bold; font-size: 15px; color: ${accentColor}; }
+        tfoot td:last-child { color: ${primaryColor}; font-size: 18px; }
+        .details { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e5e5e5; }
+        .details h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: ${accentColor}; }
+        .details-content { font-size: 13px; color: #555; white-space: pre-wrap; line-height: 1.7; }
+        .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-top: 20px; border-top: 1px solid #e5e5e5; }
+        .footer-text { font-size: 12px; color: #888; line-height: 1.6; }
+        .signature { text-align: center; }
+        .signature p { font-size: 13px; color: #666; margin-bottom: 16px; }
+        .signature-line { width: 200px; border-bottom: 2px solid ${primaryColor}; }
+      </style></head><body>
+        <div class="header">
+          <div class="logo-section">
+            ${logoSrc ? `<img src="${escapeHtml(logoSrc)}" class="logo" alt="Logo" />` : ""}
+            <div class="company-info">
+              <h1>${escapeHtml(entreprise.nom)}</h1>
+              ${entreprise.adresse ? `<p>${escapeHtml(entreprise.adresse)}</p>` : ""}
+              ${entreprise.telephone ? `<p>Tél: ${escapeHtml(entreprise.telephone)}</p>` : ""}
+              ${entreprise.email ? `<p>${escapeHtml(entreprise.email)}</p>` : ""}
+            </div>
+          </div>
+          <div class="invoice-title">
+            <h2>FACTURE</h2>
+            <p>N°: FAC-${escapeHtml(previewFacture.id.substring(0, 8).toUpperCase())}</p>
+            <p>Date: ${new Date(previewFacture.date).toLocaleDateString("fr-FR")}</p>
+          </div>
+        </div>
+        <div class="client-section">
+          <h3>Facturé à:</h3>
+          <div class="client-box">
+            <p class="name">${escapeHtml(previewFacture.clients?.nom) || "Client"}</p>
+            ${previewFacture.clients?.telephone ? `<p>Tél: ${escapeHtml(previewFacture.clients.telephone)}</p>` : ""}
+            ${previewFacture.clients?.email ? `<p>${escapeHtml(previewFacture.clients.email)}</p>` : ""}
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Description</th><th>Montant</th></tr></thead>
+          <tbody><tr>
+            <td>${escapeHtml(previewFacture.description) || "Prestation de service"}</td>
+            <td>${new Intl.NumberFormat("fr-GN").format(previewFacture.montant)} GNF</td>
+          </tr></tbody>
+          <tfoot><tr>
+            <td>TOTAL</td>
+            <td>${new Intl.NumberFormat("fr-GN").format(previewFacture.montant)} GNF</td>
+          </tr></tfoot>
+        </table>
+        ${previewContent ? `<div class="details"><h3>Détails:</h3><div class="details-content">${escapeHtml(previewContent)}</div></div>` : ""}
+        <div class="footer">
+          <div class="footer-text">
+            <p>Merci pour votre confiance.</p>
+            <p>Paiement à réception de la facture.</p>
+          </div>
+          <div class="signature">
+            <p>Signature et cachet</p>
+            ${entreprise.signature ? `<img src="${escapeHtml(entreprise.signature)}" style="max-height:60px;max-width:180px;object-fit:contain;margin:8px auto;" />` : '<div style="height:30px;"></div>'}
+            <div class="signature-line"></div>
+          </div>
+        </div>
+      </body></html>`;
+
+      const doc = iframe.contentDocument!;
+      doc.open();
+      doc.write(html);
+      doc.close();
+
+      // Wait for images to load
+      await new Promise<void>((resolve) => {
+        const imgs = Array.from(doc.images);
+        if (imgs.length === 0) {
+          setTimeout(resolve, 150);
+          return;
+        }
+        let loaded = 0;
+        const done = () => {
+          loaded++;
+          if (loaded >= imgs.length) resolve();
+        };
+        imgs.forEach((img) => {
+          if (img.complete) done();
+          else {
+            img.addEventListener("load", done);
+            img.addEventListener("error", done);
+          }
+        });
+        setTimeout(resolve, 3000);
+      });
+
+      const canvas = await html2canvas(doc.body, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
+        windowWidth: 800,
       });
 
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 10;
+      const margin = 10;
+      const imgWidth = pdfWidth - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      if (imgHeight <= pdfHeight - margin * 2) {
+        pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
+      } else {
+        // Multi-page
+        let heightLeft = imgHeight;
+        let position = margin;
+        pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight - margin;
+        while (heightLeft > 0) {
+          pdf.addPage();
+          position = margin - (imgHeight - heightLeft);
+          pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+      }
+
       pdf.save(`facture-${previewFacture.id.substring(0, 8).toUpperCase()}.pdf`);
       toast.success("Facture PDF téléchargée");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Erreur lors de la génération du PDF");
     } finally {
+      document.body.removeChild(iframe);
       setIsDownloadingPdf(false);
     }
   };

@@ -20,12 +20,7 @@ export const ALL_PERMISSIONS: AppPermission[] = [
   "modifier_bien",
   "supprimer_bien",
   
-  // Devis
-  "creer_devis",
-  "voir_devis",
-  "modifier_devis",
-  "supprimer_devis",
-  "envoyer_devis",
+  
   
   // Factures
   "creer_facture",
@@ -83,10 +78,6 @@ export const PERMISSION_CATEGORIES = {
   biens: {
     label: "Biens",
     permissions: ["creer_bien", "voir_bien", "modifier_bien", "supprimer_bien"] as AppPermission[],
-  },
-  devis: {
-    label: "Devis",
-    permissions: ["creer_devis", "voir_devis", "modifier_devis", "supprimer_devis", "envoyer_devis"] as AppPermission[],
   },
   factures: {
     label: "Factures",
