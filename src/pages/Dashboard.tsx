@@ -24,7 +24,7 @@ import { ClientDialog } from "@/components/dialogs/ClientDialog";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
-import { DocumentDialog } from "@/components/dialogs/DocumentDialog";
+
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
