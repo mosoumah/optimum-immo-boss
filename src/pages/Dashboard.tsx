@@ -126,7 +126,6 @@ const Dashboard = () => {
   // Build quick actions based on role
   const getQuickActions = () => {
     const actions = [
-      { label: "Nouveau devis", icon: FileText, onClick: () => setDevisDialogOpen(true) },
       { label: "Nouvelle facture", icon: Receipt, onClick: () => setFactureDialogOpen(true) },
       { label: "Document IA", icon: Sparkles, onClick: () => setDocumentDialogOpen(true) },
     ];
