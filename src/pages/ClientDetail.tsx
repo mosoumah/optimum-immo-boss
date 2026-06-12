@@ -67,7 +67,6 @@ const ClientDetail = () => {
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const { venteEnabled, locationEnabled } = useAgencySettings();
   const [client, setClient] = useState<Client | null>(null);
-  const [devis, setDevis] = useState<Devis[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
@@ -77,11 +76,9 @@ const ClientDetail = () => {
     if (!entrepriseId || !id) return;
 
     const clientRes = await supabase.from("clients").select("*").eq("id", id).eq("entreprise_id", entrepriseId).maybeSingle();
-    const devisRes = await supabase.from("devis").select("id, description, montant, statut, date").eq("client_id", id).order("date", { ascending: false });
     const facturesRes = await supabase.from("factures").select("id, description, montant, statut, date").eq("client_id", id).order("date", { ascending: false });
 
     setClient(clientRes.data);
-    setDevis(devisRes.data || []);
     setFactures(facturesRes.data || []);
 
     if (locationEnabled) {
