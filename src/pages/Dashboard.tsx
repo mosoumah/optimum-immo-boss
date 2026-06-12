@@ -67,7 +67,7 @@ const Dashboard = () => {
 
   // Dialog states
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
-  const [devisDialogOpen, setDevisDialogOpen] = useState(false);
+  
   const [factureDialogOpen, setFactureDialogOpen] = useState(false);
   const [depenseDialogOpen, setDepenseDialogOpen] = useState(false);
   const [tacheDialogOpen, setTacheDialogOpen] = useState(false);
