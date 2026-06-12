@@ -168,17 +168,17 @@ const Clients = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
+                    className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-secondary/30 transition-colors premium-list-item flex-wrap sm:flex-nowrap"
                   >
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-primary" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{client.nom}</div>
-                      <div className="text-sm text-muted-foreground">{client.email || "Pas d'email"}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{client.nom}</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground truncate">{client.email || "Pas d'email"}</div>
                     </div>
-                    <div className="text-sm text-muted-foreground">{client.telephone || "-"}</div>
-                    <div className="flex items-center gap-2">
+                    <div className="hidden md:block text-sm text-muted-foreground">{client.telephone || "-"}</div>
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 ml-auto">
                       <PermissionGate permission="modifier_client">
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(client)}>
                           <Pencil className="w-4 h-4" />
@@ -191,11 +191,12 @@ const Clients = () => {
                       </PermissionGate>
                       <Button variant="ghost" size="sm" asChild>
                         <Link to={`/clients/${client.id}`}>
-                          <Eye className="w-4 h-4 mr-1" />
-                          Voir fiche
+                          <Eye className="w-4 h-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Voir fiche</span>
                         </Link>
                       </Button>
                     </div>
+
                   </motion.div>
                 ))}
               </div>
