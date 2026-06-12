@@ -667,53 +667,143 @@ export type Database = {
       properties: {
         Row: {
           adresse: string | null
+          balcon: boolean
+          chambres: number | null
+          climatisation: boolean
+          commune: string | null
           cover_image_url: string | null
           created_at: string
           created_by: string | null
+          cuisine: boolean
           description: string | null
+          description_longue: string | null
           entreprise_id: string
           id: string
           images: string[] | null
+          internet: boolean
+          meuble: boolean
           nom: string
           nombre_pieces: number | null
+          parking: boolean
+          piscine: boolean
           prix: number
+          quartier: string | null
+          salles_bain: number | null
+          salons: number | null
           statut: string
           surface: number | null
           type_bien: string
           updated_at: string
+          video_url: string | null
+          ville: string | null
         }
         Insert: {
           adresse?: string | null
+          balcon?: boolean
+          chambres?: number | null
+          climatisation?: boolean
+          commune?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
+          cuisine?: boolean
           description?: string | null
+          description_longue?: string | null
           entreprise_id: string
           id?: string
           images?: string[] | null
+          internet?: boolean
+          meuble?: boolean
           nom: string
           nombre_pieces?: number | null
+          parking?: boolean
+          piscine?: boolean
           prix?: number
+          quartier?: string | null
+          salles_bain?: number | null
+          salons?: number | null
           statut?: string
           surface?: number | null
           type_bien?: string
           updated_at?: string
+          video_url?: string | null
+          ville?: string | null
         }
         Update: {
           adresse?: string | null
+          balcon?: boolean
+          chambres?: number | null
+          climatisation?: boolean
+          commune?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
+          cuisine?: boolean
           description?: string | null
+          description_longue?: string | null
           entreprise_id?: string
           id?: string
           images?: string[] | null
+          internet?: boolean
+          meuble?: boolean
           nom?: string
           nombre_pieces?: number | null
+          parking?: boolean
+          piscine?: boolean
           prix?: number
+          quartier?: string | null
+          salles_bain?: number | null
+          salons?: number | null
           statut?: string
           surface?: number | null
           type_bien?: string
+          updated_at?: string
+          video_url?: string | null
+          ville?: string | null
+        }
+        Relationships: []
+      }
+      property_media: {
+        Row: {
+          bucket: string
+          created_at: string
+          entreprise_id: string
+          id: string
+          is_cover: boolean
+          media_type: string
+          nom_fichier: string
+          ordre: number
+          property_id: string
+          storage_path: string
+          taille_octets: number | null
+          updated_at: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          entreprise_id: string
+          id?: string
+          is_cover?: boolean
+          media_type: string
+          nom_fichier: string
+          ordre?: number
+          property_id: string
+          storage_path: string
+          taille_octets?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          entreprise_id?: string
+          id?: string
+          is_cover?: boolean
+          media_type?: string
+          nom_fichier?: string
+          ordre?: number
+          property_id?: string
+          storage_path?: string
+          taille_octets?: number | null
           updated_at?: string
         }
         Relationships: []
