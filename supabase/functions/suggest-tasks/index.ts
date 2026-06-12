@@ -61,7 +61,7 @@ Contexte du secteur:
 - Gestion des clients et prospects
 - Suivi des documents administratifs
 - Relances et rappels
-- Gestion financière (devis, factures, encaissements)
+- Gestion financière (factures, encaissements)
 
 Génère des suggestions de tâches pertinentes basées sur:
 1. Les tâches existantes et leur statut
