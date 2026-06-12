@@ -405,7 +405,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
         </div>
 
         {/* Right: Line chart */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-[220px] sm:min-h-0 min-w-0">
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
               <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
