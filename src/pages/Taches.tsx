@@ -140,68 +140,6 @@ const Taches = () => {
     setTaches(taches.filter(t => t.id !== tache.id));
   };
 
-  const generateSuggestions = async () => {
-    setIsGeneratingSuggestions(true);
-    setSuggestions([]);
-
-    try {
-      const response = await supabase.functions.invoke("suggest-tasks", {
-        body: {
-          existingTasks: taches.map(t => ({ titre: t.titre, statut: t.statut })),
-          context: "Agence immobilière en Guinée - gestion quotidienne",
-        },
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      setSuggestions(response.data.suggestions || []);
-      
-      if (response.data.suggestions?.length > 0) {
-        toast.success(`${response.data.suggestions.length} suggestions générées`);
-      } else {
-        toast.info("Aucune suggestion disponible pour le moment");
-      }
-    } catch (error) {
-      console.error("Error generating suggestions:", error);
-      toast.error("Erreur lors de la génération des suggestions");
-    } finally {
-      setIsGeneratingSuggestions(false);
-    }
-  };
-
-  const addSuggestionAsTask = async (suggestion: Suggestion) => {
-    if (!entrepriseId) return;
-
-    const { error } = await supabase.from("taches").insert({
-      titre: suggestion.titre,
-      description: suggestion.description,
-      entreprise_id: entrepriseId,
-      statut: "a_faire" as const,
-      is_ai_generated: true,
-    });
-
-    if (error) {
-      toast.error("Erreur lors de l'ajout de la tâche");
-      return;
-    }
-
-    toast.success("Tâche ajoutée");
-    setSuggestions(suggestions.filter(s => s.titre !== suggestion.titre));
-    fetchTaches();
-  };
-
-  const getPriorityColor = (priorite: string) => {
-    switch (priorite?.toLowerCase()) {
-      case "haute":
-        return "bg-destructive/10 text-destructive";
-      case "moyenne":
-        return "bg-warning/10 text-warning";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
 
   if (entrepriseLoading || isLoading || permissionsLoading) {
     return (
@@ -252,20 +190,6 @@ const Taches = () => {
               <span className="hidden md:inline">Messagerie</span>
             </Button>
             <PermissionGate permission="creer_tache">
-              <Button 
-                variant="outline" 
-                onClick={generateSuggestions}
-                disabled={isGeneratingSuggestions}
-                className="gap-2"
-                size="sm"
-              >
-                {isGeneratingSuggestions ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-                <span className="hidden md:inline">Suggestions IA</span>
-              </Button>
               <Button onClick={() => setDialogOpen(true)} className="premium-button" size="sm">
                 <Plus className="w-4 h-4 sm:mr-2" />
                 <span className="hidden md:inline">Nouvelle tâche</span>
