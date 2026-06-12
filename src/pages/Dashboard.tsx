@@ -20,7 +20,7 @@ import { useAgencySettings } from "@/hooks/useAgencySettings";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
-import { DevisDialog } from "@/components/dialogs/DevisDialog";
+
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { TacheDialog } from "@/components/dialogs/TacheDialog";
