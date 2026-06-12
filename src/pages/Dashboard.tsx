@@ -127,7 +127,6 @@ const Dashboard = () => {
   const getQuickActions = () => {
     const actions = [
       { label: "Nouvelle facture", icon: Receipt, onClick: () => setFactureDialogOpen(true) },
-      { label: "Document IA", icon: Sparkles, onClick: () => setDocumentDialogOpen(true) },
     ];
 
     if (locationEnabled) {
