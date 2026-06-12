@@ -254,9 +254,10 @@ const Dashboard = () => {
             {/* Ligne 3 - Graphique + Clients */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-1.5 lg:gap-2 flex-1 min-h-0 lg:[grid-template-rows:1fr]">
               {entrepriseId && (
-                <div className="lg:col-span-2 min-h-[260px] sm:min-h-0 h-full">
+                <div className="lg:col-span-2 min-h-[520px] sm:min-h-[420px] lg:min-h-0 h-full">
                   <SimpleChart entrepriseId={entrepriseId} />
                 </div>
+
               )}
 
               <motion.div
