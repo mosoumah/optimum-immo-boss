@@ -8,7 +8,7 @@ import {
   TrendingUp,
   TrendingDown,
   CheckSquare,
-  Sparkles,
+  
   ImagePlus,
   Settings,
   LogOut,
