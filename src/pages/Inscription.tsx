@@ -119,7 +119,7 @@ const Inscription = () => {
               {[
                 "Gestion clients centralisée",
                 "Facturation automatisée",
-                "Documents générés par IA",
+                "Gestion des biens immobiliers",
                 "Tableau de bord temps réel",
               ].map((feature, i) => (
                 <div key={i} className="flex items-center gap-3">
