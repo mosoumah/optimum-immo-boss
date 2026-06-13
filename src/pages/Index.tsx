@@ -128,23 +128,23 @@ const Index = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 border-y border-border/30">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-20 border-y border-border/30">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-10 sm:mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
               Pourquoi choisir <span className="text-gradient">Optimum Immo</span> ?
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
               Des avantages concrets pour propulser votre agence immobilière.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {benefits.map((benefit, index) => (
               <motion.div
                 key={benefit.title}
@@ -152,7 +152,7 @@ const Index = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card-glow rounded-2xl p-6 text-center group"
+                className="card-glow rounded-2xl p-5 sm:p-6 text-center group"
               >
                 <motion.div 
                   initial={{ scale: 0, rotate: -180 }}
@@ -164,11 +164,11 @@ const Index = () => {
                     damping: 15, 
                     delay: index * 0.1 + 0.2 
                   }}
-                  className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-5 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300"
+                  className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4 sm:mb-5 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300"
                 >
-                  <benefit.icon className="w-8 h-8 text-primary" />
+                  <benefit.icon className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
                 </motion.div>
-                <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{benefit.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {benefit.description}
                 </p>
@@ -179,23 +179,23 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20">
-        <div className="container mx-auto px-6">
+      <section id="features" className="py-12 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
               Tout ce dont vous avez <span className="text-gradient">besoin</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
               Une suite d'outils puissants conçus spécialement pour les agences immobilières guinéennes.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {features.map((feature, index) => (
               <FeatureCard key={feature.title} {...feature} index={index} />
             ))}
@@ -204,40 +204,40 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative rounded-3xl overflow-hidden"
+            className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent" />
             <div className="absolute inset-0 pattern-dots opacity-20" />
             
-            <div className="relative card-glow rounded-3xl p-12 md:p-16 text-center">
-              <div className="flex justify-center mb-6">
+            <div className="relative card-glow rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center">
+              <div className="flex justify-center mb-5 sm:mb-6">
                 <motion.div 
                   initial={{ scale: 0, rotate: -180 }}
                   whileInView={{ scale: 1, rotate: 0 }}
                   viewport={{ once: true }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20"
+                  className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 border border-primary/20"
                 >
-                  <Building2 className="w-8 h-8 text-primary" />
+                  <Building2 className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
                 </motion.div>
               </div>
               
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
                 Prêt à transformer <span className="text-gradient">votre agence</span> ?
               </h2>
-              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+              <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto">
                 Rejoignez des centaines d'agences qui font confiance à Optimum Immo 
                 pour gérer leurs opérations quotidiennes.
               </p>
               
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button variant="hero" size="lg" asChild>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+                <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
                   <Link to="/inscription">
                     Créer mon compte gratuit
                     <ArrowRight className="w-5 h-5" />
@@ -245,7 +245,7 @@ const Index = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center justify-center gap-6 mt-8 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-6 sm:mt-8 text-xs sm:text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-primary" />
                   <span>Données sécurisées</span>
