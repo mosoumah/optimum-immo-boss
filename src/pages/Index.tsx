@@ -73,12 +73,12 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
+      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 pattern-dots opacity-30" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] max-w-[100vw] bg-primary/5 rounded-full blur-3xl" />
         
-        <div className="container mx-auto px-6 relative">
+        <div className="container mx-auto px-4 sm:px-6 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -89,19 +89,19 @@ const Index = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 sm:mb-8 max-w-full"
             >
-              <Zap className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Nouveau: Gestion immobilière simplifiée</span>
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
+              <span className="text-[11px] sm:text-sm font-medium text-primary truncate">Nouveau: Gestion immobilière simplifiée</span>
             </motion.div>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+            <h1 className="text-[2rem] leading-[1.1] sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-5 sm:mb-6 break-words">
               Boostez votre{" "}
               <span className="text-gradient">agence immobilière</span>{" "}
               en Guinée
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-1">
               Gérez vos clients, biens et factures facilement avec Optimum Immo. 
               La solution tout-en-un pour les professionnels de l'immobilier.
             </p>
@@ -110,15 +110,15 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4"
             >
-              <Button variant="hero" size="xl" asChild>
+              <Button variant="hero" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to="/inscription">
                   Commencer maintenant
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
-              <Button variant="hero-outline" size="xl" asChild>
+              <Button variant="hero-outline" size="xl" className="w-full sm:w-auto" asChild>
                 <a href="#features">Découvrir les fonctionnalités</a>
               </Button>
             </motion.div>
