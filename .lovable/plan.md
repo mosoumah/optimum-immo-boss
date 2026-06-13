@@ -1,37 +1,38 @@
 ## Problème
 
-Lorsqu'un admin ajoute un utilisateur depuis la page Utilisateurs :
-- L'edge function `admin-create-user` appelle bien `inviteUserByEmail`, donc un email d'invitation par défaut Lovable est censé partir.
-- Mais le lien d'invitation redirige vers `/connexion`, qui demande un mot de passe que l'invité n'a jamais défini → l'utilisateur ne peut pas accéder au tableau de bord.
-- De plus, la page `/reset-password` n'accepte que l'événement `PASSWORD_RECOVERY`, pas `INVITE` / `SIGNED_IN` issu d'un lien d'invitation, donc même en redirigeant manuellement, le formulaire affiche "Lien invalide".
+Deux problèmes distincts dans le déploiement Hostinger :
 
-## Solution
+### 1. Conflit de dépendances npm (ERESOLVE)
+`package.json` déclare `vite@^8.0.13`, mais `@vitejs/plugin-react-swc@^3.11.0` n'accepte que `vite@^4 || ^5 || ^6 || ^7`. Hostinger installe donc avec `--legacy-peer-deps` (le build "passe" en local mais reste fragile, et certains hébergeurs refusent carrément l'install).
 
-Garder les emails par défaut Lovable (aucune config domaine nécessaire) et corriger le flux post-clic.
+### 2. Page blanche après déploiement
+Même quand le build réussit (`dist/` est bien généré), Hostinger sert un SPA React Router sans fichier `.htaccess`. Résultat : la racine peut fonctionner mais toutes les routes (`/dashboard`, `/connexion`, refresh…) renvoient 404 ou page blanche, et les assets sont parfois mal résolus.
 
-### 1. Edge function `admin-create-user`
-- Changer `redirectTo` de `${appUrl}/connexion` vers `${appUrl}/accept-invitation`.
-- Conserver le reste de la logique (création profil, rôle, entreprise_id).
+## Plan
 
-### 2. Nouvelle page `/accept-invitation` (`src/pages/AcceptInvitation.tsx`)
-- Détecter la session créée par le lien d'invitation (`onAuthStateChange` event `SIGNED_IN` ou `INVITE`, et lecture du hash `type=invite`).
-- Afficher un écran de bienvenue avec le nom de l'entreprise et un formulaire "Définir votre mot de passe" (champ + confirmation, min 6 caractères).
-- À la soumission : `supabase.auth.updateUser({ password })`, puis redirection vers `/dashboard`.
-- Si la session est absente / le lien expiré : message clair + bouton vers `/connexion`.
+### A. Aligner Vite avec le plugin SWC
+- `package.json` : remplacer `"vite": "^8.0.13"` par `"vite": "^5.4.19"` (version stable, compatible plugin-react-swc 3.x, déjà utilisée par tous les autres projets Lovable).
+- Garder `@vitejs/plugin-react-swc@^3.11.0` tel quel.
+- `vite.config.ts` : aucune modification nécessaire (l'API utilisée est compatible Vite 5).
 
-### 3. Routing
-- Ajouter la route `/accept-invitation` dans `src/App.tsx` (publique, hors `ProtectedRoute`).
+### B. Ajouter le fallback SPA pour Hostinger
+- Créer `public/.htaccess` avec :
+  - Rewrite vers `index.html` pour toute route inexistante (SPA fallback)
+  - Compression gzip
+  - Cache long pour `/assets/*` (fichiers hashés)
+  - Headers de sécurité basiques (cohérents avec ceux déjà définis dans `vite.config.ts`)
 
-### 4. UI Utilisateurs
-- Mettre à jour le toast de succès après création pour préciser : "Un email d'invitation a été envoyé à {email}. Il pourra définir son mot de passe et accéder au tableau de bord."
+Vite copie automatiquement `public/.htaccess` dans `dist/` au build.
 
-## Hors-périmètre
+### C. Push GitHub
+La sync GitHub de Lovable est bidirectionnelle et automatique : dès que les modifs sont appliquées dans Lovable, elles sont poussées sur le repo connecté. Aucune action manuelle requise — il suffit que le projet soit déjà connecté à GitHub (sinon : menu + → GitHub → Connect project).
 
-- Pas de configuration de domaine email custom (utilisation des emails Lovable par défaut).
-- Pas de modification du template d'email (template Lovable standard utilisé).
-- Pas de changement des permissions ni de la structure des rôles.
+## Étapes de déploiement Hostinger (après le fix)
 
-## Détails techniques
+1. `npm install` (sans `--legacy-peer-deps`, ça doit passer proprement)
+2. `npm run build`
+3. Uploader **le contenu de `dist/`** (pas le dossier lui-même) dans `public_html/`
+4. Vérifier que `.htaccess` est bien présent dans `public_html/`
 
-- L'invitation Supabase génère un lien qui établit automatiquement une session quand l'utilisateur clique. C'est pour ça que la nouvelle page peut directement appeler `updateUser({ password })`.
-- `appUrl` côté edge function reste basé sur `APP_URL` env ou fallback existant.
+## Note sur l'avertissement "chunks > 500 ko"
+C'est un simple warning, pas une erreur — le bundle principal fait 2 Mo (579 ko gzip), ça reste acceptable. Pas inclus dans ce fix (hors scope demandé).
