@@ -37,11 +37,11 @@ export const PropertyFeatures = ({ property }: PropertyFeaturesProps) => {
   if (visibleItems.length === 0) return null;
 
   return (
-    <div className="flow-root w-full min-w-0 overflow-visible" style={{ contain: "layout paint" }}>
+    <div className="flow-root w-full min-w-0 overflow-visible">
       <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-      {visibleItems.map((it) => (
-        <FeatureTile key={it.label} icon={it.icon} label={it.label} value={it.value} />
-      ))}
+        {visibleItems.map((it) => (
+          <FeatureTile key={it.label} icon={it.icon} label={it.label} value={it.value} />
+        ))}
       </div>
     </div>
   );
