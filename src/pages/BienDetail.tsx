@@ -214,8 +214,8 @@ const BienDetail = () => {
 
   return (
     <div
-      className="relative z-10 h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8 contain-paint"
-      style={{ isolation: "isolate", WebkitOverflowScrolling: "touch" }}
+      className="relative z-10 h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8"
+      style={{ isolation: "isolate", contain: "paint", WebkitOverflowScrolling: "touch" }}
     >
       <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
 
