@@ -11,6 +11,7 @@ import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { BienDialog } from "@/components/dialogs/BienDialog";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -41,6 +42,7 @@ const typeBienLabels: Record<string, string> = {
 const Biens = () => {
   const { signOut } = useAuth();
   const { entrepriseId } = useEntreprise();
+  const isMobile = useIsMobile();
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -78,7 +80,7 @@ const Biens = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <FloatingParticles count={10} className="hidden sm:block" />
+      {!isMobile && <FloatingParticles count={10} />}
       <DynamicSidebar onSignOut={signOut} />
       <main className="flex-1 lg:ml-64 p-4 md:p-8 pt-16 lg:pt-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
@@ -136,12 +138,19 @@ const Biens = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((p, i) => (
-                <motion.div
+              {filtered.map((p, i) => {
+                const MotionWrapper = isMobile ? "div" : motion.div;
+
+                return (
+                <MotionWrapper
                   key={p.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  {...(!isMobile
+                    ? {
+                        initial: { opacity: 0, y: 20 },
+                        animate: { opacity: 1, y: 0 },
+                        transition: { delay: i * 0.05 },
+                      }
+                    : {})}
                 >
                   <Link
                     to={`/biens/${p.id}`}
@@ -183,8 +192,9 @@ const Biens = () => {
                     </div>
                     </div>
                   </Link>
-                </motion.div>
-              ))}
+                </MotionWrapper>
+              );
+              })}
             </div>
           )}
         </div>
