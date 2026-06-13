@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
@@ -284,16 +284,19 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
                 <Input type="number" min="0" value={form.salles_bain} onChange={(e) => update("salles_bain", e.target.value)} />
               </div>
             </div>
-            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 pt-2">
+            <div className="rounded-lg border border-border/50 bg-card">
               {switches.map((s) => (
-                <div key={s.key} className="flex min-h-[52px] items-center justify-between gap-2 p-2.5 sm:p-3 rounded-lg border border-border/40 bg-secondary/20 min-w-0">
-                  <span className="text-xs sm:text-sm min-w-0 leading-snug [overflow-wrap:anywhere]">{s.label}</span>
-                  <Switch
-                    className="shrink-0"
+                <label
+                  key={s.key}
+                  className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 border-b border-border/40 px-3 py-2 last:border-b-0"
+                >
+                  <span className="min-w-0 text-sm leading-snug break-words">{s.label}</span>
+                  <Checkbox
+                    className="h-5 w-5 flex-none rounded-md"
                     checked={form[s.key] as boolean}
                     onCheckedChange={(v) => update(s.key, v as never)}
                   />
-                </div>
+                </label>
               ))}
             </div>
           </TabsContent>
