@@ -215,7 +215,7 @@ const BienDetail = () => {
   return (
     <div
       className="relative z-10 h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8"
-      style={{ isolation: "isolate", contain: "paint", WebkitOverflowScrolling: "touch" }}
+      style={{ isolation: "isolate", WebkitOverflowScrolling: "touch" }}
     >
       <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
 
@@ -298,7 +298,7 @@ const BienDetail = () => {
         </div>
 
         {/* Caractéristiques */}
-        <section className="min-w-0 overflow-hidden">
+        <section className="min-w-0">
           <h2 className="text-lg font-semibold mb-3">Caractéristiques</h2>
           <PropertyFeatures property={property} />
         </section>
