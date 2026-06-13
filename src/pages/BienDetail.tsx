@@ -214,49 +214,53 @@ const BienDetail = () => {
     );
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8 overflow-x-hidden">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-start gap-3 flex-wrap">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/biens"><ArrowLeft className="w-5 h-5" /></Link>
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold truncate">{property.nom}</h1>
-            <p className="text-muted-foreground text-sm">
-              {typeBienLabels[property.type_bien] || property.type_bien}
-            </p>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild className="flex-shrink-0">
+              <Link to="/biens"><ArrowLeft className="w-5 h-5" /></Link>
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{property.nom}</h1>
+              <p className="text-muted-foreground text-xs sm:text-sm truncate">
+                {typeBienLabels[property.type_bien] || property.type_bien}
+              </p>
+            </div>
+            <Badge className={`${statutColors[property.statut] || "bg-muted"} flex-shrink-0`}>
+              {statutLabels[property.statut] || property.statut}
+            </Badge>
           </div>
-          <Badge className={statutColors[property.statut] || "bg-muted"}>
-            {statutLabels[property.statut] || property.statut}
-          </Badge>
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil className="w-4 h-4 mr-1" /> Modifier
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" disabled={isDeleting}>
-                <Trash2 className="w-4 h-4 mr-1" /> Supprimer
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer ce bien ?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Cette action est irréversible. Le bien « {property.nom} », ses photos, vidéos et documents seront définitivement supprimés.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Supprimer
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="flex-1 sm:flex-none">
+              <Pencil className="w-4 h-4 mr-1" /> Modifier
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isDeleting} className="flex-1 sm:flex-none">
+                  <Trash2 className="w-4 h-4 mr-1" /> Supprimer
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer ce bien ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Le bien « {property.nom} », ses photos, vidéos et documents seront définitivement supprimés.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Gallery + Infos */}
