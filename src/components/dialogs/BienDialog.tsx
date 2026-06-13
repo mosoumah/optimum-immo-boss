@@ -327,9 +327,10 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
               </p>
             )}
           </TabsContent>
+          </div>
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
+        <div className="flex justify-end gap-2 px-4 sm:px-6 py-3 border-t border-border/40 shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>
