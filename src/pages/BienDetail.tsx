@@ -269,7 +269,7 @@ const BienDetail = () => {
           </div>
 
           <div className="lg:col-span-2 space-y-4 min-w-0">
-            <div className="p-5 rounded-xl border border-border/50 bg-card overflow-hidden">
+            <div className="p-5 rounded-xl border border-border/50 bg-card">
               <div className="text-3xl font-bold text-primary mb-1 break-words">{formatCurrency(Number(property.prix))}</div>
               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                 {property.surface && (
@@ -282,7 +282,7 @@ const BienDetail = () => {
             </div>
 
             {localisationParts.length > 0 && (
-              <div className="p-5 rounded-xl border border-border/50 bg-card overflow-hidden">
+              <div className="p-5 rounded-xl border border-border/50 bg-card">
                 <div className="flex items-center gap-2 mb-2 text-sm font-semibold">
                   <MapPin className="w-4 h-4 text-primary" /> Localisation
                 </div>
@@ -293,7 +293,7 @@ const BienDetail = () => {
         </div>
 
         {/* Caractéristiques */}
-        <section className="clear-both flow-root min-w-0 bg-background">
+        <section className="min-w-0 bg-background">
           <h2 className="text-lg font-semibold mb-3">Caractéristiques</h2>
           <PropertyFeatures property={property} />
         </section>
