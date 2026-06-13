@@ -8,14 +8,14 @@ interface PropertyFeaturesProps {
 }
 
 const FeatureTile = ({ icon: Icon, label, value }: { icon: typeof Bed; label: string; value?: React.ReactNode }) => (
-  <div className="flex min-h-14 w-full min-w-0 items-center gap-3 rounded-lg border border-border/50 bg-card p-3">
-    <span className="flex h-9 w-9 flex-none items-center justify-center rounded-md bg-muted text-primary">
+  <div className="flex min-h-11 w-full min-w-0 items-center gap-3 border-b border-border/40 px-3 py-2 last:border-b-0">
+    <span className="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-muted text-primary">
       <Icon className="h-4 w-4" />
     </span>
     <div className="min-w-0 flex-1">
-      <div className="text-xs leading-tight text-muted-foreground break-words">{label}</div>
-      <div className="mt-0.5 text-sm font-semibold leading-tight break-words">{value ?? "Oui"}</div>
+      <div className="text-sm font-medium leading-snug break-words">{label}</div>
     </div>
+    <div className="flex-none text-sm font-semibold leading-tight text-primary">{value ?? "Oui"}</div>
   </div>
 );
 
@@ -37,8 +37,8 @@ export const PropertyFeatures = ({ property }: PropertyFeaturesProps) => {
   if (visibleItems.length === 0) return null;
 
   return (
-    <div className="flow-root w-full min-w-0 overflow-visible">
-      <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="w-full min-w-0 rounded-lg border border-border/50 bg-card">
+      <div className="flex w-full min-w-0 flex-col">
         {visibleItems.map((it) => (
           <FeatureTile key={it.label} icon={it.icon} label={it.label} value={it.value} />
         ))}
