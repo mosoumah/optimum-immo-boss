@@ -736,75 +736,71 @@ const Factures = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
+                  className="p-3 sm:p-4 flex items-center gap-2 sm:gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
                 >
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm sm:text-base truncate">{facture.clients?.nom || "Client inconnu"}</div>
-                      <div className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-words">{facture.description || "Sans description"}</div>
-                    </div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-wrap">
-                    <div className="text-left sm:text-right">
-                      <div className="font-semibold text-sm sm:text-base whitespace-nowrap">{formatCurrency(facture.montant)}</div>
-                      <Badge className={facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
-                        {facture.statut === "paye" ? "Payée" : "Non payée"}
-                      </Badge>
-                    </div>
-                    <div className="flex gap-1 sm:gap-2 flex-wrap">
-                      <PermissionGate permission="modifier_facture">
-                        {facture.statut !== "paye" && (
-                          <Button variant="outline" size="sm" onClick={() => marquerPayee(facture)} className="px-2 sm:px-3" title="Marquer payée">
-                            <CheckCircle className="w-4 h-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Marquer payée</span>
-                          </Button>
-                        )}
-                      </PermissionGate>
-                      <PermissionGate permission="generer_pdf_facture">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => generateFacture(facture)}
-                          disabled={generatingId === facture.id}
-                          className="px-2"
-                        >
-                          {generatingId === facture.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <FileText className="w-4 h-4" />
-                          )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm sm:text-base truncate">{facture.clients?.nom || "Client inconnu"}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground truncate">{facture.description || "Sans description"}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <div className="font-semibold text-xs sm:text-base whitespace-nowrap">{formatCurrency(facture.montant)}</div>
+                    <Badge className={`text-[10px] sm:text-xs px-1.5 py-0 ${facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
+                      {facture.statut === "paye" ? "Payée" : "Non payée"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                    <PermissionGate permission="modifier_facture">
+                      {facture.statut !== "paye" && (
+                        <Button variant="ghost" size="icon" onClick={() => marquerPayee(facture)} className="h-8 w-8" title="Marquer payée">
+                          <CheckCircle className="w-4 h-4" />
                         </Button>
-                      </PermissionGate>
-                      <PermissionGate permission="supprimer_facture">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="px-2 text-destructive hover:text-destructive hover:bg-destructive/10">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Cette action est irréversible. La facture et le revenu associé seront définitivement supprimés.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                onClick={() => supprimerFacture(facture)}
-                              >
-                                Supprimer
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </PermissionGate>
-                    </div>
+                      )}
+                    </PermissionGate>
+                    <PermissionGate permission="generer_pdf_facture">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => generateFacture(facture)}
+                        disabled={generatingId === facture.id}
+                        className="h-8 w-8"
+                        title="Aperçu facture"
+                      >
+                        {generatingId === facture.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FileText className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </PermissionGate>
+                    <PermissionGate permission="supprimer_facture">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Cette action est irréversible. La facture et le revenu associé seront définitivement supprimés.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => supprimerFacture(facture)}
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </PermissionGate>
                   </div>
                 </motion.div>
               ))}
@@ -828,35 +824,37 @@ const Factures = () => {
       )}
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-auto p-3 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               <FileText className="w-5 h-5" />
               Aperçu de la facture
             </DialogTitle>
           </DialogHeader>
 
-          <InvoicePreview
-            ref={invoiceRef}
-            entreprise={entreprise}
-            facture={previewFacture}
-            aiContent={previewContent}
-            logoDataUrl={logoDataUrl}
-          />
+          <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+            <InvoicePreview
+              ref={invoiceRef}
+              entreprise={entreprise}
+              facture={previewFacture}
+              aiContent={previewContent}
+              logoDataUrl={logoDataUrl}
+            />
+          </div>
 
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+          <div className="flex flex-wrap justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setPreviewOpen(false)} className="flex-1 sm:flex-none">
               Fermer
             </Button>
-            <Button variant="outline" onClick={handlePrint}>
+            <Button variant="outline" onClick={handlePrint} className="flex-1 sm:flex-none">
               <Printer className="w-4 h-4 mr-2" />
               Imprimer
             </Button>
-            <Button variant="outline" onClick={downloadAsHtml}>
+            <Button variant="outline" onClick={downloadAsHtml} className="flex-1 sm:flex-none">
               <Download className="w-4 h-4 mr-2" />
               HTML
             </Button>
-            <Button onClick={downloadAsPdf} disabled={isDownloadingPdf}>
+            <Button onClick={downloadAsPdf} disabled={isDownloadingPdf} className="flex-1 sm:flex-none">
               {isDownloadingPdf ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (

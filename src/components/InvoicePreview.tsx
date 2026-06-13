@@ -81,10 +81,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     return (
       <div
         ref={ref}
-        className="bg-white text-black relative overflow-hidden"
+        className="bg-white text-black relative overflow-hidden mx-auto w-full"
         style={{ 
-          width: "210mm",
-          minHeight: "297mm",
+          maxWidth: "210mm",
           fontFamily: "'Georgia', 'Times New Roman', serif"
         }}
       >
