@@ -213,7 +213,7 @@ const BienDetail = () => {
     );
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
+    <div className="h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8 [background-image:none]">
       <div className="max-w-6xl mx-auto space-y-6 min-w-0">
         {/* Header */}
         <div className="space-y-3">
@@ -293,14 +293,14 @@ const BienDetail = () => {
         </div>
 
         {/* Caractéristiques */}
-        <section className="clear-both flow-root min-w-0 overflow-visible bg-background">
+        <section className="clear-both flow-root min-w-0 bg-background">
           <h2 className="text-lg font-semibold mb-3">Caractéristiques</h2>
           <PropertyFeatures property={property} />
         </section>
 
         {/* Description */}
         {(property.description || property.description_longue) && (
-          <section className="min-w-0 overflow-hidden">
+          <section className="min-w-0">
             <h2 className="text-lg font-semibold mb-3">Description</h2>
             <div className="p-5 rounded-xl border border-border/50 bg-card space-y-3">
               {property.description && <p className="text-sm font-medium">{property.description}</p>}
@@ -372,7 +372,7 @@ const BienDetail = () => {
         )}
 
         {/* Statistiques */}
-        <section className="min-w-0 overflow-hidden">
+        <section className="min-w-0">
           <h2 className="text-lg font-semibold mb-3">Statistiques</h2>
           <PropertyStatsCards
             revenue={stats.revenue}
@@ -383,7 +383,7 @@ const BienDetail = () => {
         </section>
 
         {/* Historique réservations */}
-        <section className="min-w-0 overflow-hidden">
+        <section className="min-w-0">
           <h2 className="text-lg font-semibold mb-3">Historique des réservations</h2>
           <div className="p-4 rounded-xl border border-border/50 bg-card overflow-hidden">
             <Tabs defaultValue="en_cours" className="w-full min-w-0">
