@@ -1,38 +1,32 @@
-## Problème
+## Problèmes identifiés
 
-Deux problèmes distincts dans le déploiement Hostinger :
+1. **Liste Factures (mobile)** : Le contenu est aligné à gauche/empilé, contrairement à la page Revenus où le titre/sous-titre sont à gauche et le montant/date à droite sur une seule ligne centrée verticalement.
+2. **Aperçu de la facture (mobile)** : Le composant `InvoicePreview` a une largeur fixe `width: "210mm"` (~794px). Sur mobile (384px), il déborde horizontalement et apparaît énorme/coupé.
 
-### 1. Conflit de dépendances npm (ERESOLVE)
-`package.json` déclare `vite@^8.0.13`, mais `@vitejs/plugin-react-swc@^3.11.0` n'accepte que `vite@^4 || ^5 || ^6 || ^7`. Hostinger installe donc avec `--legacy-peer-deps` (le build "passe" en local mais reste fragile, et certains hébergeurs refusent carrément l'install).
+## Changements
 
-### 2. Page blanche après déploiement
-Même quand le build réussit (`dist/` est bien généré), Hostinger sert un SPA React Router sans fichier `.htaccess`. Résultat : la racine peut fonctionner mais toutes les routes (`/dashboard`, `/connexion`, refresh…) renvoient 404 ou page blanche, et les assets sont parfois mal résolus.
+### 1. `src/pages/Factures.tsx` — Liste des factures
+Aligner sur le style de Revenus : ligne unique centrée verticalement même sur mobile.
+- Remplacer `flex-col sm:flex-row` par `flex-row items-center` toujours
+- Structure : icône (à gauche, fixe) · bloc titre/description (flex-1, truncate) · bloc montant + badge (à droite) · actions
+- Sur très petit écran : masquer la description (`hidden sm:block`) ou la garder en `line-clamp-1`, masquer le badge sous l'icône payée pour ne garder que les icônes d'action compactes
+- Boutons d'action : icônes seules sur mobile (déjà partiellement le cas), s'assurer qu'ils restent sur la même ligne avec `flex-shrink-0`
 
-## Plan
+### 2. `src/components/InvoicePreview.tsx` — Aperçu responsive
+- Retirer `width: "210mm"` fixe ; utiliser `width: "100%"`, `maxWidth: "210mm"`, et `minHeight` conservé pour rendu PDF correct
+- Wrapper externe avec `overflow-x-auto` dans le Dialog pour permettre scroll si besoin sur très petit écran
+- Réduire les paddings sur mobile : `p-4 sm:p-10`, tailles de texte réduites (`text-lg sm:text-2xl` pour h1, `text-xl sm:text-3xl` pour total)
+- Header : passer en `flex-col sm:flex-row` pour empiler logo+nom et badge FACTURE sur mobile
+- Logo : `w-16 h-16 sm:w-24 sm:h-24`
+- Badge FACTURE : padding réduit `px-4 py-2 sm:px-8 sm:py-4`
 
-### A. Aligner Vite avec le plugin SWC
-- `package.json` : remplacer `"vite": "^8.0.13"` par `"vite": "^5.4.19"` (version stable, compatible plugin-react-swc 3.x, déjà utilisée par tous les autres projets Lovable).
-- Garder `@vitejs/plugin-react-swc@^3.11.0` tel quel.
-- `vite.config.ts` : aucune modification nécessaire (l'API utilisée est compatible Vite 5).
+### 3. `src/pages/Factures.tsx` — Dialog d'aperçu
+- `DialogContent` : ajouter `w-[95vw] sm:max-w-4xl p-3 sm:p-6` pour mieux remplir mobile
+- Wrapper `InvoicePreview` dans `<div className="overflow-x-auto">` pour sécurité
+- Boutons du footer : `flex-wrap` + `flex-1 sm:flex-none` pour qu'ils tiennent sur mobile
 
-### B. Ajouter le fallback SPA pour Hostinger
-- Créer `public/.htaccess` avec :
-  - Rewrite vers `index.html` pour toute route inexistante (SPA fallback)
-  - Compression gzip
-  - Cache long pour `/assets/*` (fichiers hashés)
-  - Headers de sécurité basiques (cohérents avec ceux déjà définis dans `vite.config.ts`)
+**Important** : la largeur fixe 210mm était utilisée pour la capture html2canvas → le PDF utilise déjà un iframe séparé (lignes 230-326) avec son propre HTML 800px, donc retirer la largeur fixe du composant React n'affecte PAS la qualité du PDF généré.
 
-Vite copie automatiquement `public/.htaccess` dans `dist/` au build.
-
-### C. Push GitHub
-La sync GitHub de Lovable est bidirectionnelle et automatique : dès que les modifs sont appliquées dans Lovable, elles sont poussées sur le repo connecté. Aucune action manuelle requise — il suffit que le projet soit déjà connecté à GitHub (sinon : menu + → GitHub → Connect project).
-
-## Étapes de déploiement Hostinger (après le fix)
-
-1. `npm install` (sans `--legacy-peer-deps`, ça doit passer proprement)
-2. `npm run build`
-3. Uploader **le contenu de `dist/`** (pas le dossier lui-même) dans `public_html/`
-4. Vérifier que `.htaccess` est bien présent dans `public_html/`
-
-## Note sur l'avertissement "chunks > 500 ko"
-C'est un simple warning, pas une erreur — le bundle principal fait 2 Mo (579 ko gzip), ça reste acceptable. Pas inclus dans ce fix (hors scope demandé).
+## Fichiers modifiés
+- `src/pages/Factures.tsx` (liste + dialog aperçu)
+- `src/components/InvoicePreview.tsx` (responsive layout)
