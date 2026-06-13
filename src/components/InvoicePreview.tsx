@@ -112,7 +112,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         <div className="p-4 sm:p-10 sm:pl-12 sm:pr-10 relative z-10">
           {/* Premium Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0 mb-6 sm:mb-10">
-            <div className="flex items-center gap-6">
+              <div className="flex flex-col min-[430px]:flex-row items-start min-[430px]:items-center gap-4 sm:gap-6 min-w-0 w-full">
               {logoSrc && (
                 <div 
                   className="w-24 h-24 rounded-2xl shadow-xl overflow-hidden"
@@ -138,7 +138,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   Agence Immobilière
                 </p>
                 <h1 
-                  className="text-2xl font-bold tracking-wide"
+                  className="text-xl sm:text-2xl font-bold tracking-wide [overflow-wrap:anywhere]"
                   style={{ 
                     color: primaryColor,
                     fontFamily: "'Georgia', serif"
@@ -171,9 +171,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             </div>
             
             {/* Premium Invoice Badge */}
-            <div className="text-right">
+            <div className="w-full sm:w-auto text-left sm:text-right">
               <div 
-                className="inline-block px-8 py-4 rounded-xl shadow-lg relative overflow-hidden"
+                className="inline-block px-5 sm:px-8 py-3 sm:py-4 rounded-xl shadow-lg relative overflow-hidden"
                 style={{ 
                   background: `linear-gradient(135deg, ${primaryColor}, ${darkenColor(primaryColor, 0.2)})`,
                   boxShadow: `0 10px 40px ${primaryColor}40`
@@ -188,13 +188,13 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   }}
                 />
                 <h2 
-                  className="text-2xl font-bold tracking-[0.25em] relative z-10"
+                  className="text-xl sm:text-2xl font-bold tracking-[0.18em] sm:tracking-[0.25em] relative z-10"
                   style={{ color: primaryTextColor }}
                 >
                   FACTURE
                 </h2>
               </div>
-              <div className="mt-4 text-right">
+              <div className="mt-4 text-left sm:text-right">
                 <p 
                   className="font-bold text-sm tracking-wide"
                   style={{ color: primaryColor }}
@@ -342,7 +342,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${primaryColor} 10px, ${primaryColor} 11px)`
                   }}
                 />
-                <div className="flex justify-between items-center relative z-10">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative z-10">
                   <div>
                     <span 
                       className="font-bold text-sm uppercase tracking-[0.2em] block"
@@ -358,7 +358,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     </span>
                   </div>
                   <span 
-                    className="text-3xl font-bold"
+                    className="text-xl sm:text-3xl font-bold [overflow-wrap:anywhere] max-w-full"
                     style={{ 
                       color: accentTextColor,
                       textShadow: `0 2px 4px ${darkenColor(accentColor, 0.3)}40`
@@ -457,7 +457,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             className="mt-10 pt-8"
             style={{ borderTop: `2px solid ${secondaryColor}` }}
           >
-            <div className="flex justify-between items-start gap-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-8">
               {/* Payment Terms */}
               <div className="flex-1">
                 <h4 
@@ -502,7 +502,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               </div>
               
               {/* Signature Area */}
-              <div className="text-center">
+              <div className="w-full sm:w-auto text-center">
                 <p 
                   className="text-xs uppercase tracking-[0.2em] font-bold mb-3"
                   style={{ color: primaryColor }}
@@ -510,7 +510,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   Signature & Cachet
                 </p>
                 <div 
-                  className="w-52 h-24 rounded-xl relative overflow-hidden flex items-center justify-center"
+                  className="w-full max-w-52 h-24 mx-auto rounded-xl relative overflow-hidden flex items-center justify-center"
                   style={{ 
                     border: entreprise.signature 
                       ? `2px solid ${primaryColor}60` 

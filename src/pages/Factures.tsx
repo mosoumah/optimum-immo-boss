@@ -670,8 +670,8 @@ const Factures = () => {
       <FloatingParticles count={25} />
       <DynamicSidebar onSignOut={handleSignOut} />
       
-      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
-        <div className="max-w-6xl mx-auto relative z-10">
+      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8 overflow-x-hidden">
+        <div className="w-full max-w-6xl mx-auto relative z-10 min-w-0">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -726,7 +726,7 @@ const Factures = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-xl border border-border/50 overflow-hidden premium-card"
+          className="w-full max-w-full rounded-xl border border-border/50 overflow-hidden premium-card"
         >
           {factures.length > 0 ? (
             <div className="divide-y divide-border/50">
@@ -738,7 +738,7 @@ const Factures = () => {
                   transition={{ delay: index * 0.05 }}
                   className="p-4 hover:bg-secondary/30 transition-colors premium-list-item"
                 >
-                  <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_minmax(5rem,auto)] sm:grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3 sm:gap-4 w-full min-w-0">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
@@ -746,8 +746,8 @@ const Factures = () => {
                       <div className="font-medium truncate">{facture.clients?.nom || "Client inconnu"}</div>
                       <div className="text-sm text-muted-foreground truncate">{facture.description || "Sans description"}</div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-semibold whitespace-nowrap text-sm sm:text-base">{formatCurrency(facture.montant)}</div>
+                    <div className="text-right min-w-0 max-w-[6rem] sm:max-w-none justify-self-end">
+                      <div className="font-semibold text-[11px] sm:text-base leading-tight [overflow-wrap:anywhere]">{formatCurrency(facture.montant)}</div>
                       <div className="flex items-center justify-end mt-0.5">
                         <Badge className={`text-[10px] px-1.5 py-0 ${facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
                           {facture.statut === "paye" ? "Payée" : "Non payée"}
@@ -756,7 +756,7 @@ const Factures = () => {
                       <div className="text-xs text-muted-foreground mt-0.5">{new Date(facture.date).toLocaleDateString("fr-FR")}</div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-border/30">
+                  <div className="flex items-center justify-center sm:justify-end gap-1 mt-2 pt-2 border-t border-border/30 w-full">
                     <PermissionGate permission="modifier_facture">
                       {facture.statut !== "paye" && (
                         <Button variant="ghost" size="icon" onClick={() => marquerPayee(facture)} className="h-8 w-8" title="Marquer payée">
