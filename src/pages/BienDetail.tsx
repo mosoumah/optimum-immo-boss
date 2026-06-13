@@ -342,12 +342,15 @@ const BienDetail = () => {
             )}
             {uploadedVideos.map((v) =>
               v.signedUrl ? (
-                <video
-                  key={v.id}
-                  src={v.signedUrl}
-                  controls
-                  className="w-full rounded-xl border border-border/50 mt-3"
-                />
+                <div key={v.id} className="aspect-video rounded-xl overflow-hidden border border-border/50 bg-black mt-3">
+                  <video
+                    src={v.signedUrl}
+                    controls
+                    preload="metadata"
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               ) : null
             )}
           </section>
