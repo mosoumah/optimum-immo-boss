@@ -174,16 +174,16 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl max-h-[88dvh] overflow-y-auto overflow-x-hidden p-4 sm:p-6 rounded-lg">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl max-h-[90dvh] overflow-hidden p-0 rounded-lg flex flex-col gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0">
           <DialogTitle>{property ? "Modifier le bien" : "Nouveau bien"}</DialogTitle>
           <DialogDescription>
             Renseignez toutes les informations puis ajoutez vos médias.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="general" className="w-full min-w-0">
-          <TabsList className="grid grid-cols-2 min-[430px]:grid-cols-3 sm:grid-cols-5 w-full h-auto gap-1 p-1">
+        <Tabs defaultValue="general" className="w-full min-w-0 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <TabsList className="mx-4 sm:mx-6 grid grid-cols-2 min-[430px]:grid-cols-3 sm:grid-cols-5 h-auto gap-1 p-1 shrink-0">
             <TabsTrigger value="general" className="min-w-0 px-2 py-2 text-xs sm:text-sm">Général</TabsTrigger>
             <TabsTrigger value="localisation" className="min-w-0 px-2 py-2 text-xs sm:text-sm">
               <span className="sm:hidden">Lieu</span>
@@ -199,7 +199,8 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="general" className="space-y-4 pt-4">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4">
+          <TabsContent value="general" className="space-y-4 pt-4 mt-0">
             <div>
               <Label>Nom du bien *</Label>
               <Input value={form.nom} onChange={(e) => update("nom", e.target.value)} placeholder="Ex: Villa Almadies" />
@@ -326,9 +327,10 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
               </p>
             )}
           </TabsContent>
+          </div>
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
+        <div className="flex justify-end gap-2 px-4 sm:px-6 py-3 border-t border-border/40 shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>
