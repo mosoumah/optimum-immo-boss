@@ -78,7 +78,7 @@ const Biens = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <FloatingParticles />
+      <FloatingParticles count={10} className="hidden sm:block" />
       <DynamicSidebar onSignOut={signOut} />
       <main className="flex-1 lg:ml-64 p-4 md:p-8 pt-16 lg:pt-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
