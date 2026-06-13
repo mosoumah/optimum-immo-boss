@@ -174,7 +174,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-3xl h-[calc(100dvh-1rem)] sm:h-auto sm:max-h-[90dvh] overflow-hidden p-0 rounded-lg !flex flex-col gap-0">
+      <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-3xl max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden p-0 rounded-lg !block">
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0">
           <DialogTitle>{property ? "Modifier le bien" : "Nouveau bien"}</DialogTitle>
           <DialogDescription>
@@ -182,7 +182,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="general" className="w-full min-w-0 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <Tabs defaultValue="general" className="w-full min-w-0">
           <TabsList className="mx-4 sm:mx-6 grid grid-cols-5 h-11 gap-1 p-1 shrink-0">
             <TabsTrigger value="general" className="min-w-0 px-2 py-2 text-xs sm:text-sm">Général</TabsTrigger>
             <TabsTrigger value="localisation" className="min-w-0 px-2 py-2 text-xs sm:text-sm">
@@ -199,7 +199,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-24 sm:pb-4">
+          <div className="px-4 sm:px-6 pb-4">
           <TabsContent value="general" className="space-y-4 pt-4 mt-0">
             <div>
               <Label>Nom du bien *</Label>
@@ -284,7 +284,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
                 <Input type="number" min="0" value={form.salles_bain} onChange={(e) => update("salles_bain", e.target.value)} />
               </div>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 pt-2">
+            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 pt-2">
               {switches.map((s) => (
                 <div key={s.key} className="flex min-h-[52px] items-center justify-between gap-2 p-2.5 sm:p-3 rounded-lg border border-border/40 bg-secondary/20 min-w-0">
                   <span className="text-xs sm:text-sm min-w-0 leading-snug [overflow-wrap:anywhere]">{s.label}</span>
@@ -331,7 +331,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
           </div>
         </Tabs>
 
-        <div className="flex justify-end gap-2 px-4 sm:px-6 py-3 border-t border-border/40 shrink-0">
+        <div className="flex justify-end gap-2 px-4 sm:px-6 py-3 border-t border-border/40 bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>
