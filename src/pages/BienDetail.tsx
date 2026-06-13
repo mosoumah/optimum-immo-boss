@@ -214,8 +214,8 @@ const BienDetail = () => {
     );
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8 overflow-x-hidden">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
+      <div className="max-w-6xl mx-auto space-y-6 min-w-0">
         {/* Header */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
