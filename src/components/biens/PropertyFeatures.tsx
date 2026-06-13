@@ -8,11 +8,11 @@ interface PropertyFeaturesProps {
 }
 
 const Item = ({ icon: Icon, label, value }: { icon: typeof Bed; label: string; value?: React.ReactNode }) => (
-  <div className="flex min-h-[58px] w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border border-border/30 bg-secondary/30 p-2.5 sm:min-h-[64px] sm:gap-3 sm:p-3">
-    <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary/10 text-primary sm:h-9 sm:w-9">
+  <div className="flex min-h-[52px] w-full min-w-0 items-center gap-2.5 rounded-lg border border-border/50 bg-card p-2.5 sm:min-h-[60px] sm:gap-3 sm:p-3">
+    <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-muted text-primary sm:h-9 sm:w-9">
       <Icon className="w-4 h-4" />
     </div>
-    <div className="min-w-0 flex-1 overflow-hidden">
+    <div className="min-w-0 flex-1">
       <div className="text-xs leading-snug text-muted-foreground break-words">{label}</div>
       {value !== undefined && <div className="text-sm font-medium leading-snug break-words">{value}</div>}
     </div>
@@ -37,7 +37,7 @@ export const PropertyFeatures = ({ property }: PropertyFeaturesProps) => {
   if (visible.length === 0) return null;
 
   return (
-    <div className="grid w-full min-w-0 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 overflow-hidden">
+    <div className="grid w-full min-w-0 grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 bg-background">
       {visible.map((it) => (
         <Item key={it.label} icon={it.icon} label={it.label} value={it.value} />
       ))}
