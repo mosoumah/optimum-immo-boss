@@ -173,7 +173,7 @@ const BienDetail = () => {
 
   if (entrepriseLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
@@ -181,7 +181,7 @@ const BienDetail = () => {
 
   if (!property) {
     return (
-      <div className="min-h-screen bg-background p-6 text-center">
+      <div className="h-full bg-background p-6 text-center overflow-y-auto">
         <Building className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
         <h1 className="text-2xl font-bold mb-2">Bien non trouvé</h1>
         <Button asChild>
