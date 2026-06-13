@@ -24,14 +24,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // 1. Restore session from storage first — this is the source of truth
-    supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
+    const finishAuthInit = (restoredSession: Session | null) => {
       if (!mounted) return;
       setSession(restoredSession);
       setUser(restoredSession?.user ?? null);
       setLoading(false);
       setIsReady(true);
-    });
+    };
+
+    // 1. Restore session from storage first — stale tokens must never block rendering
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: restoredSession } }) => {
+        finishAuthInit(restoredSession);
+      })
+      .catch(async (error) => {
+        console.warn("Session restoration failed, clearing local auth state", error);
+        await supabase.auth.signOut({ scope: "local" });
+        finishAuthInit(null);
+      });
 
     // 2. Listen for subsequent auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
