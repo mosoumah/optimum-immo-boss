@@ -736,70 +736,75 @@ const Factures = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
+                  className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-secondary/30 transition-colors premium-list-item"
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Receipt className="w-6 h-6 text-primary" />
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm sm:text-base truncate">{facture.clients?.nom || "Client inconnu"}</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-words">{facture.description || "Sans description"}</div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{facture.clients?.nom || "Client inconnu"}</div>
-                    <div className="text-sm text-muted-foreground">{facture.description || "Sans description"}</div>
-                  </div>
-                  <div className="text-right mr-4">
-                    <div className="font-medium">{formatCurrency(facture.montant)}</div>
-                    <Badge className={facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
-                      {facture.statut === "paye" ? "Payée" : "Non payée"}
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <PermissionGate permission="modifier_facture">
-                      {facture.statut !== "paye" && (
-                        <Button variant="outline" size="sm" onClick={() => marquerPayee(facture)}>
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Marquer payée
-                        </Button>
-                      )}
-                    </PermissionGate>
-                    <PermissionGate permission="generer_pdf_facture">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => generateFacture(facture)}
-                        disabled={generatingId === facture.id}
-                      >
-                        {generatingId === facture.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <FileText className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </PermissionGate>
-                    <PermissionGate permission="supprimer_facture">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                            <Trash2 className="w-4 h-4" />
+                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-wrap">
+                    <div className="text-left sm:text-right">
+                      <div className="font-semibold text-sm sm:text-base whitespace-nowrap">{formatCurrency(facture.montant)}</div>
+                      <Badge className={facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
+                        {facture.statut === "paye" ? "Payée" : "Non payée"}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-1 sm:gap-2 flex-wrap">
+                      <PermissionGate permission="modifier_facture">
+                        {facture.statut !== "paye" && (
+                          <Button variant="outline" size="sm" onClick={() => marquerPayee(facture)} className="px-2 sm:px-3" title="Marquer payée">
+                            <CheckCircle className="w-4 h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Marquer payée</span>
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Cette action est irréversible. La facture et le revenu associé seront définitivement supprimés.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => supprimerFacture(facture)}
-                            >
-                              Supprimer
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </PermissionGate>
+                        )}
+                      </PermissionGate>
+                      <PermissionGate permission="generer_pdf_facture">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => generateFacture(facture)}
+                          disabled={generatingId === facture.id}
+                          className="px-2"
+                        >
+                          {generatingId === facture.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <FileText className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </PermissionGate>
+                      <PermissionGate permission="supprimer_facture">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="px-2 text-destructive hover:text-destructive hover:bg-destructive/10">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action est irréversible. La facture et le revenu associé seront définitivement supprimés.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={() => supprimerFacture(facture)}
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </PermissionGate>
+                    </div>
                   </div>
                 </motion.div>
               ))}
