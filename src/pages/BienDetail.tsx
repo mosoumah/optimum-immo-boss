@@ -213,10 +213,7 @@ const BienDetail = () => {
     );
 
   return (
-    <div
-      className="h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8"
-      style={{ WebkitOverflowScrolling: "touch" }}
-    >
+    <div className="h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
       <div className="max-w-6xl mx-auto space-y-6 min-w-0">
         {/* Header */}
         <div className="space-y-3">
@@ -296,7 +293,7 @@ const BienDetail = () => {
         </div>
 
         {/* Caractéristiques */}
-        <section className="min-w-0 bg-background">
+        <section className="clear-both flow-root min-w-0 overflow-visible bg-background">
           <h2 className="text-lg font-semibold mb-3">Caractéristiques</h2>
           <PropertyFeatures property={property} />
         </section>
