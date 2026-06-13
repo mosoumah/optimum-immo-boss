@@ -81,10 +81,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     return (
       <div
         ref={ref}
-        className="bg-white text-black relative overflow-hidden"
+        className="bg-white text-black relative overflow-hidden mx-auto w-full"
         style={{ 
-          width: "210mm",
-          minHeight: "297mm",
+          maxWidth: "210mm",
           fontFamily: "'Georgia', 'Times New Roman', serif"
         }}
       >
@@ -110,9 +109,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           style={{ background: `linear-gradient(90deg, ${primaryColor}, ${accentColor}, ${primaryColor})` }}
         />
 
-        <div className="p-10 pl-12 pr-10 relative z-10">
+        <div className="p-4 sm:p-10 sm:pl-12 sm:pr-10 relative z-10">
           {/* Premium Header */}
-          <div className="flex justify-between items-start mb-10">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0 mb-6 sm:mb-10">
             <div className="flex items-center gap-6">
               {logoSrc && (
                 <div 
