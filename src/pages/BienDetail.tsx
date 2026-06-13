@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Building, ArrowLeft, MapPin, Maximize2, Trash2, Pencil, FileText, Download, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -216,7 +215,7 @@ const BienDetail = () => {
   return (
     <div
       className="relative z-10 h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8"
-      style={{ isolation: "isolate", transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
+      style={{ isolation: "isolate", contain: "paint", WebkitOverflowScrolling: "touch" }}
     >
       <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
 
@@ -270,22 +269,13 @@ const BienDetail = () => {
 
         {/* Gallery + Infos */}
         <div className="grid lg:grid-cols-5 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-3"
-          >
+          <div className="lg:col-span-3 min-w-0">
             <PropertyGallery images={galleryImages} fallbackCover={property.cover_image_url} />
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="lg:col-span-2 space-y-4"
-          >
-            <div className="p-5 rounded-xl border border-border/50 bg-card">
-              <div className="text-3xl font-bold text-primary mb-1">{formatCurrency(Number(property.prix))}</div>
+          <div className="lg:col-span-2 space-y-4 min-w-0">
+            <div className="p-5 rounded-xl border border-border/50 bg-card overflow-hidden">
+              <div className="text-3xl font-bold text-primary mb-1 break-words">{formatCurrency(Number(property.prix))}</div>
               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                 {property.surface && (
                   <span className="flex items-center gap-1">
@@ -297,25 +287,25 @@ const BienDetail = () => {
             </div>
 
             {localisationParts.length > 0 && (
-              <div className="p-5 rounded-xl border border-border/50 bg-card">
+              <div className="p-5 rounded-xl border border-border/50 bg-card overflow-hidden">
                 <div className="flex items-center gap-2 mb-2 text-sm font-semibold">
                   <MapPin className="w-4 h-4 text-primary" /> Localisation
                 </div>
-                <p className="text-sm text-muted-foreground">{localisationParts.join(" — ")}</p>
+                <p className="text-sm text-muted-foreground break-words">{localisationParts.join(" — ")}</p>
               </div>
             )}
-          </motion.div>
+          </div>
         </div>
 
         {/* Caractéristiques */}
-        <section>
+        <section className="min-w-0 overflow-hidden">
           <h2 className="text-lg font-semibold mb-3">Caractéristiques</h2>
           <PropertyFeatures property={property} />
         </section>
 
         {/* Description */}
         {(property.description || property.description_longue) && (
-          <section>
+          <section className="min-w-0 overflow-hidden">
             <h2 className="text-lg font-semibold mb-3">Description</h2>
             <div className="p-5 rounded-xl border border-border/50 bg-card space-y-3">
               {property.description && <p className="text-sm font-medium">{property.description}</p>}
@@ -387,7 +377,7 @@ const BienDetail = () => {
         )}
 
         {/* Statistiques */}
-        <section>
+        <section className="min-w-0 overflow-hidden">
           <h2 className="text-lg font-semibold mb-3">Statistiques</h2>
           <PropertyStatsCards
             revenue={stats.revenue}
@@ -398,14 +388,14 @@ const BienDetail = () => {
         </section>
 
         {/* Historique réservations */}
-        <section>
+        <section className="min-w-0 overflow-hidden">
           <h2 className="text-lg font-semibold mb-3">Historique des réservations</h2>
-          <div className="p-4 rounded-xl border border-border/50 bg-card">
-            <Tabs defaultValue="en_cours" className="w-full">
-              <TabsList>
-                <TabsTrigger value="en_cours">En cours ({now.length})</TabsTrigger>
-                <TabsTrigger value="a_venir">À venir ({upcoming.length})</TabsTrigger>
-                <TabsTrigger value="passees">Passées ({past.length})</TabsTrigger>
+          <div className="p-4 rounded-xl border border-border/50 bg-card overflow-hidden">
+            <Tabs defaultValue="en_cours" className="w-full min-w-0">
+              <TabsList className="grid w-full grid-cols-3 h-auto p-1 gap-1 overflow-hidden">
+                <TabsTrigger value="en_cours" className="min-w-0 px-2 py-2 text-xs sm:text-sm">En cours ({now.length})</TabsTrigger>
+                <TabsTrigger value="a_venir" className="min-w-0 px-2 py-2 text-xs sm:text-sm">À venir ({upcoming.length})</TabsTrigger>
+                <TabsTrigger value="passees" className="min-w-0 px-2 py-2 text-xs sm:text-sm">Passées ({past.length})</TabsTrigger>
               </TabsList>
               <TabsContent value="en_cours">{renderResList(now)}</TabsContent>
               <TabsContent value="a_venir">{renderResList(upcoming)}</TabsContent>
