@@ -199,7 +199,8 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="general" className="space-y-4 pt-4">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4">
+          <TabsContent value="general" className="space-y-4 pt-4 mt-0">
             <div>
               <Label>Nom du bien *</Label>
               <Input value={form.nom} onChange={(e) => update("nom", e.target.value)} placeholder="Ex: Villa Almadies" />
