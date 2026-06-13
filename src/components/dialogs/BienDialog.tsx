@@ -173,7 +173,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-3xl max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden p-0 rounded-lg !block">
+      <DialogContent className="left-2 top-2 bottom-2 right-2 max-h-none w-auto max-w-none translate-x-0 translate-y-0 transform-none overflow-y-auto overflow-x-hidden rounded-lg p-0 !block duration-0 data-[state=closed]:animate-none data-[state=open]:animate-none sm:bottom-auto sm:right-auto sm:left-1/2 sm:top-1/2 sm:max-h-[calc(100dvh-1rem)] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2">
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0">
           <DialogTitle>{property ? "Modifier le bien" : "Nouveau bien"}</DialogTitle>
           <DialogDescription>
@@ -268,7 +268,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
             </div>
           </TabsContent>
 
-          <TabsContent value="caracteristiques" className="space-y-4 pt-4">
+          <TabsContent value="caracteristiques" className="space-y-4 pt-4 data-[state=inactive]:hidden">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Chambres</Label>
