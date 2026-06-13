@@ -214,7 +214,12 @@ const BienDetail = () => {
     );
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8">
+    <div
+      className="relative z-10 h-full overflow-y-auto overflow-x-hidden bg-background p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 pb-24 lg:pb-8"
+      style={{ isolation: "isolate", transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
+    >
+      <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
+
       <div className="max-w-6xl mx-auto space-y-6 min-w-0">
         {/* Header */}
         <div className="space-y-3">
