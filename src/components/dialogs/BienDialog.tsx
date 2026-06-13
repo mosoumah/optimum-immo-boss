@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
@@ -284,17 +283,18 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
                 <Input type="number" min="0" value={form.salles_bain} onChange={(e) => update("salles_bain", e.target.value)} />
               </div>
             </div>
-            <div className="rounded-lg border border-border/50 bg-card">
+            <div className="rounded-lg border border-border/50 bg-card overflow-hidden">
               {switches.map((s) => (
                 <label
                   key={s.key}
-                  className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 border-b border-border/40 px-3 py-2 last:border-b-0"
+                  className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 border-b border-border/40 px-3 py-2 last:border-b-0 select-none"
                 >
                   <span className="min-w-0 text-sm leading-snug break-words">{s.label}</span>
-                  <Checkbox
-                    className="h-5 w-5 flex-none rounded-md"
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 flex-none rounded border-border bg-background accent-primary"
                     checked={form[s.key] as boolean}
-                    onCheckedChange={(v) => update(s.key, v as never)}
+                    onChange={(e) => update(s.key, e.target.checked as never)}
                   />
                 </label>
               ))}
