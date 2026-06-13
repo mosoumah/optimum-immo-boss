@@ -19,14 +19,14 @@ export const PropertyStatsCards = ({ revenue, total, occupancyRate, lastReservat
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid w-full min-w-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 overflow-hidden">
       {items.map((it) => (
-        <div key={it.label} className="p-4 rounded-xl border border-border/50 bg-card">
-          <div className="flex items-center gap-2 mb-2">
-            <it.icon className={`w-4 h-4 ${it.color}`} />
-            <span className="text-xs text-muted-foreground">{it.label}</span>
+        <div key={it.label} className="min-w-0 overflow-hidden rounded-xl border border-border/50 bg-card p-4">
+          <div className="flex min-w-0 items-center gap-2 mb-2">
+            <it.icon className={`w-4 h-4 flex-none ${it.color}`} />
+            <span className="min-w-0 text-xs text-muted-foreground break-words">{it.label}</span>
           </div>
-          <div className="text-base font-semibold truncate">{it.value}</div>
+          <div className="text-base font-semibold break-words">{it.value}</div>
         </div>
       ))}
     </div>
