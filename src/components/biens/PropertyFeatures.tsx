@@ -25,13 +25,13 @@ export const PropertyFeatures = ({ property }: PropertyFeaturesProps) => {
   ];
 
   const amenityItems: { icon: typeof Bed; label: string; show: boolean }[] = [
-    { icon: ChefHat, label: "Cuisine", value: "Équipée", show: property.cuisine },
-    { icon: Car, label: "Parking", value: "Disponible", show: property.parking },
-    { icon: Trees, label: "Balcon", value: "Oui", show: property.balcon },
-    { icon: Waves, label: "Piscine", value: "Oui", show: property.piscine },
-    { icon: Wifi, label: "Internet", value: "Oui", show: property.internet },
-    { icon: Snowflake, label: "Climatisation", value: "Oui", show: property.climatisation },
-    { icon: Armchair, label: "Meublé", value: "Oui", show: property.meuble },
+    { icon: ChefHat, label: "Cuisine", show: property.cuisine },
+    { icon: Car, label: "Parking", show: property.parking },
+    { icon: Trees, label: "Balcon", show: property.balcon },
+    { icon: Waves, label: "Piscine", show: property.piscine },
+    { icon: Wifi, label: "Internet", show: property.internet },
+    { icon: Snowflake, label: "Climatisation", show: property.climatisation },
+    { icon: Armchair, label: "Meublé", show: property.meuble },
   ];
 
   const visibleNumbers = numericItems.filter((i) => i.show);
