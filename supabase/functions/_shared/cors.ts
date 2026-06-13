@@ -8,6 +8,8 @@ const ALLOWED_ORIGINS: RegExp[] = [
   /^https:\/\/.*\.lovable\.app$/,
   /^https:\/\/.*\.lovableproject\.com$/,
   /^https:\/\/.*\.lovable\.dev$/,
+  // Production Hostinger
+  /^https:\/\/.*\.hostingersite\.com$/,
   // Développement local uniquement
   /^http:\/\/localhost(:\d+)?$/,
   /^http:\/\/127\.0\.0\.1(:\d+)?$/,
