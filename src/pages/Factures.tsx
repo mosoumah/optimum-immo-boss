@@ -746,8 +746,8 @@ const Factures = () => {
                       <div className="font-medium truncate">{facture.clients?.nom || "Client inconnu"}</div>
                       <div className="text-sm text-muted-foreground truncate">{facture.description || "Sans description"}</div>
                     </div>
-                    <div className="text-right min-w-0 max-w-full justify-self-end">
-                      <div className="font-semibold text-[11px] sm:text-base leading-tight break-words">{formatCurrency(facture.montant)}</div>
+                    <div className="text-right min-w-0 max-w-[6rem] sm:max-w-none justify-self-end">
+                      <div className="font-semibold text-[11px] sm:text-base leading-tight [overflow-wrap:anywhere]">{formatCurrency(facture.montant)}</div>
                       <div className="flex items-center justify-end mt-0.5">
                         <Badge className={`text-[10px] px-1.5 py-0 ${facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
                           {facture.statut === "paye" ? "Payée" : "Non payée"}
@@ -756,7 +756,7 @@ const Factures = () => {
                       <div className="text-xs text-muted-foreground mt-0.5">{new Date(facture.date).toLocaleDateString("fr-FR")}</div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-border/30 w-full">
+                  <div className="flex items-center justify-center sm:justify-end gap-1 mt-2 pt-2 border-t border-border/30 w-full">
                     <PermissionGate permission="modifier_facture">
                       {facture.statut !== "paye" && (
                         <Button variant="ghost" size="icon" onClick={() => marquerPayee(facture)} className="h-8 w-8" title="Marquer payée">
