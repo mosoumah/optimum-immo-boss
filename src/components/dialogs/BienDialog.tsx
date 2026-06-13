@@ -174,7 +174,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl max-h-[88dvh] overflow-y-auto overflow-x-hidden p-4 sm:p-6 rounded-lg">
         <DialogHeader>
           <DialogTitle>{property ? "Modifier le bien" : "Nouveau bien"}</DialogTitle>
           <DialogDescription>
@@ -182,13 +182,19 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="general">Général</TabsTrigger>
-            <TabsTrigger value="localisation">Localisation</TabsTrigger>
-            <TabsTrigger value="caracteristiques">Caract.</TabsTrigger>
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="medias" disabled={!createdId}>
+        <Tabs defaultValue="general" className="w-full min-w-0">
+          <TabsList className="grid grid-cols-2 min-[430px]:grid-cols-3 sm:grid-cols-5 w-full h-auto gap-1 p-1">
+            <TabsTrigger value="general" className="min-w-0 px-2 py-2 text-xs sm:text-sm">Général</TabsTrigger>
+            <TabsTrigger value="localisation" className="min-w-0 px-2 py-2 text-xs sm:text-sm">
+              <span className="sm:hidden">Lieu</span>
+              <span className="hidden sm:inline">Localisation</span>
+            </TabsTrigger>
+            <TabsTrigger value="caracteristiques" className="min-w-0 px-2 py-2 text-xs sm:text-sm">Caract.</TabsTrigger>
+            <TabsTrigger value="description" className="min-w-0 px-2 py-2 text-xs sm:text-sm">
+              <span className="sm:hidden">Desc.</span>
+              <span className="hidden sm:inline">Description</span>
+            </TabsTrigger>
+            <TabsTrigger value="medias" disabled={!createdId} className="min-w-0 px-2 py-2 text-xs sm:text-sm">
               Médias
             </TabsTrigger>
           </TabsList>
@@ -198,7 +204,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
               <Label>Nom du bien *</Label>
               <Input value={form.nom} onChange={(e) => update("nom", e.target.value)} placeholder="Ex: Villa Almadies" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Catégorie</Label>
                 <Select value={form.type_bien} onValueChange={(v) => update("type_bien", v)}>
@@ -225,7 +231,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Prix (GNF)</Label>
                 <Input type="number" min="0" value={form.prix} onChange={(e) => update("prix", e.target.value)} />
@@ -263,7 +269,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
           </TabsContent>
 
           <TabsContent value="caracteristiques" className="space-y-4 pt-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Chambres</Label>
                 <Input type="number" min="0" value={form.chambres} onChange={(e) => update("chambres", e.target.value)} />
@@ -277,10 +283,10 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
                 <Input type="number" min="0" value={form.salles_bain} onChange={(e) => update("salles_bain", e.target.value)} />
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
               {switches.map((s) => (
-                <div key={s.key} className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-secondary/20">
-                  <span className="text-sm">{s.label}</span>
+                <div key={s.key} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border/40 bg-secondary/20 min-w-0">
+                  <span className="text-sm min-w-0 [overflow-wrap:anywhere]">{s.label}</span>
                   <Switch
                     checked={form[s.key] as boolean}
                     onCheckedChange={(v) => update(s.key, v as never)}
