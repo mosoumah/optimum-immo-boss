@@ -8,13 +8,13 @@ interface PropertyFeaturesProps {
 }
 
 const Item = ({ icon: Icon, label, value }: { icon: typeof Bed; label: string; value?: React.ReactNode }) => (
-  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/30">
-    <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+  <div className="flex min-h-[64px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-border/30 bg-secondary/30 p-3">
+    <div className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-primary/10 text-primary">
       <Icon className="w-4 h-4" />
     </div>
-    <div className="min-w-0">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      {value !== undefined && <div className="text-sm font-medium truncate">{value}</div>}
+    <div className="min-w-0 flex-1 overflow-hidden">
+      <div className="text-xs leading-snug text-muted-foreground break-words">{label}</div>
+      {value !== undefined && <div className="text-sm font-medium leading-snug break-words">{value}</div>}
     </div>
   </div>
 );
@@ -37,7 +37,7 @@ export const PropertyFeatures = ({ property }: PropertyFeaturesProps) => {
   if (visible.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+    <div className="grid w-full min-w-0 grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 overflow-hidden">
       {visible.map((it) => (
         <Item key={it.label} icon={it.icon} label={it.label} value={it.value} />
       ))}
