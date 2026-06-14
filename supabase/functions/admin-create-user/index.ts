@@ -4,19 +4,17 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 interface CreateUserRequest {
   email: string
   nom: string
-  role: 'admin' | 'agent' | 'client'
+  password: string
+  role: 'admin' | 'agent'
   entreprise_id: string
-  client_id?: string | null
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: getCorsHeaders(req) })
   }
 
   try {
-    // Get auth header from the calling admin
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
@@ -25,18 +23,15 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create client with user's token to verify caller identity
     const supabaseUser = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } }
     )
 
-    // Verify caller's JWT and get their info
     const { data: { user: callerUser }, error: authError } = await supabaseUser.auth.getUser()
-    
+
     if (authError || !callerUser) {
-      console.error('JWT verification failed:', authError)
       return new Response(
         JSON.stringify({ error: 'Token invalide', code: 'invalid_token' }),
         { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
@@ -45,13 +40,11 @@ Deno.serve(async (req) => {
 
     const callerId = callerUser.id
 
-    // Create admin client with service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // Verify caller is an admin
     const { data: callerRole } = await supabaseAdmin
       .from('user_roles')
       .select('role')
@@ -65,7 +58,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get caller's entreprise_id
     const { data: callerProfile } = await supabaseAdmin
       .from('profiles')
       .select('entreprise_id')
@@ -79,19 +71,16 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Parse request body
     const body: CreateUserRequest = await req.json()
-    const { email, nom, role, entreprise_id, client_id } = body
+    const { email, nom, password, role, entreprise_id } = body
 
-    // Validate required fields with strict checks
-    if (!email || !nom || !role || !entreprise_id) {
+    if (!email || !nom || !password || !role || !entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Champs obligatoires manquants', code: 'missing_fields' }),
         { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(email) || email.length > 254) {
       return new Response(
@@ -100,7 +89,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate nom length
     if (typeof nom !== 'string' || nom.trim().length < 2 || nom.length > 100) {
       return new Response(
         JSON.stringify({ error: 'Nom invalide (2-100 caractères)', code: 'invalid_nom' }),
@@ -108,8 +96,14 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate role is one of the allowed values
-    const ALLOWED_ROLES = new Set(['admin', 'agent', 'client'])
+    if (typeof password !== 'string' || password.length < 8 || password.length > 72) {
+      return new Response(
+        JSON.stringify({ error: 'Mot de passe invalide (8-72 caractères)', code: 'invalid_password' }),
+        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const ALLOWED_ROLES = new Set(['admin', 'agent'])
     if (!ALLOWED_ROLES.has(role)) {
       return new Response(
         JSON.stringify({ error: 'Rôle invalide', code: 'invalid_role' }),
@@ -117,7 +111,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Verify caller can only create users in their own entreprise
     if (callerProfile.entreprise_id !== entreprise_id) {
       return new Response(
         JSON.stringify({ error: 'Vous ne pouvez créer des utilisateurs que dans votre entreprise', code: 'wrong_entreprise' }),
@@ -125,44 +118,34 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate client_id if role is client
-    if (role === 'client' && !client_id) {
-      return new Response(
-        JSON.stringify({ error: 'Un client doit être associé à un compte client', code: 'missing_client' }),
-        { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
-      )
-    }
+    console.log(`Admin ${callerId} creating user: ${email} with role ${role}`)
 
-    console.log(`Admin ${callerId} inviting user: ${email} with role ${role}`)
-
-    // Get redirect URL from env or request origin (never trust raw origin for security)
-    const appUrl = Deno.env.get('APP_URL') || 'https://optimum-immo.lovable.app'
-    const redirectTo = `${appUrl}/accept-invitation`
-
-    // Invite user via email (sends confirmation email automatically!)
-    const { data: newUserData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      data: {
+    // Create user directly with confirmed email and admin-defined password
+    const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
         nom,
-        entreprise_nom: '', // Empty to prevent trigger from creating new entreprise
+        entreprise_nom: '', // Empty to prevent trigger from creating a new entreprise
       },
-      redirectTo,
     })
 
-    if (inviteError) {
-      console.error('Error inviting user:', inviteError)
-      
-      // Handle specific errors with French messages
-      if (inviteError.message?.includes('already been registered') || 
-          inviteError.message?.includes('already registered') ||
-          inviteError.message?.includes('User already registered')) {
+    if (createError) {
+      console.error('Error creating user:', createError.message)
+
+      if (createError.message?.includes('already been registered') ||
+          createError.message?.includes('already registered') ||
+          createError.message?.includes('User already registered') ||
+          createError.message?.includes('already exists')) {
         return new Response(
           JSON.stringify({ error: 'Cet email est déjà utilisé', code: 'email_exists' }),
           { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
         )
       }
-      
+
       return new Response(
-        JSON.stringify({ error: inviteError.message || 'Erreur lors de la création', code: 'create_error' }),
+        JSON.stringify({ error: createError.message || 'Erreur lors de la création', code: 'create_error' }),
         { status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
     }
@@ -175,41 +158,31 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`User invited with ID: ${newUserId}`)
+    console.log(`User created with ID: ${newUserId}`)
 
-    // Wait a bit for the trigger to create the base profile
+    // Wait briefly for the signup trigger to create the base profile
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Update the profile with entreprise_id
+    // Upsert profile with entreprise_id, nom and email
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .update({ entreprise_id, nom })
-      .eq('id', newUserId)
+      .upsert({
+        id: newUserId,
+        email,
+        nom,
+        entreprise_id,
+      }, { onConflict: 'id' })
 
     if (profileError) {
-      console.error('Error updating profile:', profileError)
-      // Profile might not exist yet (trigger race condition), try insert
-      const { error: insertProfileError } = await supabaseAdmin
-        .from('profiles')
-        .upsert({
-          id: newUserId,
-          email,
-          nom,
-          entreprise_id,
-        }, { onConflict: 'id' })
-
-      if (insertProfileError) {
-        console.error('Error upserting profile:', insertProfileError)
-      }
+      console.error('Error upserting profile:', profileError)
     }
 
-    // Delete any existing role (cleanup from trigger)
+    // Cleanup any role auto-created by the trigger
     await supabaseAdmin
       .from('user_roles')
       .delete()
       .eq('user_id', newUserId)
 
-    // Insert the correct role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({ user_id: newUserId, role })
@@ -217,30 +190,18 @@ Deno.serve(async (req) => {
     if (roleError) {
       console.error('Error inserting role:', roleError)
       return new Response(
-        JSON.stringify({ error: 'Erreur lors de l\'attribution du rôle', code: 'role_error' }),
+        JSON.stringify({ error: "Erreur lors de l'attribution du rôle", code: 'role_error' }),
         { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
       )
-    }
-
-    // If role is client, create client_account link
-    if (role === 'client' && client_id) {
-      const { error: clientAccountError } = await supabaseAdmin
-        .from('client_accounts')
-        .insert({ user_id: newUserId, client_id })
-
-      if (clientAccountError) {
-        console.error('Error creating client account:', clientAccountError)
-        // Not critical, continue
-      }
     }
 
     console.log(`User ${newUserId} fully configured with role ${role}`)
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         user_id: newUserId,
-        message: 'Invitation envoyée avec succès'
+        message: 'Utilisateur créé avec succès'
       }),
       { status: 200, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     )
