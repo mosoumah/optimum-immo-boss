@@ -10,6 +10,9 @@ import {
   Bell,
   Mail,
   Trash2,
+  Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +78,8 @@ const Utilisateurs = () => {
   // Form state for new user
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserNom, setNewUserNom] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newUserRole, setNewUserRole] = useState<AppRole>("agent");
   const [isCreating, setIsCreating] = useState(false);
 
@@ -136,10 +141,35 @@ const Utilisateurs = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!newUserEmail || !newUserNom) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!newUserEmail || !newUserNom || !newUserPassword) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!emailRegex.test(newUserEmail)) {
+      toast({
+        title: "Email invalide",
+        description: "Veuillez saisir une adresse email valide",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newUserNom.trim().length < 2) {
+      toast({
+        title: "Nom invalide",
+        description: "Le nom doit contenir au moins 2 caractères",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newUserPassword.length < 8) {
+      toast({
+        title: "Mot de passe trop court",
+        description: "Le mot de passe doit contenir au moins 8 caractères",
         variant: "destructive",
       });
       return;
@@ -148,7 +178,6 @@ const Utilisateurs = () => {
     setIsCreating(true);
 
     try {
-      // Get current user's entreprise_id
       const { data: profileData } = await supabase
         .from("profiles")
         .select("entreprise_id")
@@ -157,14 +186,13 @@ const Utilisateurs = () => {
 
       if (!profileData?.entreprise_id) throw new Error("Entreprise non trouvée");
 
-      // Call the Edge Function to invite user (sends confirmation email!)
       const { data, error } = await supabase.functions.invoke("admin-create-user", {
         body: {
           email: newUserEmail,
           nom: newUserNom,
+          password: newUserPassword,
           role: newUserRole,
           entreprise_id: profileData.entreprise_id,
-          client_id: null,
         },
       });
 
@@ -178,13 +206,15 @@ const Utilisateurs = () => {
       }
 
       toast({
-        title: "Invitation envoyée",
-        description: `Un email d'invitation a été envoyé à ${newUserEmail}. Il pourra définir son mot de passe et accéder au tableau de bord.`,
+        title: "Utilisateur créé",
+        description: `${newUserNom} peut désormais se connecter avec son email et son mot de passe.`,
       });
 
       setCreateDialogOpen(false);
       setNewUserEmail("");
       setNewUserNom("");
+      setNewUserPassword("");
+      setShowNewPassword(false);
       setNewUserRole("agent");
       fetchData();
     } catch (error: unknown) {
@@ -366,7 +396,7 @@ const Utilisateurs = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Inviter un utilisateur</DialogTitle>
+                  <DialogTitle>Créer un utilisateur</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2">
@@ -385,8 +415,31 @@ const Utilisateurs = () => {
                       onChange={(e) => setNewUserEmail(e.target.value)}
                       placeholder="email@exemple.com"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mot de passe *</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type={showNewPassword ? "text" : "password"}
+                        value={newUserPassword}
+                        onChange={(e) => setNewUserPassword(e.target.value)}
+                        placeholder="Au moins 8 caractères"
+                        className="pl-9 pr-10"
+                        minLength={8}
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={showNewPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      L'utilisateur recevra un email pour définir son mot de passe
+                      L'utilisateur pourra se connecter immédiatement avec cet email et ce mot de passe.
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -409,7 +462,7 @@ const Utilisateurs = () => {
                     onClick={handleCreateUser}
                     disabled={isCreating}
                   >
-                    {isCreating ? "Envoi de l'invitation..." : "Envoyer l'invitation"}
+                    {isCreating ? "Création..." : "Créer l'utilisateur"}
                   </Button>
                 </div>
               </DialogContent>

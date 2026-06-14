@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, nom: string, entrepriseNom: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = "https://lightslategray-cassowary-834123.hostingersite.com/";
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,

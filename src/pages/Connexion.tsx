@@ -84,7 +84,7 @@ const Connexion = () => {
     setResetLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: "https://lightslategray-cassowary-834123.hostingersite.com/reset-password",
     });
 
     if (error) {
