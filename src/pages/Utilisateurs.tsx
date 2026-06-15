@@ -600,6 +600,54 @@ const Utilisateurs = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-border/20">
+              {filteredUsers.map((u, index) => (
+                <motion.div
+                  key={u.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
+                  className="p-4 flex items-start gap-3"
+                >
+                  <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center">
+                    <span className="text-sm font-bold text-primary">
+                      {u.nom.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{u.nom}</div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5 truncate">
+                      <Mail className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{u.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs ${getRoleBadgeClass(u.role)}`}>
+                        {getRoleIcon(u.role)}
+                        {getRoleLabel(u.role)}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(u.created_at).toLocaleDateString("fr-FR")}
+                      </span>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="shrink-0">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDialog(u)}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </main>
