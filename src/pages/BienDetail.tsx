@@ -292,11 +292,6 @@ const BienDetail = () => {
           </div>
         </div>
 
-        {/* Caractéristiques */}
-        <section className="min-w-0 bg-background">
-          <h2 className="text-lg font-semibold mb-3">Caractéristiques</h2>
-          <PropertyFeatures property={property} />
-        </section>
 
         {/* Description */}
         {(property.description || property.description_longue) && (
