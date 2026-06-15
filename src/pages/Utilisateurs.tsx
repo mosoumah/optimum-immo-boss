@@ -343,15 +343,15 @@ const Utilisateurs = () => {
 
       <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen">
         <header className="sticky top-0 z-40 header-gradient backdrop-blur-xl border-b border-border/30">
-          <div className="flex items-center justify-between px-8 py-4">
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-8 py-4 pl-16 lg:pl-8">
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative w-80"
+              className="relative flex-1 max-w-md lg:w-80"
             >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
-                placeholder="Rechercher un utilisateur..."
+                placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-11 bg-secondary/30 border-border/30 rounded-xl"
@@ -361,7 +361,7 @@ const Utilisateurs = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="flex items-center gap-4"
+              className="flex items-center gap-2 sm:gap-4 shrink-0"
             >
               <Button
                 variant="ghost"
