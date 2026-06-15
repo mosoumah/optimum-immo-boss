@@ -36,6 +36,8 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
   const docs = media.filter((m) => m.media_type === "document");
   const videos = media.filter((m) => m.media_type === "video");
 
+  const COVER_TTL = 60 * 60 * 24 * 365; // 1 an
+
   const uploadFiles = async (
     files: FileList,
     bucket: "property-gallery" | "property-documents" | "property-videos",
@@ -45,6 +47,7 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
     setUploading(true);
     try {
       const list = Array.from(files);
+      const valid: File[] = [];
       for (const file of list) {
         if (file.size > maxSize) {
           toast({
@@ -54,15 +57,24 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
           });
           continue;
         }
+        valid.push(file);
+      }
+
+      const hasCoverAlready = media.some((m) => m.media_type === "image" && m.is_cover);
+      let firstImagePath: string | null = null;
+
+      const uploadOne = async (file: File, index: number) => {
         const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-        const path = `${entrepriseId}/${propertyId}/${Date.now()}_${safeName}`;
+        const path = `${entrepriseId}/${propertyId}/${Date.now()}_${index}_${safeName}`;
         const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, {
           contentType: file.type,
           upsert: false,
         });
         if (upErr) throw upErr;
 
-        const noCoverYet = type === "image" && !media.some((m) => m.media_type === "image" && m.is_cover);
+        const isCover = type === "image" && !hasCoverAlready && index === 0;
+        if (isCover) firstImagePath = path;
+
         const { error: insErr } = await supabase.from("property_media").insert({
           property_id: propertyId,
           entreprise_id: entrepriseId,
@@ -71,10 +83,24 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
           storage_path: path,
           nom_fichier: file.name,
           taille_octets: file.size,
-          is_cover: noCoverYet,
+          is_cover: isCover,
         });
         if (insErr) throw insErr;
+      };
+
+      // Uploads en parallèle pour accélérer l'affichage
+      await Promise.all(valid.map((f, i) => uploadOne(f, i)));
+
+      // Si on vient de définir la couverture automatiquement, on l'écrit dans properties
+      if (firstImagePath) {
+        const { data: signed } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(firstImagePath, COVER_TTL);
+        if (signed?.signedUrl) {
+          await supabase.from("properties").update({ cover_image_url: signed.signedUrl }).eq("id", propertyId);
+        }
       }
+
       await refresh();
       toast({ title: "Téléversement réussi" });
     } catch (e) {
@@ -92,6 +118,9 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
     try {
       await supabase.storage.from(m.bucket).remove([m.storage_path]);
       await supabase.from("property_media").delete().eq("id", m.id);
+      if (m.is_cover) {
+        await supabase.from("properties").update({ cover_image_url: null }).eq("id", propertyId);
+      }
       await refresh();
       toast({ title: "Supprimé" });
     } catch (e) {
@@ -105,13 +134,25 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
 
   const setCover = async (m: PropertyMediaItem) => {
     try {
+      // Démarquer les autres couvertures
+      await supabase
+        .from("property_media")
+        .update({ is_cover: false })
+        .eq("property_id", propertyId)
+        .eq("media_type", "image");
+
       const { error } = await supabase
         .from("property_media")
         .update({ is_cover: true })
         .eq("id", m.id);
       if (error) throw error;
-      if (m.signedUrl) {
-        await supabase.from("properties").update({ cover_image_url: m.signedUrl }).eq("id", propertyId);
+
+      // URL signée longue durée pour l'affichage en liste/détail
+      const { data: signed } = await supabase.storage
+        .from(m.bucket)
+        .createSignedUrl(m.storage_path, COVER_TTL);
+      if (signed?.signedUrl) {
+        await supabase.from("properties").update({ cover_image_url: signed.signedUrl }).eq("id", propertyId);
       }
       await refresh();
       toast({ title: "Image principale mise à jour" });
