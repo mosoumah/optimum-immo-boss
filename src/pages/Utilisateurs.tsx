@@ -511,7 +511,7 @@ const Utilisateurs = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="card-gradient rounded-2xl border border-border/30 overflow-hidden"
           >
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border/30">
