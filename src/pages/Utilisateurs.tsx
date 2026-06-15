@@ -379,17 +379,17 @@ const Utilisateurs = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center justify-between mb-8"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
           >
             <div>
-              <h1 className="text-3xl font-bold mb-2">Gestion des utilisateurs</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">Gestion des utilisateurs</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Gérez les accès et les rôles de votre équipe
               </p>
             </div>
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2">
+                <Button className="gap-2 w-full sm:w-auto">
                   <UserPlus className="w-4 h-4" />
                   Nouvel utilisateur
                 </Button>
