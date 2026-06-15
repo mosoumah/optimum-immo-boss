@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePropertyMedia } from "@/hooks/usePropertyMedia";
 import { usePropertyStats } from "@/hooks/usePropertyStats";
 import { PropertyGallery } from "@/components/biens/PropertyGallery";
-import { PropertyFeatures } from "@/components/biens/PropertyFeatures";
+
 import { PropertyStatsCards } from "@/components/biens/PropertyStatsCards";
 import { BienDialog } from "@/components/dialogs/BienDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -292,11 +292,6 @@ const BienDetail = () => {
           </div>
         </div>
 
-        {/* Caractéristiques */}
-        <section className="min-w-0 bg-background">
-          <h2 className="text-lg font-semibold mb-3">Caractéristiques</h2>
-          <PropertyFeatures property={property} />
-        </section>
 
         {/* Description */}
         {(property.description || property.description_longue) && (
