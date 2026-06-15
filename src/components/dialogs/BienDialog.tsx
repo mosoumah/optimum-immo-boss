@@ -29,9 +29,6 @@ const defaultForm = {
   prix: "",
   surface: "",
   nombre_pieces: "",
-  chambres: "",
-  salons: "",
-  salles_bain: "",
   adresse: "",
   quartier: "",
   commune: "",
@@ -39,13 +36,6 @@ const defaultForm = {
   description: "",
   description_longue: "",
   video_url: "",
-  cuisine: false,
-  parking: false,
-  balcon: false,
-  piscine: false,
-  internet: false,
-  climatisation: false,
-  meuble: false,
 };
 
 export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDialogProps) => {
@@ -65,9 +55,6 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
         prix: property.prix?.toString() || "",
         surface: property.surface?.toString() || "",
         nombre_pieces: property.nombre_pieces?.toString() || "",
-        chambres: property.chambres?.toString() || "",
-        salons: property.salons?.toString() || "",
-        salles_bain: property.salles_bain?.toString() || "",
         adresse: property.adresse || "",
         quartier: property.quartier || "",
         commune: property.commune || "",
@@ -75,13 +62,6 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
         description: property.description || "",
         description_longue: property.description_longue || "",
         video_url: property.video_url || "",
-        cuisine: !!property.cuisine,
-        parking: !!property.parking,
-        balcon: !!property.balcon,
-        piscine: !!property.piscine,
-        internet: !!property.internet,
-        climatisation: !!property.climatisation,
-        meuble: !!property.meuble,
       });
       setCreatedId(property.id);
     } else {
@@ -106,9 +86,6 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
         prix: form.prix ? parseFloat(form.prix) : 0,
         surface: form.surface ? parseFloat(form.surface) : null,
         nombre_pieces: form.nombre_pieces ? parseInt(form.nombre_pieces) : null,
-        chambres: form.chambres ? parseInt(form.chambres) : null,
-        salons: form.salons ? parseInt(form.salons) : null,
-        salles_bain: form.salles_bain ? parseInt(form.salles_bain) : null,
         adresse: form.adresse || null,
         quartier: form.quartier || null,
         commune: form.commune || null,
@@ -116,13 +93,6 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
         description: form.description || null,
         description_longue: form.description_longue || null,
         video_url: form.video_url || null,
-        cuisine: form.cuisine,
-        parking: form.parking,
-        balcon: form.balcon,
-        piscine: form.piscine,
-        internet: form.internet,
-        climatisation: form.climatisation,
-        meuble: form.meuble,
       };
 
       let id = createdId;
@@ -161,15 +131,6 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
     }
   };
 
-  const switches: { key: keyof typeof defaultForm; label: string }[] = [
-    { key: "cuisine", label: "Cuisine" },
-    { key: "parking", label: "Parking" },
-    { key: "balcon", label: "Balcon" },
-    { key: "piscine", label: "Piscine" },
-    { key: "internet", label: "Internet" },
-    { key: "climatisation", label: "Climatisation" },
-    { key: "meuble", label: "Meublé" },
-  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -182,13 +143,12 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
         </DialogHeader>
 
         <Tabs defaultValue="general" className="w-full min-w-0">
-          <TabsList className="mx-4 sm:mx-6 grid grid-cols-5 h-11 gap-1 p-1 shrink-0">
+          <TabsList className="mx-4 sm:mx-6 grid grid-cols-4 h-11 gap-1 p-1 shrink-0">
             <TabsTrigger value="general" className="min-w-0 px-2 py-2 text-xs sm:text-sm">Général</TabsTrigger>
             <TabsTrigger value="localisation" className="min-w-0 px-2 py-2 text-xs sm:text-sm">
               <span className="sm:hidden">Lieu</span>
               <span className="hidden sm:inline">Localisation</span>
             </TabsTrigger>
-            <TabsTrigger value="caracteristiques" className="min-w-0 px-2 py-2 text-xs sm:text-sm">Caract.</TabsTrigger>
             <TabsTrigger value="description" className="min-w-0 px-2 py-2 text-xs sm:text-sm">
               <span className="sm:hidden">Desc.</span>
               <span className="hidden sm:inline">Description</span>
@@ -268,38 +228,6 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
             </div>
           </TabsContent>
 
-          <TabsContent value="caracteristiques" className="space-y-4 pt-4 data-[state=inactive]:hidden">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <Label>Chambres</Label>
-                <Input type="number" min="0" value={form.chambres} onChange={(e) => update("chambres", e.target.value)} />
-              </div>
-              <div>
-                <Label>Salons</Label>
-                <Input type="number" min="0" value={form.salons} onChange={(e) => update("salons", e.target.value)} />
-              </div>
-              <div>
-                <Label>Salles de bain</Label>
-                <Input type="number" min="0" value={form.salles_bain} onChange={(e) => update("salles_bain", e.target.value)} />
-              </div>
-            </div>
-            <div className="rounded-lg border border-border/50 bg-card overflow-hidden">
-              {switches.map((s) => (
-                <label
-                  key={s.key}
-                  className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 border-b border-border/40 px-3 py-2 last:border-b-0 select-none"
-                >
-                  <span className="min-w-0 text-sm leading-snug break-words">{s.label}</span>
-                  <input
-                    type="checkbox"
-                    className="h-5 w-5 flex-none rounded border-border bg-background accent-primary"
-                    checked={form[s.key] as boolean}
-                    onChange={(e) => update(s.key, e.target.checked as never)}
-                  />
-                </label>
-              ))}
-            </div>
-          </TabsContent>
 
           <TabsContent value="description" className="space-y-4 pt-4">
             <div>
