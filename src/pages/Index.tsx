@@ -1,259 +1,485 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { 
-  Users, 
-  FileText, 
-  Receipt, 
-  TrendingUp, 
-  CheckSquare, 
-  
+import { useRef } from "react";
+import {
+  Users,
+  Receipt,
+  TrendingUp,
+  CheckSquare,
   ArrowRight,
+  ArrowUpRight,
   Building2,
   Shield,
   Zap,
   Clock,
   Wallet,
   Database,
-  Trophy
+  Trophy,
+  CalendarRange,
+  Sparkles,
+  BarChart3,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { FeatureCard } from "@/components/FeatureCard";
+import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 
-const features = [
+const stats = [
+  { value: "+120", label: "Agences accompagnées" },
+  { value: "8 500", label: "Biens gérés" },
+  { value: "32 K", label: "Factures émises" },
+  { value: "99,9%", label: "Disponibilité" },
+];
+
+const steps = [
   {
-    icon: Users,
-    title: "Gestion des Clients",
-    description: "Centralisez toutes les informations de vos clients avec leur historique complet de transactions.",
+    n: "01",
+    title: "Créez votre espace",
+    desc: "Inscription en moins de 2 minutes. Importez vos clients, biens et historiques en quelques clics.",
   },
   {
-    icon: Receipt,
-    title: "Facturation Simplifiée",
-    description: "Générez des factures conformes et suivez les paiements en temps réel.",
+    n: "02",
+    title: "Pilotez en temps réel",
+    desc: "Tableau de bord unifié : revenus, dépenses, réservations, tâches. Tout converge au même endroit.",
   },
   {
-    icon: TrendingUp,
-    title: "Suivi Financier",
-    description: "Visualisez vos revenus, dépenses et bénéfices sur un tableau de bord intuitif.",
-  },
-  {
-    icon: CheckSquare,
-    title: "Tâches Intelligentes",
-    description: "Ne manquez plus aucune relance grâce aux rappels automatiques alimentés par l'IA.",
+    n: "03",
+    title: "Encaissez plus vite",
+    desc: "Facturation automatisée, relances intelligentes, paiements suivis. Votre trésorerie respire.",
   },
 ];
 
 const benefits = [
-  { 
-    icon: Clock, 
-    title: "Gagnez du temps", 
-    description: "Automatisez vos tâches répétitives et concentrez-vous sur l'essentiel." 
-  },
-  { 
-    icon: Wallet, 
-    title: "Économisez de l'argent", 
-    description: "Réduisez vos coûts opérationnels et maximisez vos profits." 
-  },
-  { 
-    icon: Database, 
-    title: "Récoltez des données", 
-    description: "Centralisez et analysez toutes vos informations clients." 
-  },
-  { 
-    icon: Trophy, 
-    title: "Distinguez-vous", 
-    description: "Démarquez-vous de la concurrence avec des outils professionnels." 
-  },
+  { icon: Clock, title: "Gagnez du temps", desc: "Automatisez le répétitif, concentrez-vous sur le stratégique." },
+  { icon: Wallet, title: "Économisez", desc: "Réduisez vos coûts opérationnels et augmentez vos marges." },
+  { icon: Database, title: "Centralisez", desc: "Une seule source de vérité pour toutes vos données." },
+  { icon: Trophy, title: "Distinguez-vous", desc: "Des outils dignes des plus grandes agences internationales." },
 ];
 
 const Index = () => {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const mockupY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const mockupRotate = useTransform(scrollYProgress, [0, 1], [-2, 2]);
+
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Navbar />
-      
-      {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 pattern-dots opacity-30" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] max-w-[100vw] bg-primary/5 rounded-full blur-3xl" />
-        
+
+      {/* ============== HERO ============== */}
+      <section ref={heroRef} className="relative pt-32 sm:pt-40 pb-20 sm:pb-32 overflow-hidden">
+        {/* Ambient lighting */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] max-w-[120vw] h-[700px] bg-primary/10 blur-[140px] rounded-full" />
+          <div className="absolute top-40 right-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] rounded-full" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(212,255,58,0.06)_1px,transparent_0)] [background-size:48px_48px] opacity-50" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+        </div>
+
         <div className="container mx-auto px-4 sm:px-6 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-4xl mx-auto text-center"
-          >
+          <div className="max-w-5xl mx-auto text-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 sm:mb-8 max-w-full"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm"
             >
-              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
-              <span className="text-[11px] sm:text-sm font-medium text-primary truncate">Nouveau: Gestion immobilière simplifiée</span>
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+              </span>
+              <span className="text-[11px] sm:text-xs font-medium text-primary tracking-[0.12em] uppercase">
+                Plateforme immobilière premium
+              </span>
             </motion.div>
 
-            <h1 className="text-[2rem] leading-[1.1] sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-5 sm:mb-6 break-words">
-              Boostez votre{" "}
-              <span className="text-gradient">agence immobilière</span>{" "}
-              en Guinée
-            </h1>
-            
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-1">
-              Gérez vos clients, biens et factures facilement avec Optimum Immo. 
-              La solution tout-en-un pour les professionnels de l'immobilier.
-            </p>
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-8 font-display text-[3rem] leading-[0.95] sm:text-7xl md:text-[5.5rem] lg:text-[6.5rem] tracking-tight"
+            >
+              L'excellence{" "}
+              <span className="italic text-primary [text-shadow:0_0_60px_hsl(var(--primary)/0.4)]">
+                immobilière
+              </span>
+              <br className="hidden sm:block" />
+              <span className="text-foreground/90">orchestrée.</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.25 }}
+              className="mt-7 sm:mt-8 max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground leading-relaxed px-2"
+            >
+              Optimum Immo réunit clients, biens, factures et réservations dans une expérience
+              unique. Pensée pour les agences guinéennes ambitieuses.
+            </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4"
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3"
             >
-              <Button variant="hero" size="xl" className="w-full sm:w-auto" asChild>
-                <Link to="/inscription">
-                  Commencer maintenant
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-              </Button>
-              <Button variant="hero-outline" size="xl" className="w-full sm:w-auto" asChild>
-                <a href="#features">Découvrir les fonctionnalités</a>
-              </Button>
+              <Link
+                to="/inscription"
+                className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 font-medium shadow-[0_0_0_1px_hsl(var(--primary)),0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_0_0_1px_hsl(var(--primary)),0_20px_60px_-10px_hsl(var(--primary)/0.8)] transition-all duration-300"
+              >
+                Démarrer gratuitement
+                <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
+              <a
+                href="#features"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.02] text-foreground px-7 py-3.5 font-medium hover:bg-white/[0.05] hover:border-white/20 transition-all"
+              >
+                Découvrir la plateforme
+              </a>
+            </motion.div>
+          </div>
+
+          {/* Dashboard mockup */}
+          <motion.div
+            style={{ y: mockupY, rotate: mockupRotate }}
+            initial={{ opacity: 0, y: 60, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-16 sm:mt-24 mx-auto max-w-6xl relative"
+          >
+            <div className="absolute -inset-8 bg-primary/15 blur-[100px] rounded-[3rem] -z-10" />
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
+              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+              <img
+                src={dashboardPreview.url}
+                alt="Aperçu du tableau de bord Optimum Immo"
+                className="w-full h-auto block"
+                loading="eager"
+              />
+            </div>
+            {/* Floating chips */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.6 }}
+              className="hidden md:flex absolute -left-6 top-1/3 items-center gap-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 px-4 py-3 shadow-2xl"
+            >
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Revenus</div>
+                <div className="text-sm font-semibold">+24% ce mois</div>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4, duration: 0.6 }}
+              className="hidden md:flex absolute -right-6 bottom-1/4 items-center gap-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 px-4 py-3 shadow-2xl"
+            >
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IA active</div>
+                <div className="text-sm font-semibold">Relances auto</div>
+              </div>
             </motion.div>
           </motion.div>
-
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-12 sm:py-20 border-y border-border/30">
-        <div className="container mx-auto px-4 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10 sm:mb-12"
-          >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-              Pourquoi choisir <span className="text-gradient">Optimum Immo</span> ?
-            </h2>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
-              Des avantages concrets pour propulser votre agence immobilière.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {benefits.map((benefit, index) => (
+      {/* ============== STATS BAND ============== */}
+      <section className="relative py-14 border-y border-white/5">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10">
+            {stats.map((s, i) => (
               <motion.div
-                key={benefit.title}
-                initial={{ opacity: 0, y: 30 }}
+                key={s.label}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card-glow rounded-2xl p-5 sm:p-6 text-center group"
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="text-center md:text-left"
               >
-                <motion.div 
-                  initial={{ scale: 0, rotate: -180 }}
-                  whileInView={{ scale: 1, rotate: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 200, 
-                    damping: 15, 
-                    delay: index * 0.1 + 0.2 
-                  }}
-                  className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4 sm:mb-5 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300"
-                >
-                  <benefit.icon className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
-                </motion.div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{benefit.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {benefit.description}
-                </p>
+                <div className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight text-foreground">
+                  {s.value}
+                </div>
+                <div className="mt-2 text-xs uppercase tracking-[0.15em] text-muted-foreground">
+                  {s.label}
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-12 sm:py-20">
+      {/* ============== BENTO FEATURES ============== */}
+      <section id="features" className="py-20 sm:py-32 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="container mx-auto px-4 sm:px-6 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-3xl mb-14"
+          >
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-4">— Fonctionnalités</div>
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]">
+              Une suite{" "}
+              <span className="italic text-primary">complète</span>, pensée comme un seul geste.
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 sm:gap-5 auto-rows-[minmax(180px,auto)]">
+            {/* Big: Dashboard */}
+            <BentoCard className="md:col-span-4 md:row-span-2 min-h-[360px]" index={0}>
+              <div className="flex flex-col h-full">
+                <div className="flex items-start justify-between">
+                  <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Temps réel</span>
+                </div>
+                <div className="mt-auto">
+                  <h3 className="font-display text-3xl sm:text-4xl tracking-tight">
+                    Tableau de bord <span className="italic text-primary">unifié</span>
+                  </h3>
+                  <p className="mt-3 text-sm text-muted-foreground max-w-md leading-relaxed">
+                    Revenus, dépenses, taux d'occupation, alertes. Une vue d'ensemble qui se met à jour
+                    en temps réel — chaque décision repose sur des chiffres frais.
+                  </p>
+                </div>
+                {/* Decorative mini chart */}
+                <svg className="absolute right-6 bottom-6 opacity-60" width="200" height="80" viewBox="0 0 200 80" fill="none">
+                  <path d="M0 60 L30 50 L60 55 L90 30 L120 35 L150 15 L180 25 L200 10" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" />
+                  <path d="M0 60 L30 50 L60 55 L90 30 L120 35 L150 15 L180 25 L200 10 L200 80 L0 80 Z" fill="url(#g1)" opacity="0.3" />
+                  <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+            </BentoCard>
+
+            <BentoCard className="md:col-span-2" index={1}>
+              <Icon icon={Users} />
+              <h3 className="mt-5 font-display text-2xl">Clients centralisés</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Historique complet, contacts, transactions — chaque client a son dossier vivant.
+              </p>
+            </BentoCard>
+
+            <BentoCard className="md:col-span-2" index={2}>
+              <Icon icon={Receipt} />
+              <h3 className="mt-5 font-display text-2xl">Facturation fluide</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Génération automatique, signature, suivi des paiements en un coup d'œil.
+              </p>
+            </BentoCard>
+
+            <BentoCard className="md:col-span-3" index={3}>
+              <Icon icon={Building2} />
+              <h3 className="mt-5 font-display text-2xl">Biens & galeries</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Fiches détaillées, photos haute résolution, documents PDF, statuts synchronisés
+                avec les réservations.
+              </p>
+            </BentoCard>
+
+            <BentoCard className="md:col-span-3" index={4}>
+              <Icon icon={CalendarRange} />
+              <h3 className="mt-5 font-display text-2xl">Réservations intelligentes</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Calendrier, calcul automatique du reste à payer, factures générées à la volée.
+              </p>
+            </BentoCard>
+
+            <BentoCard className="md:col-span-2" index={5}>
+              <Icon icon={CheckSquare} />
+              <h3 className="mt-5 font-display text-2xl">Tâches & équipe</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Assignez, suivez, échangez — la messagerie est intégrée.
+              </p>
+            </BentoCard>
+
+            <BentoCard className="md:col-span-4" index={6}>
+              <div className="flex items-start gap-5">
+                <Icon icon={Sparkles} />
+                <div>
+                  <h3 className="font-display text-2xl">
+                    Assistant <span className="italic text-primary">IA</span> intégré
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-lg">
+                    ImmoPilot répond, analyse, rédige et suggère. Votre copilote stratégique,
+                    branché à toutes vos données — en français, 24/7.
+                  </p>
+                </div>
+              </div>
+            </BentoCard>
+          </div>
+        </div>
+      </section>
+
+      {/* ============== HOW IT WORKS ============== */}
+      <section id="how" className="py-20 sm:py-32 border-t border-white/5">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="grid md:grid-cols-12 gap-10 md:gap-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="md:col-span-4 md:sticky md:top-32 self-start"
+            >
+              <div className="text-xs uppercase tracking-[0.2em] text-primary mb-4">— Processus</div>
+              <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
+                Trois étapes,<br />
+                <span className="italic text-primary">zéro friction</span>.
+              </h2>
+              <p className="mt-5 text-sm text-muted-foreground max-w-xs leading-relaxed">
+                De l'inscription à la première facture encaissée, la plateforme vous tient la main.
+              </p>
+            </motion.div>
+
+            <div className="md:col-span-8 relative">
+              <div className="absolute left-6 top-3 bottom-3 w-px bg-gradient-to-b from-primary/40 via-primary/20 to-transparent md:block hidden" />
+              <div className="space-y-10">
+                {steps.map((s, i) => (
+                  <motion.div
+                    key={s.n}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                    className="relative md:pl-20"
+                  >
+                    <div className="md:absolute md:left-0 md:top-1 flex items-center justify-center w-12 h-12 rounded-2xl bg-card border border-primary/30 mb-4 md:mb-0">
+                      <span className="font-display text-lg text-primary">{s.n}</span>
+                    </div>
+                    <h3 className="font-display text-2xl sm:text-3xl tracking-tight">{s.title}</h3>
+                    <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl">
+                      {s.desc}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============== BENEFITS ============== */}
+      <section id="benefits" className="py-20 sm:py-32 border-t border-white/5">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-10 sm:mb-16"
+            className="text-center max-w-2xl mx-auto mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-              Tout ce dont vous avez <span className="text-gradient">besoin</span>
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-4">— Avantages</div>
+            <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
+              Pourquoi les agences{" "}
+              <span className="italic text-primary">choisissent</span> Optimum.
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
-              Une suite d'outils puissants conçus spécialement pour les agences immobilières guinéennes.
-            </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {features.map((feature, index) => (
-              <FeatureCard key={feature.title} {...feature} index={index} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {benefits.map((b, i) => (
+              <motion.div
+                key={b.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="group relative rounded-2xl border border-white/10 bg-card/30 backdrop-blur-sm p-7 hover:border-primary/40 hover:bg-card/50 transition-all duration-500"
+              >
+                <div className="w-11 h-11 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
+                  <b.icon className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                </div>
+                <h3 className="font-display text-2xl tracking-tight">{b.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-12 sm:py-20">
+      {/* ============== TESTIMONIAL ============== */}
+      <section className="py-24 sm:py-32 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
+        <div className="container mx-auto px-6 relative">
+          <motion.blockquote
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-4xl mx-auto text-center"
+          >
+            <div className="font-display text-5xl text-primary leading-none mb-6">"</div>
+            <p className="font-display italic text-3xl sm:text-4xl md:text-5xl tracking-tight leading-[1.15] text-foreground/95">
+              Avant Optimum, je passais mes soirées sur Excel. Aujourd'hui, je gère trois fois
+              plus de biens, avec deux fois moins de stress.
+            </p>
+            <footer className="mt-10 text-sm text-muted-foreground">
+              <span className="text-foreground font-medium">Mariama Bah</span> — Directrice, Conakry Estates
+            </footer>
+          </motion.blockquote>
+        </div>
+      </section>
+
+      {/* ============== FINAL CTA ============== */}
+      <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
+            className="relative rounded-[2rem] overflow-hidden border border-primary/30 bg-gradient-to-br from-card via-card/80 to-background"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent" />
-            <div className="absolute inset-0 pattern-dots opacity-20" />
-            
-            <div className="relative card-glow rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center">
-              <div className="flex justify-center mb-5 sm:mb-6">
-                <motion.div 
-                  initial={{ scale: 0, rotate: -180 }}
-                  whileInView={{ scale: 1, rotate: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 border border-primary/20"
-                >
-                  <Building2 className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
-                </motion.div>
-              </div>
-              
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-                Prêt à transformer <span className="text-gradient">votre agence</span> ?
+            <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(212,255,58,0.08)_1px,transparent_0)] [background-size:32px_32px] opacity-50" />
+
+            <div className="relative px-6 sm:px-12 md:px-20 py-16 sm:py-24 text-center">
+              <motion.div
+                initial={{ scale: 0, rotate: -20 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", stiffness: 180, damping: 14 }}
+                className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-primary/30 bg-primary/10 mb-8"
+              >
+                <Building2 className="w-7 h-7 text-primary" />
+              </motion.div>
+
+              <h2 className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05] max-w-3xl mx-auto">
+                Prêt à transformer{" "}
+                <span className="italic text-primary">votre agence</span> ?
               </h2>
-              <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto">
-                Rejoignez des centaines d'agences qui font confiance à Optimum Immo 
-                pour gérer leurs opérations quotidiennes.
+              <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
+                Rejoignez les agences qui ont choisi de travailler avec rigueur, sérénité et style.
               </p>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
-                <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
-                  <Link to="/inscription">
-                    Créer mon compte gratuit
-                    <ArrowRight className="w-5 h-5" />
-                  </Link>
-                </Button>
+
+              <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+                <Link
+                  to="/inscription"
+                  className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-4 font-medium shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.9)] transition-all"
+                >
+                  Créer mon compte
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+                <Link
+                  to="/connexion"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-8 py-4 font-medium hover:bg-white/[0.05] hover:border-white/20 transition-all"
+                >
+                  J'ai déjà un compte
+                </Link>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-6 sm:mt-8 text-xs sm:text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-primary" />
-                  <span>Données sécurisées</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span>Configuration rapide</span>
-                </div>
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-primary" /> Données sécurisées</span>
+                <span className="inline-flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> Mise en route immédiate</span>
+                <span className="inline-flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-primary" /> IA incluse</span>
               </div>
             </div>
           </motion.div>
@@ -264,5 +490,34 @@ const Index = () => {
     </div>
   );
 };
+
+/* ----- Helpers ----- */
+
+const Icon = ({ icon: I }: { icon: typeof Users }) => (
+  <div className="inline-flex w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 items-center justify-center">
+    <I className="w-5 h-5 text-primary" strokeWidth={1.5} />
+  </div>
+);
+
+const BentoCard = ({
+  children,
+  className = "",
+  index = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  index?: number;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 24 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-50px" }}
+    transition={{ duration: 0.55, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+    className={`group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-card/60 to-card/20 backdrop-blur-sm p-6 sm:p-8 hover:border-primary/30 transition-all duration-500 ${className}`}
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+    <div className="relative h-full">{children}</div>
+  </motion.div>
+);
 
 export default Index;
