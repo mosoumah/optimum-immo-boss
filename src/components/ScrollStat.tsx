@@ -41,19 +41,28 @@ export const ScrollStat = ({
     setDisplay(`${prefix}${formatter(latest)}${suffix}`);
   });
 
-  // Vague de couleur : chaque stat passe au vert à un moment décalé
+  // Vague de couleur : chaque stat passe au vert à un moment décalé, plusieurs fois
   const colorProgress = useTransform(scrollProgress, (v) => {
-    const offset = index * 0.1;
+    const offset = index * 0.18;
     return Math.max(0, Math.min(1, v + offset));
   });
 
-  const color = useTransform(colorProgress, [0, 0.2, 0.4, 0.6, 0.8, 1], [
+  const color = useTransform(colorProgress, [0, 0.15, 0.35, 0.55, 0.75, 1], [
     "hsl(var(--foreground))",
     "hsl(var(--primary))",
     "hsl(var(--foreground))",
     "hsl(var(--primary))",
     "hsl(var(--foreground))",
     "hsl(var(--foreground))",
+  ]);
+
+  const glow = useTransform(colorProgress, [0, 0.15, 0.35, 0.55, 0.75, 1], [
+    "0 0 0px hsl(var(--primary) / 0)",
+    "0 0 40px hsl(var(--primary) / 0.35)",
+    "0 0 0px hsl(var(--primary) / 0)",
+    "0 0 40px hsl(var(--primary) / 0.35)",
+    "0 0 0px hsl(var(--primary) / 0)",
+    "0 0 0px hsl(var(--primary) / 0)",
   ]);
 
   return (
@@ -66,7 +75,7 @@ export const ScrollStat = ({
     >
       <motion.div
         className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight transition-colors"
-        style={{ color }}
+        style={{ color, textShadow: glow }}
       >
         {display}
       </motion.div>
@@ -75,4 +84,4 @@ export const ScrollStat = ({
       </div>
     </motion.div>
   );
-};
+}
