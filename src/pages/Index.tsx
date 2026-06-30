@@ -66,7 +66,7 @@ const Index = () => {
       <Navbar />
 
       {/* ============== HERO ============== */}
-      <section ref={heroRef} className="relative pt-32 sm:pt-40 pb-20 sm:pb-32 overflow-hidden">
+      <section ref={heroRef} className="relative pt-24 sm:pt-28 pb-10 sm:pb-12 overflow-hidden">
         {/* Ambient lighting */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] max-w-[120vw] h-[700px] bg-primary/10 blur-[140px] rounded-full" />
@@ -144,7 +144,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 60, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-16 sm:mt-24 mx-auto max-w-6xl relative"
+            className="mt-10 sm:mt-14 mx-auto max-w-6xl relative"
           >
             <div className="absolute -inset-8 bg-primary/15 blur-[100px] rounded-[3rem] -z-10" />
             <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
@@ -190,7 +190,7 @@ const Index = () => {
       </section>
 
       {/* ============== STATS BAND ============== */}
-      <section className="relative py-14 border-y border-white/5">
+      <section className="relative py-8 sm:py-10 border-y border-white/5">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10">
             {stats.map((s, i) => (
@@ -215,14 +215,14 @@ const Index = () => {
       </section>
 
       {/* ============== BENTO FEATURES ============== */}
-      <section id="features" className="py-20 sm:py-32 relative">
+      <section id="features" className="py-12 sm:py-16 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
         <div className="container mx-auto px-4 sm:px-6 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-3xl mb-14"
+            className="max-w-3xl mb-8 sm:mb-10"
           >
             <div className="text-xs uppercase tracking-[0.2em] text-primary mb-4">— Fonctionnalités</div>
             <h2 className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]">
@@ -324,28 +324,28 @@ const Index = () => {
       </section>
 
       {/* ============== HOW IT WORKS ============== */}
-      <section id="how" className="py-20 sm:py-32 border-t border-white/5">
+      <section id="how" className="py-12 sm:py-16 border-t border-white/5">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-12 gap-10 md:gap-16">
+          <div className="grid md:grid-cols-12 gap-8 md:gap-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="md:col-span-4 md:sticky md:top-32 self-start"
             >
-              <div className="text-xs uppercase tracking-[0.2em] text-primary mb-4">— Processus</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-primary mb-3">— Processus</div>
               <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
                 Trois étapes,<br />
                 <span className="italic text-primary">zéro friction</span>.
               </h2>
-              <p className="mt-5 text-sm text-muted-foreground max-w-xs leading-relaxed">
+              <p className="mt-4 text-sm text-muted-foreground max-w-xs leading-relaxed">
                 De l'inscription à la première facture encaissée, la plateforme vous tient la main.
               </p>
             </motion.div>
 
             <div className="md:col-span-8 relative">
               <div className="absolute left-6 top-3 bottom-3 w-px bg-gradient-to-b from-primary/40 via-primary/20 to-transparent md:block hidden" />
-              <div className="space-y-10">
+              <div className="space-y-8">
                 {steps.map((s, i) => (
                   <motion.div
                     key={s.n}
@@ -371,15 +371,15 @@ const Index = () => {
       </section>
 
       {/* ============== BENEFITS ============== */}
-      <section id="benefits" className="py-20 sm:py-32 border-t border-white/5">
+      <section id="benefits" className="py-12 sm:py-16 border-t border-white/5">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto mb-16"
+            className="text-center max-w-2xl mx-auto mb-10 sm:mb-12"
           >
-            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-4">— Avantages</div>
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-3">— Avantages</div>
             <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
               Pourquoi les agences{" "}
               <span className="italic text-primary">choisissent</span> Optimum.
@@ -408,7 +408,7 @@ const Index = () => {
       </section>
 
       {/* ============== TESTIMONIAL ============== */}
-      <section className="py-24 sm:py-32 border-t border-white/5 relative overflow-hidden">
+      <section className="py-12 sm:py-16 border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
         <div className="container mx-auto px-6 relative">
           <motion.blockquote
@@ -430,7 +430,7 @@ const Index = () => {
       </section>
 
       {/* ============== FINAL CTA ============== */}
-      <section className="py-20 sm:py-32">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
@@ -441,7 +441,7 @@ const Index = () => {
             <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(212,255,58,0.08)_1px,transparent_0)] [background-size:32px_32px] opacity-50" />
 
-            <div className="relative px-6 sm:px-12 md:px-20 py-16 sm:py-24 text-center">
+            <div className="relative px-6 sm:px-12 md:px-20 py-12 sm:py-16 text-center">
               <motion.div
                 initial={{ scale: 0, rotate: -20 }}
                 whileInView={{ scale: 1, rotate: 0 }}
