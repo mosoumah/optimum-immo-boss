@@ -198,29 +198,47 @@ const Index = () => {
       </section>
 
       {/* ============== STATS BAND ============== */}
-      <section className="relative py-14 border-y border-white/5">
+      <section ref={statsRef} className="relative py-14 border-y border-white/5">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10">
-            {stats.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="text-center md:text-left"
-              >
-                <div className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight text-foreground">
-                  {s.value}
-                </div>
-                <div className="mt-2 text-xs uppercase tracking-[0.15em] text-muted-foreground">
-                  {s.label}
-                </div>
-              </motion.div>
-            ))}
+            <ScrollStat
+              scrollProgress={statsScrollProgress}
+              prefix="+"
+              values={[120, 250, 500, 120]}
+              label="Agences accompagnées"
+              index={0}
+            />
+            <ScrollStat
+              scrollProgress={statsScrollProgress}
+              values={[8500, 12000, 25000, 8500]}
+              formatNumber={(n) =>
+                Math.round(n)
+                  .toLocaleString("fr-FR")
+                  .replace(/\s/g, " ")
+                  .replace(/,/g, " ")
+              }
+              label="Biens gérés"
+              index={1}
+            />
+            <ScrollStat
+              scrollProgress={statsScrollProgress}
+              values={[32, 65, 120, 32]}
+              suffix=" K"
+              label="Factures émises"
+              index={2}
+            />
+            <ScrollStat
+              scrollProgress={statsScrollProgress}
+              values={[99.9, 99.99, 99.999, 99.9]}
+              suffix="%"
+              decimals={1}
+              label="Disponibilité"
+              index={3}
+            />
           </div>
         </div>
       </section>
+
 
       {/* ============== BENTO FEATURES ============== */}
       <section id="features" className="py-20 sm:py-32 relative">
