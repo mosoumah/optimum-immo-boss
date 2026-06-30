@@ -22,21 +22,19 @@ export const Navbar = () => {
           }}
         />
 
-        {/* Animated lime sheen border */}
-        <motion.div
+        {/* Static lime sheen border */}
+        <div
           aria-hidden
           className="absolute inset-0 rounded-full overflow-hidden pointer-events-none"
           style={{
             padding: "1px",
             background:
-              "conic-gradient(from 0deg, transparent 0deg, hsl(var(--primary) / 0.55) 60deg, transparent 140deg, transparent 220deg, hsl(var(--primary) / 0.35) 300deg, transparent 360deg)",
+              "linear-gradient(135deg, hsl(var(--primary) / 0.55) 0%, transparent 45%, transparent 55%, hsl(var(--primary) / 0.35) 100%)",
             WebkitMask:
               "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
             WebkitMaskComposite: "xor",
             maskComposite: "exclude",
           }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 14, ease: "linear", repeat: Infinity }}
         />
 
         <div className="relative rounded-full bg-background/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden">
