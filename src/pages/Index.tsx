@@ -21,7 +21,9 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ScrollStat } from "@/components/ScrollStat";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
+
 
 const stats = [
   { value: "+120", label: "Agences accompagnées" },
