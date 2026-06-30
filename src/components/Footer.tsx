@@ -5,9 +5,9 @@ export const Footer = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-16 border-t border-white/5">
+    <footer className="relative mt-24 border-t border-white/5">
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-      <div className="container mx-auto px-6 py-10">
+      <div className="container mx-auto px-6 py-14">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
           <div className="md:col-span-5">
             <Logo size="md" animated={false} />
@@ -48,7 +48,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-8 pt-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
             © {year} Optimum Immo — Conçu pour les professionnels de l'immobilier.
           </p>
