@@ -25,12 +25,6 @@ import { ScrollStat } from "@/components/ScrollStat";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 
 
-const stats = [
-  { value: "+120", label: "Agences accompagnées" },
-  { value: "8 500", label: "Biens gérés" },
-  { value: "32 K", label: "Factures émises" },
-  { value: "99,9%", label: "Disponibilité" },
-];
 
 const steps = [
   {
