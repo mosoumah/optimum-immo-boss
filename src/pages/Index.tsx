@@ -59,11 +59,17 @@ const benefits = [
 
 const Index = () => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const { scrollYProgress: statsScrollProgress } = useScroll({
+    target: statsRef,
+    offset: ["start end", "end start"],
+  });
   const mockupY = useTransform(scrollYProgress, [0, 1], [0, 120]);
   const mockupRotate = useTransform(scrollYProgress, [0, 1], [-2, 2]);
 
   return (
+
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Navbar />
 
