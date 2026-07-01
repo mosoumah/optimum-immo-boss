@@ -140,198 +140,24 @@ const Index = () => {
             </motion.div>
           </div>
 
-          {/* Dashboard mockup — fully rendered, animated */}
+          {/* Dashboard mockup */}
           <motion.div
             style={{ y: mockupY, rotate: mockupRotate }}
             initial={{ opacity: 0, y: 60, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="mt-16 sm:mt-24 mx-auto max-w-6xl relative"
           >
-            {/* Ambient glow */}
-            <div className="absolute -inset-10 bg-primary/20 blur-[120px] rounded-[3rem] -z-10" />
-            <div className="absolute -inset-2 bg-gradient-to-tr from-primary/10 via-transparent to-primary/10 blur-2xl rounded-[2rem] -z-10" />
-
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.85)] bg-gradient-to-br from-[#0d0f0a] via-[#0a0b08] to-[#0d0f0a]">
-              {/* Top sheen */}
-              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
-
-              {/* Window chrome */}
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/5 bg-white/[0.015]">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                <span className="w-2.5 h-2.5 rounded-full bg-primary/70" />
-                <div className="ml-4 h-5 flex-1 max-w-xs rounded-md bg-white/[0.03] border border-white/5 flex items-center px-2.5">
-                  <span className="text-[10px] text-muted-foreground/70 font-mono">optimum-immo.app/dashboard</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-12 gap-4 p-5 sm:p-6">
-                {/* Sidebar */}
-                <div className="hidden md:flex col-span-2 flex-col gap-2">
-                  <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-primary/10 border border-primary/20">
-                    <div className="w-6 h-6 rounded-md bg-primary/30" />
-                    <div className="h-2 flex-1 rounded bg-primary/60" />
-                  </div>
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/[0.02]">
-                      <div className="w-6 h-6 rounded-md bg-white/5" />
-                      <div className="h-2 flex-1 rounded bg-white/10" style={{ width: `${60 + i * 6}%` }} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Main content */}
-                <div className="col-span-12 md:col-span-10 space-y-4">
-                  {/* KPI row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                      { label: "Revenus", value: "48,2M", delta: "+24%", icon: TrendingUp },
-                      { label: "Réservations", value: "127", delta: "+8", icon: CalendarRange },
-                      { label: "Factures", value: "312", delta: "+42", icon: Receipt },
-                      { label: "Clients", value: "1 240", delta: "+18", icon: Users },
-                    ].map((k, i) => (
-                      <motion.div
-                        key={k.label}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8 + i * 0.08, duration: 0.5 }}
-                        className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/80">{k.label}</span>
-                          <k.icon className="w-3 h-3 text-primary" />
-                        </div>
-                        <div className="text-lg font-bold tracking-tight" style={{ fontFamily: '"Instrument Serif", serif' }}>
-                          {k.value}
-                        </div>
-                        <div className="text-[10px] text-primary font-medium mt-0.5">{k.delta}</div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Chart + side panel */}
-                  <div className="grid grid-cols-3 gap-4">
-                    {/* Chart */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 1.1, duration: 0.6 }}
-                      className="col-span-3 lg:col-span-2 rounded-xl border border-white/5 bg-white/[0.02] p-4 h-56 relative overflow-hidden"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <div className="text-xs text-muted-foreground/80">Revenus mensuels</div>
-                          <div className="text-sm font-semibold">GNF 48 200 000</div>
-                        </div>
-                        <div className="flex gap-1">
-                          {["1M", "3M", "1A"].map((t, i) => (
-                            <span key={t} className={`text-[9px] px-1.5 py-0.5 rounded ${i === 1 ? "bg-primary/20 text-primary" : "text-muted-foreground/60"}`}>{t}</span>
-                          ))}
-                        </div>
-                      </div>
-                      <svg viewBox="0 0 400 140" className="w-full h-[calc(100%-2.5rem)]" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(72, 100%, 55%)" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="hsl(72, 100%, 55%)" stopOpacity="0" />
-                          </linearGradient>
-                          <linearGradient id="lineStroke" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="hsl(72, 100%, 65%)" />
-                            <stop offset="100%" stopColor="hsl(72, 100%, 45%)" />
-                          </linearGradient>
-                        </defs>
-                        {/* grid */}
-                        {[0, 1, 2, 3].map((i) => (
-                          <line key={i} x1="0" x2="400" y1={20 + i * 35} y2={20 + i * 35} stroke="rgba(255,255,255,0.04)" />
-                        ))}
-                        {/* area */}
-                        <motion.path
-                          d="M0,110 C40,90 70,95 100,75 C140,50 170,80 210,55 C250,30 290,45 330,25 C360,10 380,15 400,10 L400,140 L0,140 Z"
-                          fill="url(#areaFill)"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 1.6, duration: 0.8 }}
-                        />
-                        {/* line */}
-                        <motion.path
-                          d="M0,110 C40,90 70,95 100,75 C140,50 170,80 210,55 C250,30 290,45 330,25 C360,10 380,15 400,10"
-                          fill="none"
-                          stroke="url(#lineStroke)"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{ delay: 1.2, duration: 1.6, ease: "easeInOut" }}
-                        />
-                        {/* dots */}
-                        {[[100, 75], [210, 55], [330, 25]].map(([x, y], i) => (
-                          <motion.circle
-                            key={i}
-                            cx={x} cy={y} r="3.5"
-                            fill="hsl(72, 100%, 55%)"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 2.2 + i * 0.15, type: "spring", stiffness: 300 }}
-                          />
-                        ))}
-                      </svg>
-                    </motion.div>
-
-                    {/* Activity panel */}
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1.3, duration: 0.6 }}
-                      className="hidden lg:flex col-span-1 rounded-xl border border-white/5 bg-white/[0.02] p-4 h-56 flex-col"
-                    >
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-3">Activité</div>
-                      <div className="space-y-2.5 flex-1">
-                        {[
-                          { c: "bg-primary", t: "Nouvelle réservation" },
-                          { c: "bg-primary/60", t: "Facture #218 payée" },
-                          { c: "bg-white/40", t: "Client ajouté" },
-                          { c: "bg-primary/40", t: "Tâche complétée" },
-                        ].map((a, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 1.6 + i * 0.1 }}
-                            className="flex items-center gap-2"
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${a.c}`} />
-                            <span className="text-[10px] text-foreground/80 flex-1 truncate">{a.t}</span>
-                            <span className="text-[9px] text-muted-foreground/50">{i + 1}m</span>
-                          </motion.div>
-                        ))}
-                      </div>
-                      <div className="h-8 flex items-end gap-1 mt-2">
-                        {[40, 60, 35, 80, 55, 90, 70, 100, 65, 85].map((h, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ height: 0 }}
-                            animate={{ height: `${h}%` }}
-                            transition={{ delay: 2 + i * 0.05, duration: 0.4 }}
-                            className="flex-1 bg-primary/60 rounded-sm"
-                          />
-                        ))}
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom sheen sweep */}
-              <motion.div
-                aria-hidden
-                initial={{ x: "-100%" }}
-                animate={{ x: "200%" }}
-                transition={{ delay: 2.5, duration: 2.2, ease: "easeInOut", repeat: Infinity, repeatDelay: 4 }}
-                className="pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-primary/10 to-transparent skew-x-12"
+            <div className="absolute -inset-8 bg-primary/15 blur-[100px] rounded-[3rem] -z-10" />
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
+              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+              <img
+                src={dashboardPreview.url}
+                alt="Aperçu du tableau de bord Optimum Immo"
+                className="w-full h-auto block"
+                loading="eager"
               />
             </div>
-
             {/* Floating chips */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
