@@ -149,13 +149,19 @@ const Index = () => {
             className="mt-16 sm:mt-24 mx-auto max-w-6xl relative"
           >
             <div className="absolute -inset-8 bg-primary/15 blur-[100px] rounded-[3rem] -z-10" />
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
-              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+            <div
+              className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/60 backdrop-blur"
+              style={{ aspectRatio: "16 / 9" }}
+            >
+              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent z-10" />
               <img
                 src={dashboardPreview.url}
                 alt="Aperçu du tableau de bord Optimum Immo"
-                className="w-full h-auto block"
+                className="absolute inset-0 w-full h-full object-cover object-top block"
                 loading="eager"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
               />
             </div>
             {/* Floating chips */}
