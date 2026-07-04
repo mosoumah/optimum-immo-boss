@@ -164,7 +164,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen lg:h-screen flex relative lg:overflow-hidden">
-      <FloatingParticles count={isMobile ? 10 : 35} />
+      {!isMobile && <FloatingParticles count={18} />}
       <DynamicSidebar onSignOut={handleSignOut} />
 
       <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen lg:h-screen flex flex-col lg:overflow-hidden">
