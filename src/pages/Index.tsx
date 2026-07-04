@@ -198,13 +198,13 @@ const Index = () => {
             <ScrollStat
               scrollProgress={statsScrollProgress}
               prefix="+"
-              values={[120, 250, 500, 120]}
+              values={[150, 150, 150, 150]}
               label="Agences accompagnées"
               index={0}
             />
             <ScrollStat
               scrollProgress={statsScrollProgress}
-              values={[8500, 12000, 25000, 8500]}
+              values={[1456, 1456, 1456, 1456]}
               formatNumber={(n) =>
                 Math.round(n)
                   .toLocaleString("fr-FR")
