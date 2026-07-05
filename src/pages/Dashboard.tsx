@@ -181,7 +181,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="px-4 py-4 sm:p-2 lg:p-4 flex-1 min-h-0 flex flex-col lg:overflow-hidden gap-4 sm:gap-0 pb-28 sm:pb-2">
+        <div className="relative z-10 px-4 py-4 sm:p-2 lg:p-4 flex-1 min-h-0 flex flex-col lg:overflow-hidden gap-4 sm:gap-0 pb-28 sm:pb-2">
           {/* Desktop Header Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
