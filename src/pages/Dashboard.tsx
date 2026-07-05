@@ -164,10 +164,10 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen lg:h-screen flex relative lg:overflow-hidden">
-      {!isMobile && <FloatingParticles count={18} />}
       <DynamicSidebar onSignOut={handleSignOut} />
 
-      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen lg:h-screen flex flex-col lg:overflow-hidden">
+      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen lg:h-screen flex flex-col lg:overflow-hidden relative">
+        {!isMobile && <FloatingParticles count={18} />}
         {/* Mobile sticky header */}
         <div className="sm:hidden sticky top-0 z-30 backdrop-blur-xl bg-background/75 border-b border-border/40 px-4 py-3 pl-16 flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
