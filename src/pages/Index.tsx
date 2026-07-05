@@ -59,7 +59,7 @@ const Index = () => {
     target: statsRef,
     offset: ["start end", "end start"],
   });
-  const mockupY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const mockupY = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const mockupRotate = useTransform(scrollYProgress, [0, 1], [-2, 2]);
 
   return (
@@ -149,7 +149,7 @@ const Index = () => {
             className="mt-16 sm:mt-24 mx-auto max-w-6xl relative"
           >
             <div className="absolute -inset-8 bg-primary/15 blur-[100px] rounded-[3rem] -z-10" />
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
+            <div className="dashboard-preview-animated relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
               <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
               <img
                 src={dashboardPreview.url}
