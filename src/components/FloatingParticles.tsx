@@ -51,7 +51,7 @@ export const FloatingParticles = ({ count = 20, className = "" }: FloatingPartic
 
   return (
     <div
-      className={`fixed inset-0 overflow-hidden pointer-events-none z-0 ${className}`}
+      className={`absolute inset-0 overflow-hidden pointer-events-none z-0 ${className}`}
       aria-hidden="true"
     >
       <style>{`

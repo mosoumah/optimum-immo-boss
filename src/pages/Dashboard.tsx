@@ -164,10 +164,10 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen lg:h-screen flex relative lg:overflow-hidden">
-      {!isMobile && <FloatingParticles count={18} />}
       <DynamicSidebar onSignOut={handleSignOut} />
 
-      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen lg:h-screen flex flex-col lg:overflow-hidden">
+      <main className="flex-1 lg:ml-64 mesh-gradient min-h-screen lg:h-screen flex flex-col lg:overflow-hidden relative">
+        {!isMobile && <FloatingParticles count={18} />}
         {/* Mobile sticky header */}
         <div className="sm:hidden sticky top-0 z-30 backdrop-blur-xl bg-background/75 border-b border-border/40 px-4 py-3 pl-16 flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -181,7 +181,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="px-4 py-4 sm:p-2 lg:p-4 flex-1 min-h-0 flex flex-col lg:overflow-hidden gap-4 sm:gap-0 pb-28 sm:pb-2">
+        <div className="relative z-10 px-4 py-4 sm:p-2 lg:p-4 flex-1 min-h-0 flex flex-col lg:overflow-hidden gap-4 sm:gap-0 pb-28 sm:pb-2">
           {/* Desktop Header Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
