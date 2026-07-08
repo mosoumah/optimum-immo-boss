@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,9 @@ const Connexion = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextParam = searchParams.get("next");
+  const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
   const { signIn, user, isReady } = useAuth();
   const redirectingRef = useRef(false);
 
@@ -42,6 +45,10 @@ const Connexion = () => {
             variant: "destructive",
           });
           redirectingRef.current = false;
+          return;
+        }
+        if (safeNext) {
+          window.location.href = safeNext;
           return;
         }
         navigate("/dashboard", { replace: true });
