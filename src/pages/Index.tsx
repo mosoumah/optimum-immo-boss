@@ -22,7 +22,6 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
-import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 
 
 
@@ -151,12 +150,44 @@ const Index = () => {
             <div className="absolute -inset-8 bg-primary/15 blur-[100px] rounded-[3rem] -z-10" />
             <div className="dashboard-preview-animated relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
               <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-              <img
-                src={dashboardPreview.url}
-                alt="Aperçu du tableau de bord Optimum Immo"
-                className="w-full h-auto block"
-                loading="eager"
-              />
+              <div className="dashboard-mockup" aria-label="Aperçu du tableau de bord Optimum Immo">
+                <div className="dashboard-mockup__sidebar">
+                  <div className="dashboard-mockup__logo" />
+                  <span />
+                  <span className="is-active" />
+                  <span />
+                  <span />
+                </div>
+                <div className="dashboard-mockup__content">
+                  <div className="dashboard-mockup__header">
+                    <div>
+                      <span />
+                      <strong />
+                    </div>
+                    <i />
+                  </div>
+                  <div className="dashboard-mockup__kpis">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <div className="dashboard-mockup__main">
+                    <div className="dashboard-mockup__chart">
+                      <svg viewBox="0 0 640 220" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M0 168 C80 120 118 146 182 104 C244 64 300 88 356 58 C430 18 500 68 640 32" />
+                        <path d="M0 168 C80 120 118 146 182 104 C244 64 300 88 356 58 C430 18 500 68 640 32 L640 220 L0 220 Z" />
+                      </svg>
+                    </div>
+                    <div className="dashboard-mockup__panel">
+                      <span />
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             {/* Floating chips */}
             <motion.div
