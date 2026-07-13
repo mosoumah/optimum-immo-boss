@@ -24,6 +24,8 @@ import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 
+const dashboardPreviewHostedUrl = `https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app${dashboardPreview.url}`;
+
 
 
 const steps = [
@@ -152,6 +154,13 @@ const Index = () => {
                 className="dashboard-preview-image w-full h-auto block"
                 loading="eager"
                 fetchPriority="high"
+                onError={(event) => {
+                  const image = event.currentTarget;
+
+                  if (image.src !== dashboardPreviewHostedUrl) {
+                    image.src = dashboardPreviewHostedUrl;
+                  }
+                }}
               />
             </div>
             {/* Floating chips */}
