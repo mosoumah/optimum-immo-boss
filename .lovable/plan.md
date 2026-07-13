@@ -1,50 +1,23 @@
-# Refonte Premium — Landing Page `/`
+## Plan
 
-Direction visuelle verrouillée : **Noir & Lime** (cohérent avec le dashboard), typo **Instrument Serif × Work Sans**, structure **Hero immersif + Bento grid**.
+1. **Identifier la cause exacte**
+   - Vérifier l’élément “dashboard preview” de la page d’accueil qui utilise l’image `dashboard-preview.png` et l’animation CSS `dashboard-preview-animated`.
+   - Confirmer que le problème vient très probablement du rendu combiné `framer-motion` + `useScroll/useTransform` + `overflow-hidden` + calques absolus, qui peut produire un cadrage/coupe incorrecte en production.
 
-## Direction créative
+2. **Stabiliser le mockup du dashboard**
+   - Remplacer le déplacement/rotation dépendant du scroll par une animation CSS autonome et stable, afin que l’aperçu s’affiche toujours correctement en version déployée.
+   - Garder le même visuel général : image du dashboard, glow vert, light sweep, badges flottants.
+   - Empêcher les badges/flottants de couper ou masquer l’image de façon anormale.
 
-- **Couleurs** : fond `#0a0a0a`, surfaces `#141414`, accent lime `#d4ff3a`, secondaire vert `#22c55e`, texte ivoire `#f5f5f0` / muted `#8a8a85`.
-- **Typographie** : titres en *Instrument Serif* (italique sur mots-clés "agence", "immobilier"), corps en *Work Sans*. Tailles hero jusqu'à `clamp(3.5rem, 8vw, 7rem)`, tracking serré sur display.
-- **Texture** : grain subtil, halos lime radiaux, lignes fines `border-white/5`, glassmorphism léger sur cartes.
-- **Motion** : Framer Motion — fade-up séquentiel, parallaxe douce sur hero, hover tilt sur bento, ligne lime qui se trace sous les titres, compteur animé sur stats.
+3. **Rendre l’image obligatoire et proprement cadrée**
+   - Ajouter des dimensions/aspect-ratio stables autour du mockup.
+   - Conserver `loading="eager"` et ajouter si nécessaire `fetchPriority="high"` pour forcer le chargement prioritaire.
+   - S’assurer que le conteneur ne crée plus de bande noire ou de recadrage inattendu en production.
 
-## Structure de la page
+4. **Limiter strictement les changements**
+   - Modifier uniquement `src/pages/Index.tsx` et, si nécessaire, `src/index.css`.
+   - Ne pas toucher au vrai dashboard connecté, aux données, à MCP, à l’authentification ou aux autres pages.
 
-1. **Navbar** repensée : logo + liens minimaux + CTA lime pill, blur backdrop.
-2. **Hero éditorial**
-   - Eyebrow lime `• Plateforme immobilière nouvelle génération`
-   - Titre serif XXL avec mots en italique lime
-   - Sous-titre Work Sans, max 60ch
-   - Double CTA (lime solide + outline) + indicateur scroll
-   - Mockup dashboard flottant (image fournie) avec glow lime, légèrement incliné
-3. **Bande de stats / preuve sociale** : 4 chiffres animés (agences, biens gérés, factures, satisfaction).
-4. **Bento grid features (6 cellules asymétriques)**
-   - Grande cellule : Tableau de bord temps réel (preview chart)
-   - Gestion clients · Facturation · Réservations · Biens · Tâches IA
-   - Tailles variées (2x1, 1x1, 1x2), accents lime ponctuels, icônes Lucide en lime sur fond `#141414`.
-5. **Section "Comment ça marche"** : 3 étapes numérotées style éditorial, ligne verticale lime.
-6. **Section bénéfices** : 4 cartes minimales (gain de temps, économies, données, distinction) avec icônes outline.
-7. **Témoignage / citation** pleine largeur, serif italique géant, attribution discrète.
-8. **CTA final** : carte noire bordée lime, halo, double bouton.
-9. **Footer** premium : colonnes liens, logo, mention conformité.
-
-## Détails techniques
-
-- **Fichiers modifiés**
-  - `src/pages/Index.tsx` — refonte complète avec nouvelles sections.
-  - `src/components/Navbar.tsx` — variante premium dark.
-  - `src/components/Footer.tsx` — version enrichie.
-  - `src/components/FeatureCard.tsx` — variantes bento (size: sm/md/lg).
-  - `src/index.css` — ajout tokens : `--lime`, `--lime-glow`, gradients, `bg-grain`, `shadow-lime`.
-  - `tailwind.config.ts` — `fontFamily.display: ['"Instrument Serif"', 'serif']`, `fontFamily.sans: ['"Work Sans"', ...]`, couleur `lime`.
-- **Fonts** : `bun add @fontsource/instrument-serif @fontsource/work-sans`, imports dans `src/main.tsx`.
-- **Image dashboard** : utiliser la capture jointe via `lovable-assets create` puis import comme mockup hero.
-- **Aucune logique backend modifiée**, uniquement présentationnel.
-- Pages internes (dashboard, etc.) non touchées — palette dashboard déjà cohérente.
-
-## Hors scope
-
-- Pas de modification du dashboard, des dialogs, du chatbot, ni du backend.
-- Pas de nouvelle route, pas de nouvelles fonctionnalités produit.
-- SEO basique conservé (titre/meta existants), non refondu sauf si demandé.
+5. **Vérifier visuellement**
+   - Tester la page d’accueil avec Playwright en local sur une taille proche de votre capture.
+   - Confirmer que l’image du dashboard et son animation restent visibles et correctement cadrées.
