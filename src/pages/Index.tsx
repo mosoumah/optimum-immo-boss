@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useRef } from "react";
 import {
@@ -52,15 +52,11 @@ const benefits = [
 ];
 
 const Index = () => {
-  const heroRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const { scrollYProgress: statsScrollProgress } = useScroll({
     target: statsRef,
     offset: ["start end", "end start"],
   });
-  const mockupY = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const mockupRotate = useTransform(scrollYProgress, [0, 1], [-2, 2]);
 
   return (
 
@@ -68,7 +64,7 @@ const Index = () => {
       <Navbar />
 
       {/* ============== HERO ============== */}
-      <section ref={heroRef} className="relative pt-32 sm:pt-40 pb-20 sm:pb-32 overflow-hidden">
+      <section className="relative pt-32 sm:pt-40 pb-20 sm:pb-32 overflow-hidden">
         {/* Ambient lighting */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] max-w-[120vw] h-[700px] bg-primary/10 blur-[140px] rounded-full" />
@@ -142,11 +138,10 @@ const Index = () => {
 
           {/* Dashboard mockup */}
           <motion.div
-            style={{ y: mockupY, rotate: mockupRotate }}
             initial={{ opacity: 0, y: 60, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-16 sm:mt-24 mx-auto max-w-6xl relative"
+            className="dashboard-preview-motion mt-16 sm:mt-24 mx-auto max-w-6xl relative"
           >
             <div className="absolute -inset-8 bg-primary/15 blur-[100px] rounded-[3rem] -z-10" />
             <div className="dashboard-preview-animated relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
@@ -154,8 +149,9 @@ const Index = () => {
               <img
                 src={dashboardPreview.url}
                 alt="Aperçu du tableau de bord Optimum Immo"
-                className="w-full h-auto block"
+                className="dashboard-preview-image w-full h-auto block"
                 loading="eager"
+                fetchPriority="high"
               />
             </div>
             {/* Floating chips */}
