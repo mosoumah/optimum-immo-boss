@@ -163,7 +163,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.6 }}
-              className="hidden md:flex absolute left-2 lg:left-4 top-1/3 items-center gap-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 px-4 py-3 shadow-2xl z-20"
+              className="hidden md:flex absolute -left-6 top-1/3 items-center gap-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 px-4 py-3 shadow-2xl"
             >
               <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-primary" />
@@ -177,7 +177,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.4, duration: 0.6 }}
-              className="hidden md:flex absolute right-2 lg:right-4 bottom-1/4 items-center gap-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 px-4 py-3 shadow-2xl z-20"
+              className="hidden md:flex absolute -right-6 bottom-1/4 items-center gap-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 px-4 py-3 shadow-2xl"
             >
               <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-primary" />
