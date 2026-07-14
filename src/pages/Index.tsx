@@ -58,10 +58,16 @@ const benefits = [
 
 const Index = () => {
   const statsRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const { scrollYProgress: statsScrollProgress } = useScroll({
     target: statsRef,
     offset: ["start end", "end start"],
   });
+
+  const handlePlanSelect = (_plan: Plan) => {
+    navigate("/tarifs");
+  };
 
   return (
 
