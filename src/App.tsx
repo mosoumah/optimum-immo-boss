@@ -16,6 +16,7 @@ import ClientDetail from "./pages/ClientDetail";
 import Biens from "./pages/Biens";
 import BienDetail from "./pages/BienDetail";
 import Reservations from "./pages/Reservations";
+import Tarifs from "./pages/Tarifs";
 
 import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
@@ -45,6 +46,7 @@ const App = () => (
           <AuthProvider>
             <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/tarifs" element={<Tarifs />} />
             <Route path="/index" element={<Navigate to="/" replace />} />
             <Route path="/inscription" element={<Inscription />} />
             <Route path="/connexion" element={<Connexion />} />

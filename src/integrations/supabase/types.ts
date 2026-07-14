@@ -848,6 +848,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          billing_cycle: string | null
           created_at: string | null
           end_date: string | null
           entreprise_id: string
@@ -856,8 +857,11 @@ export type Database = {
           plan: string
           start_date: string | null
           status: string
+          trial_ends_at: string | null
+          updated_at: string | null
         }
         Insert: {
+          billing_cycle?: string | null
           created_at?: string | null
           end_date?: string | null
           entreprise_id: string
@@ -866,8 +870,11 @@ export type Database = {
           plan?: string
           start_date?: string | null
           status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
         }
         Update: {
+          billing_cycle?: string | null
           created_at?: string | null
           end_date?: string | null
           entreprise_id?: string
@@ -876,6 +883,8 @@ export type Database = {
           plan?: string
           start_date?: string | null
           status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1144,6 +1153,10 @@ export type Database = {
         Returns: undefined
       }
       get_current_user_context: { Args: never; Returns: Json }
+      get_subscription_state: {
+        Args: { _entreprise_id: string }
+        Returns: Json
+      }
       get_top_properties: {
         Args: { _entreprise_id: string }
         Returns: {
@@ -1176,6 +1189,7 @@ export type Database = {
         Returns: boolean
       }
       notify_departures_today: { Args: never; Returns: undefined }
+      subscription_daily_maintenance: { Args: never; Returns: undefined }
     }
     Enums: {
       app_permission:

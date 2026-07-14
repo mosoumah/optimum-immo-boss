@@ -75,6 +75,7 @@ export const Navbar = () => {
                 { href: "#features", label: "Fonctionnalités" },
                 { href: "#how", label: "Processus" },
                 { href: "#benefits", label: "Avantages" },
+                { href: "/tarifs", label: "Tarifs" },
               ].map((item) => (
                 <a
                   key={item.href}
