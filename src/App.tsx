@@ -46,6 +46,7 @@ const App = () => (
           <AuthProvider>
             <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/tarifs" element={<Tarifs />} />
             <Route path="/index" element={<Navigate to="/" replace />} />
             <Route path="/inscription" element={<Inscription />} />
             <Route path="/connexion" element={<Connexion />} />
