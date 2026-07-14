@@ -90,16 +90,21 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm"
+              className="group relative inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-4 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full border border-primary/40 bg-gradient-to-r from-primary/15 via-primary/5 to-primary/15 backdrop-blur-xl shadow-[0_0_40px_hsl(var(--primary)/0.15)] overflow-hidden"
             >
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+              <span className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(110deg,transparent_25%,hsl(var(--primary)/0.25)_50%,transparent_75%)] bg-[length:200%_100%] animate-shimmer" />
+              <span className="relative flex items-center gap-2">
+                <span className="text-lg sm:text-xl leading-none">🎉</span>
+                <span className="text-[11px] sm:text-xs font-bold text-primary tracking-[0.14em] uppercase whitespace-nowrap">
+                  14 jours d'essai gratuits
+                </span>
               </span>
-              <span className="text-[11px] sm:text-xs font-medium text-primary tracking-[0.12em] uppercase">
-                Plateforme immobilière premium
+              <span className="relative hidden sm:block h-4 w-px bg-primary/30" />
+              <span className="relative text-[11px] sm:text-xs font-medium text-foreground/80 tracking-wide">
+                Aucune carte bancaire requise · Toutes les fonctionnalités incluses
               </span>
             </motion.div>
+
 
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
