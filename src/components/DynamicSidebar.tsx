@@ -18,6 +18,7 @@ import {
   X,
   Building,
   CalendarCheck,
+  Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -47,6 +48,7 @@ const sidebarItems: SidebarItem[] = [
   
   { icon: UserCog, label: "Utilisateurs", path: "/utilisateurs", roles: ["admin"] },
   { icon: Shield, label: "Permissions", path: "/gestion-permissions", roles: ["admin"] },
+  { icon: Sparkles, label: "Abonnement", path: "/tarifs", roles: ["admin"] },
 ];
 
 interface DynamicSidebarProps {
