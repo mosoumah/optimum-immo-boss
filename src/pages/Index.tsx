@@ -441,6 +441,49 @@ const Index = () => {
         </div>
       </section>
 
+      {/* ============== PRICING ============== */}
+      <section id="pricing" className="py-12 sm:py-20 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/5 blur-[140px] rounded-full pointer-events-none" />
+        <div className="container mx-auto px-4 sm:px-6 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-2xl mx-auto mb-10"
+          >
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-4">— Tarifs</div>
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]">
+              Un forfait adapté à{" "}
+              <span className="italic text-primary">votre agence</span>.
+            </h2>
+            <p className="mt-5 text-sm sm:text-base text-muted-foreground">
+              14 jours d'essai gratuits. Sans carte bancaire. Sans engagement.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <BillingToggle value={billingCycle} onChange={setBillingCycle} />
+            </div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 max-w-6xl mx-auto items-stretch">
+            {PLANS.map((plan, i) => (
+              <PlanCard key={plan.id} plan={plan} cycle={billingCycle} onSelect={handlePlanSelect} index={i} />
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              to="/tarifs"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+            >
+              Voir tous les détails et la FAQ
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+
+
       {/* ============== TESTIMONIAL ============== */}
       <section className="py-14 sm:py-20 border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
