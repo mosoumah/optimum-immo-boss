@@ -16,6 +16,7 @@ import ClientDetail from "./pages/ClientDetail";
 import Biens from "./pages/Biens";
 import BienDetail from "./pages/BienDetail";
 import Reservations from "./pages/Reservations";
+import Tarifs from "./pages/Tarifs";
 
 import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
