@@ -1,6 +1,9 @@
 import { motion, useScroll } from "framer-motion";
-import { Link } from "react-router-dom";
-import { useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { PLANS, type BillingCycle, type Plan } from "@/lib/pricing/plans";
+import { PlanCard } from "@/components/pricing/PlanCard";
+import { BillingToggle } from "@/components/pricing/BillingToggle";
 import {
   Users,
   Receipt,
