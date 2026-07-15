@@ -35,25 +35,25 @@ const steps = [
   {
     n: "01",
     title: "Créez votre espace",
-    desc: "Inscription en moins de 2 minutes. Importez vos clients, biens et historiques en quelques clics.",
+    desc: "Ouvrez votre compte en moins de 2 minutes et importez vos clients, biens et historiques sans perdre un seul dossier.",
   },
   {
     n: "02",
     title: "Pilotez en temps réel",
-    desc: "Tableau de bord unifié : revenus, dépenses, réservations, tâches. Tout converge au même endroit.",
+    desc: "Retrouvez toute votre activité au même endroit : revenus, dépenses, réservations, tâches. Finies les informations éparpillées entre plusieurs outils.",
   },
   {
     n: "03",
     title: "Encaissez plus vite",
-    desc: "Facturation automatisée, relances intelligentes, paiements suivis. Votre trésorerie respire.",
+    desc: "Factures automatiques, relances intelligentes, paiements suivis. Votre trésorerie respire et vos revenus rentrent à temps.",
   },
 ];
 
 const benefits = [
-  { icon: Clock, title: "Gagnez du temps", desc: "Automatisez le répétitif, concentrez-vous sur le stratégique." },
-  { icon: Wallet, title: "Économisez", desc: "Réduisez vos coûts opérationnels et augmentez vos marges." },
-  { icon: Database, title: "Centralisez", desc: "Une seule source de vérité pour toutes vos données." },
-  { icon: Trophy, title: "Distinguez-vous", desc: "Des outils dignes des plus grandes agences internationales." },
+  { icon: Clock, title: "Gagnez du temps", desc: "Automatisez les tâches répétitives et consacrez votre énergie à développer votre agence." },
+  { icon: Wallet, title: "Économisez", desc: "Réduisez les erreurs, les oublis et les coûts cachés qui rongent vos marges." },
+  { icon: Database, title: "Centralisez", desc: "Toutes vos données au même endroit, accessibles à tout moment, sécurisées en permanence." },
+  { icon: Trophy, title: "Distinguez-vous", desc: "Offrez à vos clients une expérience à la hauteur des plus grandes agences internationales." },
 ];
 
 const Index = () => {
@@ -126,8 +126,9 @@ const Index = () => {
               transition={{ duration: 0.7, delay: 0.25 }}
               className="mt-7 sm:mt-8 max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground leading-relaxed px-2"
             >
-              Optimum Immo réunit clients, biens, factures et réservations dans une expérience
-              unique. Pensée pour les agences guinéennes ambitieuses.
+              Gagnez du temps chaque jour, évitez les erreurs coûteuses et pilotez toute votre agence
+              depuis un seul écran. Optimum Immo réunit vos clients, vos biens, vos réservations et vos
+              finances dans une plateforme pensée pour les agences immobilières guinéennes.
             </motion.p>
 
             <motion.div
@@ -218,7 +219,7 @@ const Index = () => {
               scrollProgress={statsScrollProgress}
               prefix="+"
               values={[150, 150, 150, 150]}
-              label="Agences accompagnées"
+              label="Agences qui nous font confiance"
               index={0}
             />
             <ScrollStat
@@ -230,14 +231,14 @@ const Index = () => {
                   .replace(/\s/g, " ")
                   .replace(/,/g, " ")
               }
-              label="Biens gérés"
+              label="Biens gérés en toute sérénité"
               index={1}
             />
             <ScrollStat
               scrollProgress={statsScrollProgress}
               values={[32, 65, 120, 32]}
               suffix=" K"
-              label="Factures émises"
+              label="Factures émises sans effort"
               index={2}
             />
             <ScrollStat
@@ -245,7 +246,7 @@ const Index = () => {
               values={[99.9, 99.99, 99.999, 99.9]}
               suffix="%"
               decimals={1}
-              label="Disponibilité"
+              label="Disponibilité garantie"
               index={3}
             />
           </div>
@@ -285,8 +286,9 @@ const Index = () => {
                     Tableau de bord <span className="italic text-primary">unifié</span>
                   </h3>
                   <p className="mt-3 text-sm text-muted-foreground max-w-md leading-relaxed">
-                    Revenus, dépenses, taux d'occupation, alertes. Une vue d'ensemble qui se met à jour
-                    en temps réel — chaque décision repose sur des chiffres frais.
+                    Fini les tableurs éparpillés et les chiffres qui ne concordent jamais. Suivez vos
+                    revenus, vos dépenses, votre taux d'occupation et vos alertes en un seul coup d'œil —
+                    chaque décision s'appuie enfin sur des données fiables, mises à jour en temps réel.
                   </p>
                 </div>
                 {/* Decorative mini chart */}
@@ -307,7 +309,9 @@ const Index = () => {
               <Icon icon={Users} />
               <h3 className="mt-5 font-display text-2xl">Clients centralisés</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Historique complet, contacts, transactions — chaque client a son dossier vivant.
+                Retrouvez en quelques secondes l'historique complet de chaque client — contacts,
+                réservations, paiements. Offrez un suivi professionnel qui fidélise et donne à votre
+                agence une image irréprochable.
               </p>
             </BentoCard>
 
@@ -315,7 +319,8 @@ const Index = () => {
               <Icon icon={Receipt} />
               <h3 className="mt-5 font-display text-2xl">Facturation fluide</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Génération automatique, signature, suivi des paiements en un coup d'œil.
+                Générez vos factures en un clic, suivez les paiements en temps réel et éliminez les
+                oublis qui pèsent sur votre trésorerie. Vous encaissez plus vite, sans stress administratif.
               </p>
             </BentoCard>
 
@@ -323,8 +328,9 @@ const Index = () => {
               <Icon icon={Building2} />
               <h3 className="mt-5 font-display text-2xl">Biens & galeries</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Fiches détaillées, photos haute résolution, documents PDF, statuts synchronisés
-                avec les réservations.
+                Présentez vos biens sous leur meilleur jour : photos haute résolution, documents PDF,
+                fiches détaillées. Chaque bien reste synchronisé avec ses réservations, plus aucune
+                double location.
               </p>
             </BentoCard>
 
@@ -332,7 +338,9 @@ const Index = () => {
               <Icon icon={CalendarRange} />
               <h3 className="mt-5 font-display text-2xl">Réservations intelligentes</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Calendrier, calcul automatique du reste à payer, factures générées à la volée.
+                Gardez le contrôle total de votre planning. Calcul automatique du reste à payer,
+                factures générées instantanément et disponibilités toujours à jour — vos équipes
+                gagnent en clarté, vos clients en confiance.
               </p>
             </BentoCard>
 
@@ -340,7 +348,8 @@ const Index = () => {
               <Icon icon={CheckSquare} />
               <h3 className="mt-5 font-display text-2xl">Tâches & équipe</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Assignez, suivez, échangez — la messagerie est intégrée.
+                Assignez, suivez et communiquez sans quitter la plateforme. Votre équipe avance
+                ensemble, chaque responsabilité est claire, rien ne se perd.
               </p>
             </BentoCard>
 
@@ -352,8 +361,9 @@ const Index = () => {
                     Assistant <span className="italic text-primary">IA</span> intégré
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-lg">
-                    ImmoPilot répond, analyse, rédige et suggère. Votre copilote stratégique,
-                    branché à toutes vos données — en français, 24/7.
+                    ImmoPilot devient le bras droit de votre agence : il répond à vos questions,
+                    analyse vos performances et suggère les bonnes actions à mener. Un copilote
+                    disponible 24/7, en français, connecté à toutes vos données.
                   </p>
                 </div>
               </div>
@@ -378,7 +388,8 @@ const Index = () => {
                 <span className="italic text-primary">zéro friction</span>.
               </h2>
               <p className="mt-5 text-sm text-muted-foreground max-w-xs leading-relaxed">
-                De l'inscription à la première facture encaissée, la plateforme vous tient la main.
+                De l'inscription à votre première facture encaissée, Optimum Immo vous accompagne
+                pas à pas — sans formation technique, sans complication.
               </p>
             </motion.div>
 
@@ -462,7 +473,8 @@ const Index = () => {
               <span className="italic text-primary">votre agence</span>.
             </h2>
             <p className="mt-5 text-sm sm:text-base text-muted-foreground">
-              14 jours d'essai gratuits. Sans carte bancaire. Sans engagement.
+              Testez toutes les fonctionnalités pendant 14 jours, sans carte bancaire et sans
+              engagement. Choisissez ensuite le forfait qui accompagne la croissance de votre agence.
             </p>
             <div className="mt-8 flex justify-center">
               <BillingToggle value={billingCycle} onChange={setBillingCycle} />
@@ -539,7 +551,8 @@ const Index = () => {
                 <span className="italic text-primary">votre agence</span> ?
               </h2>
               <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
-                Rejoignez les agences qui ont choisi de travailler avec rigueur, sérénité et style.
+                Rejoignez les agences immobilières guinéennes qui ont choisi la clarté, la sérénité
+                et un outil moderne pour développer sereinement leur activité.
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
