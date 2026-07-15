@@ -283,31 +283,34 @@ const Index = () => {
               transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="group relative overflow-hidden rounded-3xl border border-white/[0.08] p-6 sm:p-8 hover:border-primary/30 transition-all duration-500 md:col-span-4 md:row-span-2 min-h-[360px] isolate"
             >
-              {/* Background image */}
+              {/* Background image — sharp, loads early */}
               <img
                 src={dashboardHeroBg.url}
                 alt=""
                 aria-hidden
-                loading="lazy"
+                loading="eager"
                 decoding="async"
+                fetchPriority="high"
                 className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
               />
-              {/* Overlays */}
-              <div aria-hidden className="absolute inset-0 bg-black/55 pointer-events-none -z-10" />
+              {/* Light global tint for brand cohesion (no blur) */}
+              <div aria-hidden className="absolute inset-0 bg-black/15 pointer-events-none -z-10" />
+              {/* Localized dark gradient only behind bottom text area */}
               <div
                 aria-hidden
-                className="absolute inset-0 pointer-events-none -z-10"
+                className="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none -z-10"
                 style={{
                   background:
-                    "radial-gradient(ellipse at 30% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.7) 100%)",
+                    "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 100%)",
                 }}
               />
+              {/* Localized dark patch behind top-right label */}
               <div
                 aria-hidden
-                className="absolute inset-0 pointer-events-none -z-10"
+                className="absolute top-0 right-0 w-1/2 h-24 pointer-events-none -z-10"
                 style={{
-                  boxShadow:
-                    "inset 0 0 80px 10px rgba(0,0,0,0.55), inset 0 0 140px -20px hsl(var(--primary) / 0.18)",
+                  background:
+                    "radial-gradient(ellipse at top right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%)",
                 }}
               />
 
@@ -316,13 +319,13 @@ const Index = () => {
                   <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center backdrop-blur-sm">
                     <BarChart3 className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-white/70">Temps réel</span>
+                  <span className="text-[10px] uppercase tracking-wider text-white/90" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.7)" }}>Temps réel</span>
                 </div>
                 <div className="mt-auto pt-8">
-                  <h3 className="font-display text-3xl sm:text-4xl tracking-tight text-white">
+                  <h3 className="font-display text-3xl sm:text-4xl tracking-tight text-white" style={{ textShadow: "0 2px 16px rgba(0,0,0,0.75)" }}>
                     Tableau de bord <span className="italic text-primary">unifié</span>
                   </h3>
-                  <p className="mt-3 text-sm text-white/80 max-w-md leading-relaxed">
+                  <p className="mt-3 text-sm text-white/90 max-w-md leading-relaxed" style={{ textShadow: "0 1px 10px rgba(0,0,0,0.75)" }}>
                     Fini les tableurs éparpillés et les chiffres qui ne concordent jamais. Suivez vos
                     revenus, vos dépenses, votre taux d'occupation et vos alertes en un seul coup d'œil —
                     chaque décision s'appuie enfin sur des données fiables, mises à jour en temps réel.
