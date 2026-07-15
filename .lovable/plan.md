@@ -1,106 +1,71 @@
-## Section Tarification & Abonnements — Optimum Immo
 
-Ajouter une page tarification premium + toute la logique d'essai gratuit 14 jours et de blocage post-essai, **sans toucher** aux modules métier existants (clients, biens, réservations, factures, revenus, dépenses, chatbot, permissions).
+# Réécriture marketing — Landing page Optimum Immo
 
----
+Objectif : améliorer le taux de conversion en réécrivant **uniquement les textes** de `src/pages/Index.tsx`. Aucune structure, aucun composant, aucun style, aucune animation, aucune icône n'est modifié. Seuls les chaînes de caractères (sous-titres, descriptions, paragraphes, libellés, citation) changent.
 
-### 1. Backend — Extension de la table `subscriptions` (migration additive)
+## Fichier modifié
+- `src/pages/Index.tsx` (uniquement les textes)
 
-La table `subscriptions` existe déjà. On ne la recrée pas, on l'étend :
+## Textes réécrits (aperçu)
 
-- Ajouter colonnes : `trial_ends_at timestamptz`, `billing_cycle text` (`monthly` | `yearly`), `updated_at timestamptz`.
-- Étendre les valeurs possibles de `plan` : `trial`, `starter`, `standard`, `pro` (texte libre, aucune contrainte cassée).
-- Étendre `status` : `trial`, `active`, `expired`, `cancelled`.
+**Hero — sous-titre (l.129-130)**
+> Gagnez du temps chaque jour, évitez les erreurs coûteuses et pilotez toute votre agence depuis un seul écran. Optimum Immo réunit vos clients, vos biens, vos réservations et vos finances dans une plateforme pensée pour les agences immobilières guinéennes.
 
-**Provisionnement automatique de l'essai 14 jours :**
-- Modifier UNIQUEMENT le trigger `handle_new_user` (ou équivalent d'inscription) déjà en place, pour insérer à la création d'entreprise :
-  ```
-  plan='trial', status='trial', start_date=now(), trial_ends_at=now()+14 days, end_date=now()+14 days
-  ```
-- Fonction SQL `SECURITY DEFINER` : `get_subscription_state(_entreprise_id)` retournant `{ plan, status, is_trial, days_left, is_active, is_expired, features }` — source unique de vérité côté client.
-- Job `pg_cron` quotidien : passe `status='expired'` quand `end_date < now()` et crée une notification "Essai expiré" pour les admins.
-- Notifications automatiques (via table `notifications` existante) : J-7, J-3, J-1, J-0. Job `pg_cron` quotidien qui insère les notifications correspondantes (idempotent via clé unique `entreprise_id + type + jour`).
+**Stats band — labels (l.221, 233, 240, 248)**
+- « Agences qui nous font confiance »
+- « Biens gérés en toute sérénité »
+- « Factures émises sans effort »
+- « Disponibilité garantie »
 
-Grants + RLS déjà en place sur `subscriptions`, on conserve.
+**Bento — titre section (déjà pertinent, conservé)**
 
----
+**Tableau de bord unifié (l.287-290)**
+> Fini les tableurs éparpillés et les chiffres qui ne concordent jamais. Suivez vos revenus, vos dépenses, votre taux d'occupation et vos alertes en un seul coup d'œil — chaque décision s'appuie enfin sur des données fiables, mises à jour en temps réel.
 
-### 2. Frontend — Nouvelle page `/tarifs`
+**Clients centralisés (l.309-311)**
+> Retrouvez en quelques secondes l'historique complet de chaque client — contacts, réservations, paiements. Offrez un suivi professionnel qui fidélise et donne à votre agence une image irréprochable.
 
-Route publique + accessible depuis dashboard. Composants dans `src/pages/Tarifs.tsx` + `src/components/pricing/*` :
+**Facturation fluide (l.317-319)**
+> Générez vos factures en un clic, suivez les paiements en temps réel et éliminez les oublis qui pèsent sur votre trésorerie. Vous encaissez plus vite, sans stress administratif.
 
-- **En-tête** : titre, sous-titre, CTA "Commencer gratuitement".
-- **Switch Mensuel / Annuel 🔥** animé (Framer Motion), badge "Économisez 2 mois".
-- **3 cartes forfaits** (Starter / Standard [populaire, plus grande] / Pro) avec prix GNF, features, CTA. Données dans `src/lib/pricing/plans.ts` (source unique, facile à étendre : promos, codes promo, nouvelles features).
-- **Bandeau réassurance** 14 jours gratuits.
-- **Section "Pourquoi Optimum Immo"** : 8 cartes icônes (Lucide).
-- **FAQ** avec `Accordion` shadcn (8 questions fournies).
-- **Pied de section** : logos moyens de paiement (Orange Money, MTN, Visa, Mastercard, Virement — SVG/texte stylé) + CTA final.
+**Biens & galeries (l.325-328)**
+> Présentez vos biens sous leur meilleur jour : photos haute résolution, documents PDF, fiches détaillées. Chaque bien reste synchronisé avec ses réservations, plus aucune double location.
 
-Design : cohérent charte (lime green, gradients, `card-premium`, `mesh-gradient`, `FloatingParticles`), responsive mobile/tablette/desktop, animations `framer-motion`.
+**Réservations intelligentes (l.334-336)**
+> Gardez le contrôle total de votre planning. Calcul automatique du reste à payer, factures générées instantanément et disponibilités toujours à jour — vos équipes gagnent en clarté, vos clients en confiance.
 
-Ajouter lien "Tarifs" dans `Navbar` et sidebar (`DynamicSidebar`).
+**Tâches & équipe (l.342-344)**
+> Assignez, suivez et communiquez sans quitter la plateforme. Votre équipe avance ensemble, chaque responsabilité est claire, rien ne se perd.
 
----
+**Assistant IA (l.354-357)**
+> ImmoPilot devient le bras droit de votre agence : il répond à vos questions, analyse vos performances et suggère les bonnes actions à mener. Un copilote disponible 24/7, en français, connecté à toutes vos données.
 
-### 3. Hook `useSubscription` — enrichissement
+**Steps (l.34-50)**
+- 01 — « Créez votre espace » : « Ouvrez votre compte en moins de 2 minutes et importez vos clients, biens et historiques sans perdre un seul dossier. »
+- 02 — « Pilotez en temps réel » : « Retrouvez toute votre activité au même endroit : revenus, dépenses, réservations, tâches. Finies les informations éparpillées entre plusieurs outils. »
+- 03 — « Encaissez plus vite » : « Factures automatiques, relances intelligentes, paiements suivis. Votre trésorerie respire et vos revenus rentrent à temps. »
 
-Étendre `src/hooks/useSubscription.tsx` pour exposer :
-- `isTrial`, `trialDaysLeft`, `trialEndsAt`
-- `isBlocked` (essai expiré + aucun plan payant actif)
-- `canUse(feature)` — check features par plan (`ai_assistant`, `unlimited_factures`, `messaging`, etc.) défini dans `src/lib/pricing/features.ts`.
+**How it works — intro (l.380-382)**
+> De l'inscription à votre première facture encaissée, Optimum Immo vous accompagne pas à pas — sans formation technique, sans complication.
 
-Basé sur la RPC `get_subscription_state` pour éviter la logique côté client dispersée.
+**Benefits (l.52-57)**
+- Gagnez du temps — « Automatisez les tâches répétitives et consacrez votre énergie à développer votre agence. »
+- Économisez — « Réduisez les erreurs, les oublis et les coûts cachés qui rongent vos marges. »
+- Centralisez — « Toutes vos données au même endroit, accessibles à tout moment, sécurisées en permanence. »
+- Distinguez-vous — « Offrez à vos clients une expérience à la hauteur des plus grandes agences internationales. »
 
----
+**Pricing — sous-titre (l.464-466)**
+> Testez toutes les fonctionnalités pendant 14 jours, sans carte bancaire et sans engagement. Choisissez ensuite le forfait qui accompagne la croissance de votre agence.
 
-### 4. Carte Essai sur le Dashboard
+**Testimonial (l.504-505)** — conservé (déjà orienté bénéfice).
 
-Nouveau composant `src/components/dashboard/TrialCard.tsx` :
-- Visible uniquement si `isTrial`.
-- 🎁 Essai gratuit, "Il vous reste X jours", barre de progression (`Progress` shadcn), bouton "Voir les abonnements" → `/tarifs`.
-- Discret, intégré au layout dashboard existant sans modifier les autres blocs.
+**Final CTA (l.541-543)**
+> Rejoignez les agences immobilières guinéennes qui ont choisi la clarté, la sérénité et un outil moderne pour développer sereinement leur activité.
 
----
+## Ce qui ne change pas
+- Aucune structure JSX, aucune classe CSS, aucune animation, aucune icône, aucune image.
+- Aucun titre déjà pertinent (H1 hero, titres de sections, boutons CTA « 14 jours d'essai gratuits », « Découvrir la plateforme », « Créer mon compte », « J'ai déjà un compte »).
+- Aucun composant importé, aucun hook, aucune logique métier.
 
-### 5. Blocage post-essai (non intrusif)
-
-Nouveau composant `src/components/SubscriptionGate.tsx` (wrapper léger, style `PermissionGate` déjà existant) :
-- Si `isBlocked`, remplace le contenu enfant par une carte "Votre essai est terminé — Choisissez un forfait" + CTA `/tarifs`.
-- Appliqué uniquement autour des **boutons d'action de création** dans : `BienDialog` trigger, `ReservationDialog` trigger, `FactureDialog` trigger, `AIChatBot`.
-- **Aucune modification** de la logique des dialogs eux-mêmes, ni des Edge Functions, ni des tables métier. Les données restent 100 % consultables.
-
-Modal automatique "Essai terminé" affichée une fois par session sur le dashboard si `isBlocked`.
-
----
-
-### 6. Page choix de forfait post-essai
-
-Sur `/tarifs`, quand `isBlocked=true`, afficher un bandeau haut de page "Votre essai est terminé". Les CTA des cartes appellent une fonction `selectPlan(plan, cycle)` qui :
-- Enregistre l'intention dans `subscriptions` (`plan`, `billing_cycle`, `status='pending_payment'`).
-- Affiche une modale "Paiement à venir — contactez-nous / Orange Money / etc." (aucun Stripe conformément à la mémoire projet).
-
-Le paiement effectif reste manuel comme aujourd'hui — le plan pose les rails pour l'ajouter plus tard sans refactor.
-
----
-
-### Détails techniques
-
-**Fichiers créés**
-- `supabase/migrations/<ts>_subscriptions_trial.sql`
-- `src/pages/Tarifs.tsx`
-- `src/components/pricing/PlanCard.tsx`, `BillingToggle.tsx`, `ReassuranceBanner.tsx`, `WhyOptimum.tsx`, `PricingFAQ.tsx`, `PaymentMethodsStrip.tsx`
-- `src/components/dashboard/TrialCard.tsx`
-- `src/components/SubscriptionGate.tsx`
-- `src/lib/pricing/plans.ts`, `src/lib/pricing/features.ts`
-
-**Fichiers modifiés (minimal)**
-- `src/App.tsx` — route `/tarifs`
-- `src/hooks/useSubscription.tsx` — enrichissement via nouvelle RPC
-- `src/pages/Dashboard.tsx` — insertion `<TrialCard />`
-- `src/components/Navbar.tsx`, `src/components/DynamicSidebar.tsx` — lien "Tarifs"
-- Wrappers `SubscriptionGate` autour des 4 CTA création (biens, réservations, factures, chatbot)
-
-**Non modifié** : Edge Functions, tables métier, logique clients/biens/réservations/factures/revenus/dépenses/permissions/chatbot, RLS existant.
-
-**Architecture évolutive** : ajout futur d'un plan / promo = édition de `plans.ts` + éventuelle colonne `promo_code` ; ajout d'une feature Premium = édition de `features.ts` + wrap `SubscriptionGate feature="x"`.
+## Validation
+Après application : relecture du fichier pour confirmer qu'aucune balise, className, import ou logique n'a changé, uniquement les chaînes littérales.
