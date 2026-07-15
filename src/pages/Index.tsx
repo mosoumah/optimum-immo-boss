@@ -477,9 +477,6 @@ const Index = () => {
               Testez toutes les fonctionnalités pendant 14 jours, sans carte bancaire et sans
               engagement. Choisissez ensuite le forfait qui accompagne la croissance de votre agence.
             </p>
-            <div className="mt-8 flex justify-center">
-              <BillingToggle value={billingCycle} onChange={setBillingCycle} />
-            </div>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 max-w-6xl mx-auto items-stretch">
