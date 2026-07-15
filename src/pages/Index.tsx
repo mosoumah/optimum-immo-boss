@@ -140,7 +140,7 @@ const Index = () => {
                 to="/inscription"
                 className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 font-medium shadow-[0_0_0_1px_hsl(var(--primary)),0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_0_0_1px_hsl(var(--primary)),0_20px_60px_-10px_hsl(var(--primary)/0.8)] transition-all duration-300"
               >
-                Démarrer gratuitement
+                14 jours d'essai gratuits
                 <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
               <a
@@ -447,7 +447,7 @@ const Index = () => {
       </section>
 
       {/* ============== PRICING ============== */}
-      <section id="pricing" className="py-12 sm:py-20 border-t border-white/5 relative overflow-hidden">
+      <section id="pricing" className="py-10 sm:py-14 border-t border-white/5 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/5 blur-[140px] rounded-full pointer-events-none" />
         <div className="container mx-auto px-4 sm:px-6 relative">
           <motion.div
@@ -490,7 +490,7 @@ const Index = () => {
 
 
       {/* ============== TESTIMONIAL ============== */}
-      <section className="py-14 sm:py-20 border-t border-white/5 relative overflow-hidden">
+      <section className="py-10 sm:py-14 border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
         <div className="container mx-auto px-6 relative">
           <motion.blockquote
@@ -512,7 +512,7 @@ const Index = () => {
       </section>
 
       {/* ============== FINAL CTA ============== */}
-      <section className="py-12 sm:py-20">
+      <section className="py-10 sm:py-14">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
