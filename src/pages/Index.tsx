@@ -504,7 +504,7 @@ const Index = () => {
       <TestimonialsSection />
 
       {/* ============== FINAL CTA ============== */}
-      <section className="py-12 sm:py-16">
+      <section className="pt-4 pb-6 sm:pt-6 sm:pb-8">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
