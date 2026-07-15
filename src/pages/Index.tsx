@@ -275,14 +275,6 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 sm:gap-5 auto-rows-[minmax(180px,auto)]">
             {/* Big: Dashboard */}
             <BentoCard className="md:col-span-4 md:row-span-2 min-h-[360px]" index={0}>
-              {/* Premium edge-to-edge background image */}
-              <div
-                aria-hidden
-                className="absolute -inset-6 sm:-inset-8 bg-cover bg-center opacity-80 transition-opacity duration-700 group-hover:opacity-95"
-                style={{ backgroundImage: `url(${dashboardBg.url})` }}
-              />
-              <div aria-hidden className="absolute -inset-6 sm:-inset-8 bg-gradient-to-br from-background/55 via-background/20 to-transparent" />
-              <div aria-hidden className="absolute -inset-6 sm:-inset-8 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
               <div className="flex flex-col h-full relative">
 
                 <div className="flex items-start justify-between">
