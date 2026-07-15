@@ -26,6 +26,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
+import dashboardBg from "@/assets/dashboard-bg.png.asset.json";
 
 const dashboardPreviewHostedUrl = `https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app${dashboardPreview.url}`;
 
@@ -274,7 +275,16 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 sm:gap-5 auto-rows-[minmax(180px,auto)]">
             {/* Big: Dashboard */}
             <BentoCard className="md:col-span-4 md:row-span-2 min-h-[360px]" index={0}>
-              <div className="flex flex-col h-full">
+              {/* Premium background image */}
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-cover bg-center opacity-40 transition-opacity duration-700 group-hover:opacity-55"
+                style={{ backgroundImage: `url(${dashboardBg.url})` }}
+              />
+              <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/60 to-background/30" />
+              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+              <div className="flex flex-col h-full relative">
+
                 <div className="flex items-start justify-between">
                   <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                     <BarChart3 className="w-5 h-5 text-primary" />
