@@ -24,9 +24,6 @@ export const BillingToggle = ({ value, onChange }: Props) => {
           )}
           <span className={`relative ${value === cycle ? "text-primary-foreground" : "text-muted-foreground"}`}>
             {cycle === "monthly" ? "Mensuel" : "Annuel"}
-            {cycle === "yearly" && (
-              <span className="ml-1.5 text-xs">🔥</span>
-            )}
           </span>
         </button>
       ))}
