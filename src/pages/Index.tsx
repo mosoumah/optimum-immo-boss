@@ -447,7 +447,7 @@ const Index = () => {
       </section>
 
       {/* ============== PRICING ============== */}
-      <section id="pricing" className="py-12 sm:py-20 border-t border-white/5 relative overflow-hidden">
+      <section id="pricing" className="py-10 sm:py-14 border-t border-white/5 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/5 blur-[140px] rounded-full pointer-events-none" />
         <div className="container mx-auto px-4 sm:px-6 relative">
           <motion.div
