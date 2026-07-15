@@ -26,6 +26,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
+import dashboardBg from "@/assets/dashboard-bg.png.asset.json";
 
 const dashboardPreviewHostedUrl = `https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app${dashboardPreview.url}`;
 
