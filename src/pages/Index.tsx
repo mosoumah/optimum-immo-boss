@@ -490,7 +490,7 @@ const Index = () => {
 
 
       {/* ============== TESTIMONIAL ============== */}
-      <section className="py-14 sm:py-20 border-t border-white/5 relative overflow-hidden">
+      <section className="py-10 sm:py-14 border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
         <div className="container mx-auto px-6 relative">
           <motion.blockquote
