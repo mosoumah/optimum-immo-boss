@@ -515,47 +515,49 @@ const Index = () => {
             <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(212,255,58,0.08)_1px,transparent_0)] [background-size:32px_32px] opacity-50" />
 
-            <div className="relative px-6 sm:px-12 md:px-20 py-12 sm:py-16 text-center">
+            <div className="relative px-6 sm:px-12 md:px-20 py-8 sm:py-10 text-center">
               <motion.div
                 initial={{ scale: 0, rotate: -20 }}
                 whileInView={{ scale: 1, rotate: 0 }}
                 viewport={{ once: true }}
                 transition={{ type: "spring", stiffness: 180, damping: 14 }}
-                className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-primary/30 bg-primary/10 mb-8"
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-primary/30 bg-primary/10 mb-5"
               >
-                <Building2 className="w-7 h-7 text-primary" />
+                <Building2 className="w-6 h-6 text-primary" />
               </motion.div>
 
-              <h2 className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05] max-w-3xl mx-auto">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl tracking-tight leading-[1.05] max-w-3xl mx-auto">
                 Prêt à transformer{" "}
                 <span className="italic text-primary">votre agence</span> ?
               </h2>
-              <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
+              <p className="mt-4 text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
                 Rejoignez les agences immobilières guinéennes qui ont choisi la clarté, la sérénité
                 et un outil moderne pour développer sereinement leur activité.
               </p>
 
-              <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+              <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
                 <Link
                   to="/inscription"
-                  className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-4 font-medium shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.9)] transition-all"
+                  className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-3.5 font-medium shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.9)] transition-all"
                 >
-                  Créer mon compte
+                  14 jours d'essai gratuits
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
                   to="/connexion"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-8 py-4 font-medium hover:bg-white/[0.05] hover:border-white/20 transition-all"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-8 py-3.5 font-medium hover:bg-white/[0.05] hover:border-white/20 transition-all"
                 >
                   J'ai déjà un compte
                 </Link>
               </div>
 
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-primary" /> Données sécurisées</span>
                 <span className="inline-flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> Mise en route immédiate</span>
                 <span className="inline-flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-primary" /> IA incluse</span>
               </div>
+            </div>
+
             </div>
           </motion.div>
         </div>
