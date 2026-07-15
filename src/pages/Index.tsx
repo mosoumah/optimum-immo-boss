@@ -277,14 +277,38 @@ const Index = () => {
             {/* Big: Dashboard */}
             <BentoCard className="md:col-span-4 md:row-span-2 min-h-[360px]" index={0}>
               <div className="flex flex-col h-full relative">
+                {/* Premium background image */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+                  style={{ backgroundImage: `url(${dashboardHeroBg.url})` }}
+                />
+                {/* Overlays: dark tint, radial vignette, subtle green halo, inner shadow */}
+                <div aria-hidden className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl bg-black/55 pointer-events-none z-0" />
+                <div
+                  aria-hidden
+                  className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl pointer-events-none z-0"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at 30% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.7) 100%)",
+                  }}
+                />
+                <div
+                  aria-hidden
+                  className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl pointer-events-none z-0 backdrop-blur-[2px]"
+                  style={{
+                    boxShadow:
+                      "inset 0 0 80px 10px rgba(0,0,0,0.55), inset 0 0 140px -20px hsl(var(--primary) / 0.18)",
+                  }}
+                />
 
-                <div className="flex items-start justify-between">
-                  <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <div className="relative z-10 flex items-start justify-between">
+                  <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center backdrop-blur-sm">
                     <BarChart3 className="w-5 h-5 text-primary" />
                   </div>
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Temps réel</span>
                 </div>
-                <div className="mt-auto">
+                <div className="relative z-10 mt-auto">
                   <h3 className="font-display text-3xl sm:text-4xl tracking-tight">
                     Tableau de bord <span className="italic text-primary">unifié</span>
                   </h3>
@@ -294,17 +318,6 @@ const Index = () => {
                     chaque décision s'appuie enfin sur des données fiables, mises à jour en temps réel.
                   </p>
                 </div>
-                {/* Decorative mini chart */}
-                <svg className="absolute right-6 bottom-6 opacity-60" width="200" height="80" viewBox="0 0 200 80" fill="none">
-                  <path d="M0 60 L30 50 L60 55 L90 30 L120 35 L150 15 L180 25 L200 10" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" />
-                  <path d="M0 60 L30 50 L60 55 L90 30 L120 35 L150 15 L180 25 L200 10 L200 80 L0 80 Z" fill="url(#g1)" opacity="0.3" />
-                  <defs>
-                    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
               </div>
             </BentoCard>
 
