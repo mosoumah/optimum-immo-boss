@@ -140,7 +140,7 @@ const Index = () => {
                 to="/inscription"
                 className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 font-medium shadow-[0_0_0_1px_hsl(var(--primary)),0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_0_0_1px_hsl(var(--primary)),0_20px_60px_-10px_hsl(var(--primary)/0.8)] transition-all duration-300"
               >
-                Démarrer gratuitement
+                14 jours d'essai gratuits
                 <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
               <a
