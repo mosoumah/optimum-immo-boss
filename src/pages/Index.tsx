@@ -374,7 +374,7 @@ const Index = () => {
       </section>
 
       {/* ============== HOW IT WORKS ============== */}
-      <section id="how" className="py-12 sm:py-20 border-t border-white/5">
+      <section id="how" className="py-12 sm:py-16 border-t border-white/5">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-12 gap-10 md:gap-16">
             <motion.div
@@ -422,7 +422,7 @@ const Index = () => {
       </section>
 
       {/* ============== BENEFITS ============== */}
-      <section id="benefits" className="py-12 sm:py-20 border-t border-white/5">
+      <section id="benefits" className="py-12 sm:py-16 border-t border-white/5">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -459,7 +459,7 @@ const Index = () => {
       </section>
 
       {/* ============== PRICING ============== */}
-      <section id="pricing" className="py-10 sm:py-14 border-t border-white/5 relative overflow-hidden">
+      <section id="pricing" className="py-12 sm:py-16 border-t border-white/5 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/5 blur-[140px] rounded-full pointer-events-none" />
         <div className="container mx-auto px-4 sm:px-6 relative">
           <motion.div
@@ -500,7 +500,7 @@ const Index = () => {
 
 
       {/* ============== TESTIMONIAL ============== */}
-      <section className="py-10 sm:py-14 border-t border-white/5 relative overflow-hidden">
+      <section className="py-12 sm:py-16 border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
         <div className="container mx-auto px-6 relative">
           <motion.blockquote
@@ -522,7 +522,7 @@ const Index = () => {
       </section>
 
       {/* ============== FINAL CTA ============== */}
-      <section className="py-10 sm:py-14">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
