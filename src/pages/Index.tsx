@@ -25,6 +25,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 
 const dashboardPreviewHostedUrl = `https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app${dashboardPreview.url}`;
@@ -499,27 +500,8 @@ const Index = () => {
 
 
 
-      {/* ============== TESTIMONIAL ============== */}
-      <section className="py-12 sm:py-16 border-t border-white/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
-        <div className="container mx-auto px-6 relative">
-          <motion.blockquote
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-4xl mx-auto text-center"
-          >
-            <div className="font-display text-5xl text-primary leading-none mb-6">"</div>
-            <p className="font-display italic text-3xl sm:text-4xl md:text-5xl tracking-tight leading-[1.15] text-foreground/95">
-              Avant Optimum, je passais mes soirées sur Excel. Aujourd'hui, je gère trois fois
-              plus de biens, avec deux fois moins de stress.
-            </p>
-            <footer className="mt-10 text-sm text-muted-foreground">
-              <span className="text-foreground font-medium">Mariama Bah</span> — Directrice, Conakry Estates
-            </footer>
-          </motion.blockquote>
-        </div>
-      </section>
+      {/* ============== TESTIMONIALS ============== */}
+      <TestimonialsSection />
 
       {/* ============== FINAL CTA ============== */}
       <section className="py-12 sm:py-16">
