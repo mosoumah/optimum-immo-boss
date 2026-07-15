@@ -275,51 +275,62 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 sm:gap-5 auto-rows-[minmax(180px,auto)]">
             {/* Big: Dashboard */}
-            <BentoCard className="md:col-span-4 md:row-span-2 min-h-[360px]" index={0}>
-              <div className="flex flex-col h-full relative">
-                {/* Premium background image */}
-                <div
-                  aria-hidden
-                  className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl bg-cover bg-center bg-no-repeat pointer-events-none z-0"
-                  style={{ backgroundImage: `url(${dashboardHeroBg.url})` }}
-                />
-                {/* Overlays: dark tint, radial vignette, subtle green halo, inner shadow */}
-                <div aria-hidden className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl bg-black/55 pointer-events-none z-0" />
-                <div
-                  aria-hidden
-                  className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl pointer-events-none z-0"
-                  style={{
-                    background:
-                      "radial-gradient(ellipse at 30% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.7) 100%)",
-                  }}
-                />
-                <div
-                  aria-hidden
-                  className="absolute inset-0 -m-6 sm:-m-8 rounded-3xl pointer-events-none z-0 backdrop-blur-[2px]"
-                  style={{
-                    boxShadow:
-                      "inset 0 0 80px 10px rgba(0,0,0,0.55), inset 0 0 140px -20px hsl(var(--primary) / 0.18)",
-                  }}
-                />
+            {/* Big: Dashboard — custom card with premium background image */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="group relative overflow-hidden rounded-3xl border border-white/[0.08] p-6 sm:p-8 hover:border-primary/30 transition-all duration-500 md:col-span-4 md:row-span-2 min-h-[360px] isolate"
+            >
+              {/* Background image */}
+              <img
+                src={dashboardHeroBg.url}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
+              />
+              {/* Overlays */}
+              <div aria-hidden className="absolute inset-0 bg-black/55 pointer-events-none -z-10" />
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none -z-10"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at 30% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.7) 100%)",
+                }}
+              />
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none -z-10"
+                style={{
+                  boxShadow:
+                    "inset 0 0 80px 10px rgba(0,0,0,0.55), inset 0 0 140px -20px hsl(var(--primary) / 0.18)",
+                }}
+              />
 
-                <div className="relative z-10 flex items-start justify-between">
+              <div className="relative flex flex-col h-full">
+                <div className="flex items-start justify-between">
                   <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center backdrop-blur-sm">
                     <BarChart3 className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Temps réel</span>
+                  <span className="text-[10px] uppercase tracking-wider text-white/70">Temps réel</span>
                 </div>
-                <div className="relative z-10 mt-auto">
-                  <h3 className="font-display text-3xl sm:text-4xl tracking-tight">
+                <div className="mt-auto pt-8">
+                  <h3 className="font-display text-3xl sm:text-4xl tracking-tight text-white">
                     Tableau de bord <span className="italic text-primary">unifié</span>
                   </h3>
-                  <p className="mt-3 text-sm text-muted-foreground max-w-md leading-relaxed">
+                  <p className="mt-3 text-sm text-white/80 max-w-md leading-relaxed">
                     Fini les tableurs éparpillés et les chiffres qui ne concordent jamais. Suivez vos
                     revenus, vos dépenses, votre taux d'occupation et vos alertes en un seul coup d'œil —
                     chaque décision s'appuie enfin sur des données fiables, mises à jour en temps réel.
                   </p>
                 </div>
               </div>
-            </BentoCard>
+            </motion.div>
+
 
             <BentoCard className="md:col-span-2" index={1}>
               <Icon icon={Users} />
