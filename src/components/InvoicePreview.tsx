@@ -21,7 +21,18 @@ interface InvoicePreviewProps {
   } | null;
   aiContent: string;
   logoDataUrl?: string | null;
+  editable?: boolean;
 }
+
+// Props for editable inline text (attributes only, styling via CSS below)
+const ep = (editable: boolean, field: string) =>
+  editable
+    ? {
+        contentEditable: true,
+        suppressContentEditableWarning: true,
+        "data-field": field,
+      }
+    : {};
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
@@ -56,7 +67,7 @@ const darkenColor = (hexColor: string, percent: number): string => {
 };
 
 export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
-  ({ entreprise, facture, aiContent, logoDataUrl }, ref) => {
+  ({ entreprise, facture, aiContent, logoDataUrl, editable = false }, ref) => {
     if (!facture || !entreprise) return null;
 
     const logoSrc = logoDataUrl || entreprise.logo;
@@ -87,6 +98,19 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           fontFamily: "'Georgia', 'Times New Roman', serif"
         }}
       >
+        {editable && (
+          <style>{`
+            [data-field] {
+              outline: 1px dashed rgba(59,130,246,0.55);
+              outline-offset: 3px;
+              border-radius: 2px;
+              cursor: text;
+              transition: outline-color 0.15s;
+            }
+            [data-field]:hover { outline-color: rgba(59,130,246,0.9); }
+            [data-field]:focus { outline: 2px solid rgba(59,130,246,1); background: rgba(59,130,246,0.05); }
+          `}</style>
+        )}
         {/* Left Premium Lateral Accent */}
         <div 
           className="absolute left-0 top-0 bottom-0 w-2"
@@ -134,6 +158,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <p 
                   className="text-xs font-medium uppercase tracking-[0.3em] mb-2"
                   style={{ color: accentColor }}
+                  {...ep(editable, "tagline")}
                 >
                   Agence Immobilière
                 </p>
@@ -143,6 +168,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     color: primaryColor,
                     fontFamily: "'Georgia', serif"
                   }}
+                  {...ep(editable, "ent-nom")}
                 >
                   {entreprise.nom}
                 </h1>
@@ -151,18 +177,18 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}
                 />
                 <div className="text-sm" style={{ color: "#5a5a5a" }}>
-                  {entreprise.adresse && (
-                    <p className="mb-1">{entreprise.adresse}</p>
+                  {(entreprise.adresse || editable) && (
+                    <p className="mb-1" {...ep(editable, "ent-adresse")}>{entreprise.adresse || (editable ? "Adresse" : "")}</p>
                   )}
                   <p className="flex items-center gap-3 flex-wrap text-xs">
-                    {entreprise.telephone && (
+                    {(entreprise.telephone || editable) && (
                       <span className="flex items-center gap-1">
-                        <span style={{ color: primaryColor }}>✆</span> {entreprise.telephone}
+                        <span style={{ color: primaryColor }}>✆</span> <span {...ep(editable, "ent-telephone")}>{entreprise.telephone || (editable ? "Téléphone" : "")}</span>
                       </span>
                     )}
-                    {entreprise.email && (
+                    {(entreprise.email || editable) && (
                       <span className="flex items-center gap-1">
-                        <span style={{ color: primaryColor }}>✉</span> {entreprise.email}
+                        <span style={{ color: primaryColor }}>✉</span> <span {...ep(editable, "ent-email")}>{entreprise.email || (editable ? "Email" : "")}</span>
                       </span>
                     )}
                   </p>
@@ -190,6 +216,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <h2 
                   className="text-xl sm:text-2xl font-bold tracking-[0.18em] sm:tracking-[0.25em] relative z-10"
                   style={{ color: primaryTextColor }}
+                  {...ep(editable, "label-facture")}
                 >
                   FACTURE
                 </h2>
@@ -198,15 +225,17 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <p 
                   className="font-bold text-sm tracking-wide"
                   style={{ color: primaryColor }}
+                  {...ep(editable, "numero")}
                 >
                   N° FAC-{facture.id.substring(0, 8).toUpperCase()}
                 </p>
-                <p className="text-xs mt-2" style={{ color: "#666" }}>
+                <p className="text-xs mt-2" style={{ color: "#666" }} {...ep(editable, "date-emise")}>
                   Émise le {formatDate(facture.date)}
                 </p>
               </div>
             </div>
           </div>
+
 
           {/* Elegant Separator */}
           <div className="flex items-center gap-4 mb-8">
@@ -244,6 +273,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               <h3 
                 className="text-xs font-bold uppercase tracking-[0.25em] mb-3"
                 style={{ color: primaryColor }}
+                {...ep(editable, "label-destinataire")}
               >
                 Destinataire
               </h3>
@@ -253,6 +283,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   color: primaryColor,
                   fontFamily: "'Georgia', serif"
                 }}
+                {...ep(editable, "client-nom")}
               >
                 {facture.clients?.nom || "Client"}
               </p>
@@ -261,17 +292,18 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 style={{ background: accentColor }}
               />
               <div className="text-sm" style={{ color: "#666" }}>
-                {facture.clients?.telephone && (
+                {(facture.clients?.telephone || editable) && (
                   <p className="mb-1">
-                    <span style={{ color: primaryColor }}>✆</span> {facture.clients.telephone}
+                    <span style={{ color: primaryColor }}>✆</span> <span {...ep(editable, "client-telephone")}>{facture.clients?.telephone || (editable ? "Téléphone" : "")}</span>
                   </p>
                 )}
-                {facture.clients?.email && (
+                {(facture.clients?.email || editable) && (
                   <p>
-                    <span style={{ color: primaryColor }}>✉</span> {facture.clients.email}
+                    <span style={{ color: primaryColor }}>✉</span> <span {...ep(editable, "client-email")}>{facture.clients?.email || (editable ? "Email" : "")}</span>
                   </p>
                 )}
               </div>
+
             </div>
           </div>
 
@@ -294,12 +326,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     <th 
                       className="text-left p-5 font-bold text-sm uppercase tracking-[0.2em]"
                       style={{ color: primaryTextColor }}
+                      {...ep(editable, "label-designation")}
                     >
                       Désignation du Service
                     </th>
                     <th 
                       className="text-right p-5 font-bold text-sm uppercase tracking-[0.2em] w-44"
                       style={{ color: primaryTextColor }}
+                      {...ep(editable, "label-montant")}
                     >
                       Montant HT
                     </th>
@@ -311,16 +345,18 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                       <p 
                         className="text-base font-medium mb-1"
                         style={{ color: "#333" }}
+                        {...ep(editable, "description")}
                       >
                         {facture.description || "Prestation de conseil immobilier"}
                       </p>
-                      <p className="text-xs" style={{ color: "#888" }}>
+                      <p className="text-xs" style={{ color: "#888" }} {...ep(editable, "description-sub")}>
                         Prestation réalisée conformément aux termes convenus
                       </p>
                     </td>
                     <td 
                       className="p-5 text-right font-bold text-lg"
                       style={{ color: primaryColor }}
+                      {...ep(editable, "montant")}
                     >
                       {formatCurrency(facture.montant)}
                     </td>
@@ -347,12 +383,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     <span 
                       className="font-bold text-sm uppercase tracking-[0.2em] block"
                       style={{ color: accentTextColor }}
+                      {...ep(editable, "label-total")}
                     >
                       Montant Total à Régler
                     </span>
                     <span 
                       className="text-xs mt-2 block opacity-80"
                       style={{ color: accentTextColor }}
+                      {...ep(editable, "label-total-sub")}
                     >
                       Net à payer — Arrêté à la somme indiquée ci-contre
                     </span>
@@ -363,12 +401,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                       color: accentTextColor,
                       textShadow: `0 2px 4px ${darkenColor(accentColor, 0.3)}40`
                     }}
+                    {...ep(editable, "montant-total")}
                   >
                     {formatCurrency(facture.montant)}
                   </span>
                 </div>
               </div>
             </div>
+
           </div>
 
           {/* AI Generated Content - Premium Section */}
@@ -419,6 +459,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   <h3 
                     className="text-sm font-bold uppercase tracking-[0.3em] mb-4"
                     style={{ color: primaryColor }}
+                    {...ep(editable, "label-detail")}
                   >
                     Détail de la Prestation
                   </h3>
@@ -430,23 +471,29 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     className="text-base leading-loose relative z-10"
                     style={{ 
                       color: "#444",
-                      fontFamily: "'Georgia', serif"
+                      fontFamily: "'Georgia', serif",
+                      whiteSpace: editable ? "pre-wrap" : undefined,
+                      textAlign: "justify",
                     }}
+                    {...ep(editable, "ai-content")}
                   >
-                    {aiContent.split('\n').map((line, idx) => {
-                      const cleanLine = line.replace(/^[\s•\-*]+/, '').trim();
-                      if (!cleanLine) return <div key={idx} className="h-4" />;
-                      return (
-                        <p 
-                          key={idx} 
-                          className="mb-4 last:mb-0"
-                          style={{ textAlign: "justify" }}
-                        >
-                          {cleanLine}
-                        </p>
-                      );
-                    })}
+                    {editable
+                      ? aiContent
+                      : aiContent.split('\n').map((line, idx) => {
+                          const cleanLine = line.replace(/^[\s•\-*]+/, '').trim();
+                          if (!cleanLine) return <div key={idx} className="h-4" />;
+                          return (
+                            <p 
+                              key={idx} 
+                              className="mb-4 last:mb-0"
+                              style={{ textAlign: "justify" }}
+                            >
+                              {cleanLine}
+                            </p>
+                          );
+                        })}
                   </div>
+
                 </div>
               </div>
             </>
@@ -463,6 +510,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <h4 
                   className="font-bold uppercase text-sm tracking-[0.2em] mb-4"
                   style={{ color: primaryColor }}
+                  {...ep(editable, "label-modalites")}
                 >
                   Modalités de Règlement
                 </h4>
@@ -474,13 +522,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   className="text-sm leading-relaxed"
                   style={{ color: "#555" }}
                 >
-                  <p className="mb-3">
+                  <p className="mb-3" {...ep(editable, "modalites-1")}>
                     Le règlement est attendu sous <strong style={{ color: primaryColor }}>trente (30) jours</strong> à 
                     compter de la date d'émission de la présente facture.
                   </p>
                   <p 
                     className="italic text-sm"
                     style={{ color: accentColor }}
+                    {...ep(editable, "modalites-2")}
                   >
                     Nous vous remercions pour votre confiance et restons à votre entière disposition 
                     pour tout renseignement complémentaire.
@@ -495,17 +544,20 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   <p 
                     className="text-[10px] uppercase tracking-wider"
                     style={{ color: "#999" }}
+                    {...ep(editable, "mention-legale")}
                   >
                     Document original faisant foi pour toutes fins légales et comptables
                   </p>
                 </div>
               </div>
+
               
               {/* Signature Area */}
               <div className="w-full sm:w-auto text-center">
                 <p 
                   className="text-xs uppercase tracking-[0.2em] font-bold mb-3"
                   style={{ color: primaryColor }}
+                  {...ep(editable, "label-signature")}
                 >
                   Signature & Cachet
                 </p>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2, Pencil } from "lucide-react";
+import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2, Pencil, Save, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,6 +74,8 @@ const Factures = () => {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+  const [isEditingPreview, setIsEditingPreview] = useState(false);
+  const [isSavingEdits, setIsSavingEdits] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const { loading: permissionsLoading } = usePermissions();
 
@@ -222,6 +224,114 @@ const Factures = () => {
       setGeneratingId(null);
     }
   };
+
+  const savePreviewEdits = async () => {
+    if (!invoiceRef.current || !previewFacture) return;
+
+    const canModify = await checkPermission("modifier_facture");
+    if (!canModify) {
+      toast.error("Vous n'avez pas la permission de modifier les factures");
+      return;
+    }
+
+    setIsSavingEdits(true);
+    try {
+      const root = invoiceRef.current;
+      const getVal = (field: string) => {
+        const el = root.querySelector(`[data-field="${field}"]`) as HTMLElement | null;
+        return el ? (el.innerText || "").trim() : null;
+      };
+
+      const parseAmount = (s: string | null) => {
+        if (!s) return null;
+        const digits = s.replace(/[^\d]/g, "");
+        return digits ? parseFloat(digits) : null;
+      };
+
+      const description = getVal("description");
+      const montantStr = getVal("montant");
+      const montant = parseAmount(montantStr);
+      const clientNom = getVal("client-nom");
+      const clientTel = getVal("client-telephone");
+      const clientEmail = getVal("client-email");
+      const entNom = getVal("ent-nom");
+      const entAdresse = getVal("ent-adresse");
+      const entTel = getVal("ent-telephone");
+      const entEmail = getVal("ent-email");
+      const aiText = getVal("ai-content");
+
+      // Update facture
+      const factureUpdate: Record<string, unknown> = {};
+      if (description !== null) factureUpdate.description = description;
+      if (montant !== null && montant > 0) factureUpdate.montant = montant;
+      if (Object.keys(factureUpdate).length) {
+        const { error } = await supabase.from("factures").update(factureUpdate).eq("id", previewFacture.id);
+        if (error) throw error;
+      }
+
+      // Update client
+      if (previewFacture.client_id) {
+        const clientUpdate: Record<string, unknown> = {};
+        if (clientNom) clientUpdate.nom = clientNom;
+        if (clientTel !== null) clientUpdate.telephone = clientTel || null;
+        if (clientEmail !== null) clientUpdate.email = clientEmail || null;
+        if (Object.keys(clientUpdate).length) {
+          const { error } = await supabase.from("clients").update(clientUpdate).eq("id", previewFacture.client_id);
+          if (error) throw error;
+        }
+      }
+
+      // Update entreprise
+      if (entrepriseId) {
+        const entUpdate: Record<string, unknown> = {};
+        if (entNom) entUpdate.nom = entNom;
+        if (entAdresse !== null) entUpdate.adresse = entAdresse || null;
+        if (entTel !== null) entUpdate.telephone = entTel || null;
+        if (entEmail !== null) entUpdate.email = entEmail || null;
+        if (Object.keys(entUpdate).length) {
+          const { error } = await supabase.from("entreprises").update(entUpdate).eq("id", entrepriseId);
+          if (error) throw error;
+        }
+      }
+
+      // Refresh local state so preview updates immediately
+      const newFacture: Facture = {
+        ...previewFacture,
+        description: description ?? previewFacture.description,
+        montant: montant ?? previewFacture.montant,
+        clients: previewFacture.clients
+          ? {
+              nom: clientNom || previewFacture.clients.nom,
+              telephone: clientTel !== null ? clientTel || null : previewFacture.clients.telephone,
+              email: clientEmail !== null ? clientEmail || null : previewFacture.clients.email,
+            }
+          : previewFacture.clients,
+      };
+      setPreviewFacture(newFacture);
+      if (aiText !== null) setPreviewContent(aiText);
+      setEntreprise((prev) =>
+        prev
+          ? {
+              ...prev,
+              nom: entNom || prev.nom,
+              adresse: entAdresse !== null ? entAdresse || null : prev.adresse,
+              telephone: entTel !== null ? entTel || null : prev.telephone,
+              email: entEmail !== null ? entEmail || null : prev.email,
+            }
+          : prev,
+      );
+
+      toast.success("Facture mise à jour");
+      setIsEditingPreview(false);
+      fetchFactures();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la sauvegarde");
+    } finally {
+      setIsSavingEdits(false);
+    }
+  };
+
 
   const downloadAsPdf = async () => {
     if (!previewFacture || !entreprise) return;
@@ -841,45 +951,73 @@ const Factures = () => {
         />
       )}
 
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+      <Dialog open={previewOpen} onOpenChange={(o) => { setPreviewOpen(o); if (!o) setIsEditingPreview(false); }}>
         <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-auto p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               <FileText className="w-5 h-5" />
               Aperçu de la facture
+              {isEditingPreview && (
+                <span className="text-xs font-normal text-primary ml-2">
+                  ✏️ Mode édition — cliquez sur n'importe quel texte pour le modifier
+                </span>
+              )}
             </DialogTitle>
           </DialogHeader>
 
           <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
             <InvoicePreview
+              key={`${previewFacture?.id}-${isEditingPreview}`}
               ref={invoiceRef}
               entreprise={entreprise}
               facture={previewFacture}
               aiContent={previewContent}
               logoDataUrl={logoDataUrl}
+              editable={isEditingPreview}
             />
           </div>
 
           <div className="flex flex-wrap justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setPreviewOpen(false)} className="flex-1 sm:flex-none">
-              Fermer
-            </Button>
-            <Button variant="outline" onClick={handlePrint} className="flex-1 sm:flex-none">
-              <Printer className="w-4 h-4 mr-2" />
-              Imprimer
-            </Button>
-            <Button variant="outline" onClick={downloadAsHtml} className="flex-1 sm:flex-none">
-              <Download className="w-4 h-4 mr-2" />
-              HTML
-            </Button>
-            <Button onClick={downloadAsPdf} disabled={isDownloadingPdf} className="flex-1 sm:flex-none">
-              {isDownloadingPdf ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4 mr-2" />
-              )}
-              PDF
-            </Button>
+            {isEditingPreview ? (
+              <>
+                <Button variant="outline" onClick={() => setIsEditingPreview(false)} disabled={isSavingEdits} className="flex-1 sm:flex-none">
+                  <X className="w-4 h-4 mr-2" />
+                  Annuler
+                </Button>
+                <Button onClick={savePreviewEdits} disabled={isSavingEdits} className="flex-1 sm:flex-none">
+                  {isSavingEdits ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  Enregistrer
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setPreviewOpen(false)} className="flex-1 sm:flex-none">
+                  Fermer
+                </Button>
+                <PermissionGate permission="modifier_facture">
+                  <Button variant="outline" onClick={() => setIsEditingPreview(true)} className="flex-1 sm:flex-none">
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Éditer
+                  </Button>
+                </PermissionGate>
+                <Button variant="outline" onClick={handlePrint} className="flex-1 sm:flex-none">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimer
+                </Button>
+                <Button variant="outline" onClick={downloadAsHtml} className="flex-1 sm:flex-none">
+                  <Download className="w-4 h-4 mr-2" />
+                  HTML
+                </Button>
+                <Button onClick={downloadAsPdf} disabled={isDownloadingPdf} className="flex-1 sm:flex-none">
+                  {isDownloadingPdf ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  PDF
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
