@@ -87,7 +87,8 @@ const Factures = () => {
       .from("factures")
       .select("*, clients(nom, telephone, email)")
       .eq("entreprise_id", entrepriseId)
-      .order("date", { ascending: false });
+      .order("date", { ascending: false })
+      .order("created_at", { ascending: false });
 
     setFactures(data || []);
     setIsLoading(false);

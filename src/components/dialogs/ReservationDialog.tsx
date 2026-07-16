@@ -206,7 +206,11 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <Label>Bien</Label>
             <Select value={form.property_id} onValueChange={(v) => {
               const selected = properties.find(p => p.id === v);
-              setForm({ ...form, property_id: v, prix_unitaire: selected?.prix ? selected.prix.toString() : form.prix_unitaire });
+              // Only auto-fill price for daily rentals; hourly price must be entered manually
+              const nextPrix = form.type_location === "jour" && selected?.prix
+                ? selected.prix.toString()
+                : form.prix_unitaire;
+              setForm({ ...form, property_id: v, prix_unitaire: nextPrix });
             }}>
               <SelectTrigger><SelectValue placeholder="Sélectionner un bien" /></SelectTrigger>
               <SelectContent>
@@ -220,7 +224,21 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <Label>Type de location *</Label>
             <Select
               value={form.type_location}
-              onValueChange={(v) => setForm({ ...form, type_location: v, nombre_heures: v === "heure" ? form.nombre_heures : "" })}
+              onValueChange={(v) => {
+                if (v === "heure") {
+                  // Reset price so user enters hourly rate manually
+                  setForm({ ...form, type_location: v, prix_unitaire: "" });
+                } else {
+                  // Switching back to daily: auto-fill from selected property if available
+                  const selected = properties.find(p => p.id === form.property_id);
+                  setForm({
+                    ...form,
+                    type_location: v,
+                    nombre_heures: "",
+                    prix_unitaire: selected?.prix ? selected.prix.toString() : form.prix_unitaire,
+                  });
+                }
+              }}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
