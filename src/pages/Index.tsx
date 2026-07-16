@@ -26,6 +26,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { FAQSection } from "@/components/landing/FAQSection";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 import dashboardHeroBg from "@/assets/dashboard-hero-bg.webp";
 
@@ -530,6 +531,9 @@ const Index = () => {
 
       {/* ============== TESTIMONIALS ============== */}
       <TestimonialsSection />
+
+      {/* ============== FAQ ============== */}
+      <FAQSection />
 
       {/* ============== FINAL CTA ============== */}
       <section className="pt-4 pb-6 sm:pt-6 sm:pb-8">
