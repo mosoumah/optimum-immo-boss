@@ -532,6 +532,9 @@ const Index = () => {
       {/* ============== TESTIMONIALS ============== */}
       <TestimonialsSection />
 
+      {/* ============== FAQ ============== */}
+      <FAQSection />
+
       {/* ============== FINAL CTA ============== */}
       <section className="pt-4 pb-6 sm:pt-6 sm:pb-8">
         <div className="container mx-auto px-4 sm:px-6">
