@@ -718,7 +718,7 @@ const Factures = () => {
             transition={{ delay: 0.1 }}
             className="flex justify-end mb-6"
           >
-            <Button onClick={() => setDialogOpen(true)} className="premium-button">
+            <Button onClick={() => { setEditingFacture(null); setDialogOpen(true); }} className="premium-button">
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle facture
             </Button>
