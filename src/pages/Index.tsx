@@ -27,7 +27,7 @@ import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
-import dashboardHeroBg from "@/assets/dashboard-hero-bg.png.asset.json";
+import dashboardHeroBg from "@/assets/dashboard-hero-bg.webp";
 
 const dashboardPreviewHostedUrl = `https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app${dashboardPreview.url}`;
 
@@ -285,7 +285,7 @@ const Index = () => {
             >
               {/* Background image — sharp, loads early */}
               <img
-                src={dashboardHeroBg.url}
+                src={dashboardHeroBg}
                 alt=""
                 aria-hidden
                 loading="eager"
