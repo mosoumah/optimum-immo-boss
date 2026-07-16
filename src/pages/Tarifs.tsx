@@ -149,7 +149,7 @@ const Tarifs = () => {
         </section>
 
         {/* PAYMENTS + FINAL CTA */}
-        <section className="px-4 pb-24">
+        <section className="px-4 pb-8">
           <div className="max-w-5xl mx-auto">
             <PaymentMethodsStrip />
           </div>
