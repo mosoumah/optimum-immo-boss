@@ -5,6 +5,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ShieldX, RefreshCw, LogOut } from "lucide-react";
+import { TrialExpiredGate } from "@/components/TrialExpiredGate";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -137,5 +138,5 @@ export const RoleProtectedRoute = ({
     return <Navigate to={redirectTo} replace />;
   }
 
-  return <>{children}</>;
+  return <TrialExpiredGate>{children}</TrialExpiredGate>;
 };
