@@ -74,6 +74,8 @@ const Factures = () => {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+  const [isEditingPreview, setIsEditingPreview] = useState(false);
+  const [isSavingEdits, setIsSavingEdits] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const { loading: permissionsLoading } = usePermissions();
 
