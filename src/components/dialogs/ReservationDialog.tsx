@@ -230,9 +230,26 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             </Select>
           </div>
           {isHeure ? (
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Date *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value, date_depart: e.target.value })} /></div>
-              <div><Label>Nombre d'heures *</Label><Input type="number" min="0" step="0.5" value={form.nombre_heures} onChange={(e) => setForm({ ...form, nombre_heures: e.target.value })} /></div>
+            <div>
+              <Label>Nombre d'heures *</Label>
+              <Select
+                value={form.nombre_heures}
+                onValueChange={(v) => {
+                  const today = new Date();
+                  const y = today.getFullYear();
+                  const m = String(today.getMonth() + 1).padStart(2, "0");
+                  const d = String(today.getDate()).padStart(2, "0");
+                  const todayStr = form.date_arrivee || `${y}-${m}-${d}`;
+                  setForm({ ...form, nombre_heures: v, date_arrivee: todayStr, date_depart: todayStr });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Sélectionner la durée" /></SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24].map((h) => (
+                    <SelectItem key={h} value={h.toString()}>{h} heure{h > 1 ? "s" : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           ) : (
             <>
