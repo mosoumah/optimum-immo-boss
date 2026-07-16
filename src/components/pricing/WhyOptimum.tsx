@@ -15,8 +15,8 @@ const items = [
 export const WhyOptimum = () => (
   <div>
     <div className="text-center mb-10">
-      <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3">
-        Pourquoi choisir <span className="text-gradient">Optimum Immo</span> ?
+      <h2 className="font-display text-3xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05] mb-4">
+        Pourquoi choisir <span className="italic text-primary">Optimum Immo</span> ?
       </h2>
       <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
         Une solution pensée pour la réalité des agences immobilières guinéennes.
