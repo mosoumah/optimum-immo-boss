@@ -152,6 +152,8 @@ const Tarifs = () => {
         <section className="px-4 pb-24">
           <div className="max-w-5xl mx-auto">
             <PaymentMethodsStrip />
+          </div>
+          <div className="max-w-7xl mx-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
               whileInView={{ opacity: 1, scale: 1 }}
