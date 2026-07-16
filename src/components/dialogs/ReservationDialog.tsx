@@ -36,6 +36,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     type_location: "jour",
     date_arrivee: "",
     date_depart: "",
+    nombre_heures: "",
     prix_unitaire: "",
     montant_paye: "",
     caution: "",
