@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2, Pencil } from "lucide-react";
+import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2, Pencil, Save, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
