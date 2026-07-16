@@ -766,6 +766,15 @@ const Factures = () => {
                           <CheckCircle className="w-4 h-4" />
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setEditingFacture(facture); setDialogOpen(true); }}
+                        className="h-8 w-8"
+                        title="Modifier la facture"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
                     </PermissionGate>
                     <PermissionGate permission="generer_pdf_facture">
                       <Button
