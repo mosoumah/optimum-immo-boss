@@ -595,17 +595,10 @@ const Abonnement = () => {
                     { label: "Total factures (4 sem.)", value: totalF, tone: "text-primary", bg: "from-primary/15 to-primary/0" },
                     { label: "Total réservations (4 sem.)", value: totalR, tone: "text-info", bg: "from-info/15 to-info/0" },
                     { label: "Moyenne factures/sem.", value: avgF, sub: `${avgR} résa/sem.`, tone: "text-foreground", bg: "from-muted/40 to-muted/0" },
-                    {
-                      label: "Factures vs sem. précédente",
-                      value: `${deltaF >= 0 ? "+" : ""}${deltaF}%`,
-                      tone: deltaF >= 0 ? "text-success" : "text-destructive",
-                      bg: deltaF >= 0 ? "from-success/15 to-success/0" : "from-destructive/15 to-destructive/0",
-                      icon: TrendingUp,
-                      delta: deltaF,
-                    },
                   ];
+                  void deltaF;
                   return (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 mb-6">
                       {stats.map((s) => (
                         <div
                           key={s.label}
@@ -614,10 +607,10 @@ const Abonnement = () => {
                           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                             {s.label}
                           </div>
-                          <div className={`text-xl font-bold mt-0.5 ${s.tone} flex items-center gap-1.5`}>
-                            {s.value}
-                            {s.icon && <s.icon className={`w-3.5 h-3.5 ${(s.delta ?? 0) < 0 ? "rotate-180" : ""}`} />}
-                          </div>
+                        <div className={`text-xl font-bold mt-0.5 ${s.tone}`}>
+                          {s.value}
+                        </div>
+
                           {s.sub && (
                             <div className="text-[10px] text-muted-foreground mt-0.5">{s.sub}</div>
                           )}
