@@ -39,6 +39,7 @@ import {
 
 interface Facture {
   id: string;
+  client_id: string | null;
   description: string | null;
   montant: number;
   statut: string;
