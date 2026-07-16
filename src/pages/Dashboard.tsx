@@ -39,7 +39,7 @@ import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummar
 import { SimpleDailyActivity } from "@/components/dashboard/SimpleDailyActivity";
 import { SimpleChart } from "@/components/dashboard/SimpleChart";
 import { QuickActionsFab } from "@/components/dashboard/QuickActionsFab";
-import { SubscriptionCard } from "@/components/dashboard/SubscriptionCard";
+import { TrialCard } from "@/components/dashboard/TrialCard";
 
 interface Profile {
   nom: string;
@@ -236,7 +236,7 @@ const Dashboard = () => {
 
           {/* Dashboard Content */}
           <div className="flex flex-col gap-4 sm:gap-1 flex-1 min-h-0">
-            <SubscriptionCard />
+            <TrialCard />
             {/* Ligne 1 - Résumé financier */}
             <div>
               {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
