@@ -161,8 +161,8 @@ const Tarifs = () => {
             >
               <div className="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.15),transparent_70%)]" />
               <div className="relative">
-                <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-6">
-                  Prêt à digitaliser votre <span className="text-gradient">agence immobilière</span> ?
+                <h2 className="font-display text-3xl sm:text-5xl tracking-tight leading-[1.05] mb-6">
+                  Prêt à digitaliser votre <span className="italic text-primary">agence immobilière</span> ?
                 </h2>
                 <Link to={user ? "/dashboard" : "/inscription"}>
                   <Button size="lg" className="rounded-xl font-semibold h-13 px-8 gap-2 shadow-lg shadow-primary/30">
