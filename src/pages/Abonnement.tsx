@@ -228,6 +228,21 @@ const Abonnement = () => {
     fetchData();
   }, [fetchData]);
 
+  // Realtime: refresh usage & weekly chart when underlying data changes
+  useEffect(() => {
+    if (!entrepriseId) return;
+    const channel = supabase
+      .channel(`abonnement-usage-${entrepriseId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "factures", filter: `entreprise_id=eq.${entrepriseId}` }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `entreprise_id=eq.${entrepriseId}` }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "properties", filter: `entreprise_id=eq.${entrepriseId}` }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `entreprise_id=eq.${entrepriseId}` }, () => fetchData())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [entrepriseId, fetchData]);
+
   if (entrepriseLoading || subLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
