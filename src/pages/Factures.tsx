@@ -66,6 +66,7 @@ const Factures = () => {
   const [factures, setFactures] = useState<Facture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingFacture, setEditingFacture] = useState<Facture | null>(null);
   const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState("");
