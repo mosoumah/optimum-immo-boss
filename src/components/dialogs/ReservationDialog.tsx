@@ -58,13 +58,18 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
 
   useEffect(() => {
     if (reservation) {
+      const isHeure = reservation.type_location === "heure";
+      const nbHeures = isHeure && reservation.prix_unitaire > 0
+        ? Math.round((Number(reservation.montant_total) / Number(reservation.prix_unitaire)) * 100) / 100
+        : 0;
       setForm({
         client_id: reservation.client_id || "",
         property_id: reservation.property_id || "",
         property_name: reservation.property_name || "",
-        type_location: "jour",
+        type_location: reservation.type_location || "jour",
         date_arrivee: reservation.date_arrivee || "",
         date_depart: reservation.date_depart || "",
+        nombre_heures: nbHeures ? nbHeures.toString() : "",
         prix_unitaire: reservation.prix_unitaire?.toString() || "",
         montant_paye: reservation.montant_paye?.toString() || "",
         caution: reservation.caution?.toString() || "",
@@ -73,24 +78,34 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         notes: reservation.notes || "",
       });
     } else {
-      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "en_attente", generer_facture: false, notes: "" });
+      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", nombre_heures: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "en_attente", generer_facture: false, notes: "" });
     }
   }, [reservation, open]);
 
+  const isHeure = form.type_location === "heure";
+
   const { montantTotal, unites, resteAPayer } = useMemo(() => {
+    const prix = parseFloat(form.prix_unitaire) || 0;
+    if (isHeure) {
+      const h = parseFloat(form.nombre_heures) || 0;
+      const total = h * prix;
+      const paye = parseFloat(form.montant_paye) || 0;
+      return { montantTotal: total, unites: h, resteAPayer: Math.max(total - paye, 0) };
+    }
     if (!form.date_arrivee || !form.date_depart || !form.prix_unitaire) return { montantTotal: 0, unites: 0, resteAPayer: 0 };
     const start = new Date(form.date_arrivee);
     const end = new Date(form.date_depart);
-    const prix = parseFloat(form.prix_unitaire) || 0;
     const units = Math.max(Math.abs(differenceInDays(end, start)), 1);
     const total = units * prix;
     const paye = parseFloat(form.montant_paye) || 0;
     return { montantTotal: total, unites: units, resteAPayer: Math.max(total - paye, 0) };
-  }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.montant_paye]);
+  }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.montant_paye, form.nombre_heures, isHeure]);
 
-  const datesInversees = form.date_arrivee && form.date_depart && new Date(form.date_depart) < new Date(form.date_arrivee);
-  const typeLabel = "jour";
-  const canCalculate = form.date_arrivee && form.date_depart && form.prix_unitaire;
+  const datesInversees = !isHeure && form.date_arrivee && form.date_depart && new Date(form.date_depart) < new Date(form.date_arrivee);
+  const typeLabel = isHeure ? "heure" : "jour";
+  const canCalculate = isHeure
+    ? !!(form.nombre_heures && form.prix_unitaire)
+    : !!(form.date_arrivee && form.date_depart && form.prix_unitaire);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
