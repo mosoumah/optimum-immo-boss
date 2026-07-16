@@ -48,7 +48,7 @@ const sidebarItems: SidebarItem[] = [
   
   { icon: UserCog, label: "Utilisateurs", path: "/utilisateurs", roles: ["admin"] },
   { icon: Shield, label: "Permissions", path: "/gestion-permissions", roles: ["admin"] },
-  { icon: Sparkles, label: "Abonnement", path: "/tarifs", roles: ["admin"] },
+  { icon: Sparkles, label: "Abonnement", path: "/abonnement", roles: ["admin"] },
 ];
 
 interface DynamicSidebarProps {

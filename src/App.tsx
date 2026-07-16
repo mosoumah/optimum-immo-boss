@@ -27,6 +27,7 @@ import Taches from "./pages/Taches";
 import Parametres from "./pages/Parametres";
 import Utilisateurs from "./pages/Utilisateurs";
 import GestionPermissions from "./pages/GestionPermissions";
+import Abonnement from "./pages/Abonnement";
 
 import ResetPassword from "./pages/ResetPassword";
 import AcceptInvitation from "./pages/AcceptInvitation";
@@ -164,6 +165,14 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin"]}>
                   <GestionPermissions />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/abonnement"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin"]}>
+                  <Abonnement />
                 </RoleProtectedRoute>
               }
             />
