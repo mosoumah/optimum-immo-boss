@@ -39,7 +39,7 @@ import { SimpleFinanceSummary } from "@/components/dashboard/SimpleFinanceSummar
 import { SimpleDailyActivity } from "@/components/dashboard/SimpleDailyActivity";
 import { SimpleChart } from "@/components/dashboard/SimpleChart";
 import { QuickActionsFab } from "@/components/dashboard/QuickActionsFab";
-import { TrialCard } from "@/components/dashboard/TrialCard";
+
 
 interface Profile {
   nom: string;
