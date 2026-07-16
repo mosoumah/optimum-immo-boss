@@ -21,7 +21,26 @@ interface InvoicePreviewProps {
   } | null;
   aiContent: string;
   logoDataUrl?: string | null;
+  editable?: boolean;
 }
+
+// Props for editable inline text
+const editableProps = (editable: boolean, field: string) =>
+  editable
+    ? {
+        contentEditable: true,
+        suppressContentEditableWarning: true,
+        "data-field": field,
+        style: {
+          outline: "1px dashed rgba(59,130,246,0.5)",
+          outlineOffset: "2px",
+          borderRadius: "2px",
+          cursor: "text",
+          minWidth: "20px",
+          display: "inline-block",
+        } as React.CSSProperties,
+      }
+    : {};
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("fr-GN").format(amount) + " GNF";
