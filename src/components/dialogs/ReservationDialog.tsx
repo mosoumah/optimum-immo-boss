@@ -126,7 +126,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       property_name: selectedProperty?.nom || form.property_name || "—",
       type_location: form.type_location,
       date_arrivee: form.date_arrivee,
-      date_depart: form.date_depart,
+      date_depart: isHeure ? (form.date_depart || form.date_arrivee) : form.date_depart,
       prix_unitaire: parseFloat(form.prix_unitaire) || 0,
       montant_total: montantTotal,
       montant_paye: parseFloat(form.montant_paye) || 0,
