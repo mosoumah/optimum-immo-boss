@@ -510,6 +510,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <h4 
                   className="font-bold uppercase text-sm tracking-[0.2em] mb-4"
                   style={{ color: primaryColor }}
+                  {...ep(editable, "label-modalites")}
                 >
                   Modalités de Règlement
                 </h4>
@@ -521,13 +522,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   className="text-sm leading-relaxed"
                   style={{ color: "#555" }}
                 >
-                  <p className="mb-3">
+                  <p className="mb-3" {...ep(editable, "modalites-1")}>
                     Le règlement est attendu sous <strong style={{ color: primaryColor }}>trente (30) jours</strong> à 
                     compter de la date d'émission de la présente facture.
                   </p>
                   <p 
                     className="italic text-sm"
                     style={{ color: accentColor }}
+                    {...ep(editable, "modalites-2")}
                   >
                     Nous vous remercions pour votre confiance et restons à votre entière disposition 
                     pour tout renseignement complémentaire.
@@ -542,11 +544,13 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   <p 
                     className="text-[10px] uppercase tracking-wider"
                     style={{ color: "#999" }}
+                    {...ep(editable, "mention-legale")}
                   >
                     Document original faisant foi pour toutes fins légales et comptables
                   </p>
                 </div>
               </div>
+
               
               {/* Signature Area */}
               <div className="w-full sm:w-auto text-center">
