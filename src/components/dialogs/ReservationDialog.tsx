@@ -160,11 +160,14 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       const resteDesc = paye > 0 && paye < montantTotal
         ? ` | Payé: ${formatCurrency(paye)} — Reste: ${formatCurrency(montantTotal - paye)}`
         : "";
+      const periode = isHeure
+        ? `le ${form.date_arrivee} — ${unites} heure${unites > 1 ? "s" : ""} × ${formatCurrency(parseFloat(form.prix_unitaire))}`
+        : `du ${form.date_arrivee} au ${form.date_depart}`;
       const { error: factureError } = await supabase.from("factures").insert({
         client_id: form.client_id,
         entreprise_id: entrepriseId,
         montant: montantTotal,
-        description: `Location ${propertyName} du ${form.date_arrivee} au ${form.date_depart}${resteDesc}`,
+        description: `Location ${propertyName} ${periode}${resteDesc}`,
         date: new Date().toISOString().split("T")[0],
         reservation_id: newReservationId,
       });
