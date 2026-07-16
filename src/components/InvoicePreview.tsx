@@ -459,6 +459,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   <h3 
                     className="text-sm font-bold uppercase tracking-[0.3em] mb-4"
                     style={{ color: primaryColor }}
+                    {...ep(editable, "label-detail")}
                   >
                     Détail de la Prestation
                   </h3>
@@ -470,23 +471,29 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     className="text-base leading-loose relative z-10"
                     style={{ 
                       color: "#444",
-                      fontFamily: "'Georgia', serif"
+                      fontFamily: "'Georgia', serif",
+                      whiteSpace: editable ? "pre-wrap" : undefined,
+                      textAlign: "justify",
                     }}
+                    {...ep(editable, "ai-content")}
                   >
-                    {aiContent.split('\n').map((line, idx) => {
-                      const cleanLine = line.replace(/^[\s•\-*]+/, '').trim();
-                      if (!cleanLine) return <div key={idx} className="h-4" />;
-                      return (
-                        <p 
-                          key={idx} 
-                          className="mb-4 last:mb-0"
-                          style={{ textAlign: "justify" }}
-                        >
-                          {cleanLine}
-                        </p>
-                      );
-                    })}
+                    {editable
+                      ? aiContent
+                      : aiContent.split('\n').map((line, idx) => {
+                          const cleanLine = line.replace(/^[\s•\-*]+/, '').trim();
+                          if (!cleanLine) return <div key={idx} className="h-4" />;
+                          return (
+                            <p 
+                              key={idx} 
+                              className="mb-4 last:mb-0"
+                              style={{ textAlign: "justify" }}
+                            >
+                              {cleanLine}
+                            </p>
+                          );
+                        })}
                   </div>
+
                 </div>
               </div>
             </>
