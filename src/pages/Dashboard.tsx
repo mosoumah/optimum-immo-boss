@@ -236,7 +236,7 @@ const Dashboard = () => {
 
           {/* Dashboard Content */}
           <div className="flex flex-col gap-4 sm:gap-1 flex-1 min-h-0">
-            <TrialCard />
+
             {/* Ligne 1 - Résumé financier */}
             <div>
               {dashboardData.simple && <SimpleFinanceSummary data={dashboardData.simple} />}
