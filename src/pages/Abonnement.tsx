@@ -11,17 +11,16 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowUpRight,
-  Users,
   Receipt,
-  Building,
   CalendarCheck,
-  Infinity as InfinityIcon,
+  TrendingUp,
+  TrendingDown,
+  ShieldCheck,
 } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -35,18 +34,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLANS, formatGNF, type PlanId } from "@/lib/pricing/plans";
-
-interface PlanLimits {
-  users: number | null; // null = illimité
-  factures: number | null;
-}
-
-const PLAN_LIMITS: Record<PlanId | "trial", PlanLimits> = {
-  trial: { users: null, factures: null },
-  starter: { users: 2, factures: 100 },
-  standard: { users: 5, factures: 500 },
-  pro: { users: null, factures: null },
-};
 
 const PLAN_ICON: Record<string, typeof Rocket> = {
   trial: Sparkles,
@@ -62,13 +49,27 @@ const PLAN_LABEL: Record<string, string> = {
   pro: "Pro",
 };
 
-interface Usage {
-  users: number;
-  facturesMois: number;
-  biens: number;
-  reservationsMois: number;
-  clients: number;
+interface WeekRow {
+  label: string;
+  range: string;
+  factures: number;
+  reservations: number;
+  revenus: number;
+  depenses: number;
+  isCurrent: boolean;
 }
+
+const startOfWeek = (d: Date) => {
+  const day = d.getDay();
+  const diff = (day + 6) % 7; // Monday as first day
+  const res = new Date(d);
+  res.setHours(0, 0, 0, 0);
+  res.setDate(res.getDate() - diff);
+  return res;
+};
+
+const fmtDay = (d: Date) =>
+  d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
 
 const Abonnement = () => {
   const { signOut } = useAuth();
@@ -85,7 +86,7 @@ const Abonnement = () => {
     isLoading: subLoading,
   } = useSubscription();
 
-  const [usage, setUsage] = useState<Usage | null>(null);
+  const [weeks, setWeeks] = useState<WeekRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const handleSignOut = async () => {
@@ -93,56 +94,106 @@ const Abonnement = () => {
     navigate("/");
   };
 
-  const fetchUsage = useCallback(async () => {
+  const fetchWeeks = useCallback(async () => {
     if (!entrepriseId) return;
     setLoading(true);
 
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-    const iso = startOfMonth.toISOString();
+    const now = new Date();
+    const currentWeekStart = startOfWeek(now);
+    // 4 weeks: this week + 3 previous
+    const weekStarts: Date[] = [];
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(currentWeekStart);
+      d.setDate(d.getDate() - i * 7);
+      weekStarts.push(d);
+    }
+    const rangeStart = weekStarts[0];
+    const rangeEnd = new Date(currentWeekStart);
+    rangeEnd.setDate(rangeEnd.getDate() + 7);
 
-    const [usersRes, facturesRes, biensRes, reservationsRes, clientsRes] =
+    const isoStart = rangeStart.toISOString();
+    const isoEnd = rangeEnd.toISOString();
+
+    const [facturesRes, reservationsRes, revenusRes, depensesRes] =
       await Promise.all([
         supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true })
-          .eq("entreprise_id", entrepriseId),
-        supabase
           .from("factures")
-          .select("id", { count: "exact", head: true })
+          .select("created_at")
           .eq("entreprise_id", entrepriseId)
-          .gte("created_at", iso),
-        supabase
-          .from("properties")
-          .select("id", { count: "exact", head: true })
-          .eq("entreprise_id", entrepriseId),
+          .gte("created_at", isoStart)
+          .lt("created_at", isoEnd),
         supabase
           .from("reservations")
-          .select("id", { count: "exact", head: true })
+          .select("created_at")
           .eq("entreprise_id", entrepriseId)
-          .gte("created_at", iso),
+          .gte("created_at", isoStart)
+          .lt("created_at", isoEnd),
         supabase
-          .from("clients")
-          .select("id", { count: "exact", head: true })
-          .eq("entreprise_id", entrepriseId),
+          .from("revenus")
+          .select("date,montant")
+          .eq("entreprise_id", entrepriseId)
+          .gte("date", rangeStart.toISOString().slice(0, 10))
+          .lt("date", rangeEnd.toISOString().slice(0, 10)),
+        supabase
+          .from("depenses")
+          .select("date,montant")
+          .eq("entreprise_id", entrepriseId)
+          .gte("date", rangeStart.toISOString().slice(0, 10))
+          .lt("date", rangeEnd.toISOString().slice(0, 10)),
       ]);
 
-    setUsage({
-      users: usersRes.count ?? 0,
-      facturesMois: facturesRes.count ?? 0,
-      biens: biensRes.count ?? 0,
-      reservationsMois: reservationsRes.count ?? 0,
-      clients: clientsRes.count ?? 0,
+    const bucket = (d: Date) => {
+      for (let i = weekStarts.length - 1; i >= 0; i--) {
+        if (d >= weekStarts[i]) return i;
+      }
+      return -1;
+    };
+
+    const rows: WeekRow[] = weekStarts.map((ws, i) => {
+      const we = new Date(ws);
+      we.setDate(we.getDate() + 6);
+      const isCurrent = i === weekStarts.length - 1;
+      return {
+        label: isCurrent
+          ? "Cette semaine"
+          : i === weekStarts.length - 2
+            ? "Semaine dernière"
+            : `Il y a ${weekStarts.length - 1 - i} semaines`,
+        range: `${fmtDay(ws)} — ${fmtDay(we)}`,
+        factures: 0,
+        reservations: 0,
+        revenus: 0,
+        depenses: 0,
+        isCurrent,
+      };
     });
+
+    (facturesRes.data ?? []).forEach((r) => {
+      const idx = bucket(new Date(r.created_at));
+      if (idx >= 0) rows[idx].factures += 1;
+    });
+    (reservationsRes.data ?? []).forEach((r) => {
+      const idx = bucket(new Date(r.created_at));
+      if (idx >= 0) rows[idx].reservations += 1;
+    });
+    (revenusRes.data ?? []).forEach((r) => {
+      const idx = bucket(new Date(r.date));
+      if (idx >= 0) rows[idx].revenus += Number(r.montant) || 0;
+    });
+    (depensesRes.data ?? []).forEach((r) => {
+      const idx = bucket(new Date(r.date));
+      if (idx >= 0) rows[idx].depenses += Number(r.montant) || 0;
+    });
+
+    setWeeks(rows);
     setLoading(false);
   }, [entrepriseId]);
 
   useEffect(() => {
-    fetchUsage();
-  }, [fetchUsage]);
+    fetchWeeks();
+  }, [fetchWeeks]);
 
-  if (entrepriseLoading || subLoading || loading || !usage) {
+  if (entrepriseLoading || subLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -150,54 +201,19 @@ const Abonnement = () => {
     );
   }
 
-  const limits = PLAN_LIMITS[(plan as PlanId) ?? "trial"] ?? PLAN_LIMITS.trial;
   const PlanIcon = PLAN_ICON[plan] ?? Sparkles;
   const planLabel = PLAN_LABEL[plan] ?? plan;
-  const planData = PLANS.find((p) => p.id === plan);
+  const planData = PLANS.find((p) => p.id === (plan as PlanId));
 
-  const formatQuota = (used: number, limit: number | null) =>
-    limit === null ? `${used} / ∞` : `${used} / ${limit}`;
-
-  const percent = (used: number, limit: number | null) =>
-    limit === null ? 0 : Math.min(100, Math.round((used / limit) * 100));
-
-  const rows = [
-    {
-      icon: Users,
-      label: "Utilisateurs actifs",
-      used: usage.users,
-      limit: limits.users,
-      period: "Total",
-    },
-    {
-      icon: Receipt,
-      label: "Factures ce mois-ci",
-      used: usage.facturesMois,
-      limit: limits.factures,
-      period: "Mensuel",
-    },
-    {
-      icon: Building,
-      label: "Biens gérés",
-      used: usage.biens,
-      limit: null,
-      period: "Illimité",
-    },
-    {
-      icon: CalendarCheck,
-      label: "Réservations ce mois-ci",
-      used: usage.reservationsMois,
-      limit: null,
-      period: "Illimité",
-    },
-    {
-      icon: Users,
-      label: "Clients enregistrés",
-      used: usage.clients,
-      limit: null,
-      period: "Illimité",
-    },
-  ];
+  const totals = weeks.reduce(
+    (a, w) => ({
+      factures: a.factures + w.factures,
+      reservations: a.reservations + w.reservations,
+      revenus: a.revenus + w.revenus,
+      depenses: a.depenses + w.depenses,
+    }),
+    { factures: 0, reservations: 0, revenus: 0, depenses: 0 },
+  );
 
   return (
     <div className="min-h-screen flex relative overflow-x-hidden">
@@ -221,7 +237,7 @@ const Abonnement = () => {
               <div className="flex-1">
                 <h1 className="text-3xl font-bold">Mon abonnement</h1>
                 <p className="text-muted-foreground">
-                  Suivez votre forfait et votre consommation en temps réel
+                  Suivez votre forfait et votre consommation hebdomadaire
                 </p>
               </div>
               <Link to="/tarifs">
@@ -231,6 +247,32 @@ const Abonnement = () => {
                 </Button>
               </Link>
             </motion.div>
+
+            {/* Trial expired banner */}
+            {isExpired && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-2xl border border-destructive/40 bg-destructive/5 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+              >
+                <div className="w-12 h-12 rounded-xl bg-destructive/10 border border-destructive/30 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-destructive" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-destructive mb-1">
+                    Votre essai gratuit est terminé
+                  </h3>
+                  <p className="text-sm text-muted-foreground flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    Passez à un forfait payant pour continuer. Toutes vos données
+                    sont conservées et réapparaîtront dès le paiement effectué.
+                  </p>
+                </div>
+                <Link to="/tarifs">
+                  <Button className="rounded-xl">Choisir un forfait</Button>
+                </Link>
+              </motion.div>
+            )}
 
             {/* Current Plan Card */}
             <motion.div
@@ -248,7 +290,7 @@ const Abonnement = () => {
                   <div>
                     <div className="text-sm text-muted-foreground">Forfait actuel</div>
                     <div className="text-2xl font-bold">{planLabel}</div>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {isExpired ? (
                         <Badge variant="destructive" className="gap-1">
                           <AlertTriangle className="w-3 h-3" /> Expiré
@@ -305,18 +347,18 @@ const Abonnement = () => {
               </div>
             </motion.div>
 
-            {/* Usage Table */}
+            {/* Weekly Usage Table */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="rounded-2xl border border-border/50 premium-card overflow-hidden"
             >
-              <div className="p-5 border-b border-border/50 flex items-center justify-between">
+              <div className="p-5 border-b border-border/50 flex items-center justify-between flex-wrap gap-3">
                 <div>
-                  <h2 className="text-lg font-bold">Consommation en temps réel</h2>
+                  <h2 className="text-lg font-bold">Consommation hebdomadaire</h2>
                   <p className="text-sm text-muted-foreground">
-                    Aperçu de votre usage par rapport aux limites de votre forfait
+                    Vue détaillée de votre activité sur les 4 dernières semaines
                   </p>
                 </div>
                 <Badge variant="outline" className="hidden sm:inline-flex">
@@ -324,80 +366,89 @@ const Abonnement = () => {
                 </Badge>
               </div>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Ressource</TableHead>
-                    <TableHead>Période</TableHead>
-                    <TableHead>Utilisé / Limite</TableHead>
-                    <TableHead className="w-[35%]">Progression</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((r) => {
-                    const p = percent(r.used, r.limit);
-                    const over = r.limit !== null && r.used >= r.limit;
-                    const warn = r.limit !== null && p >= 80 && !over;
-                    return (
-                      <TableRow key={r.label}>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Semaine</TableHead>
+                      <TableHead className="text-center">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Receipt className="w-3.5 h-3.5" /> Factures
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-center">
+                        <span className="inline-flex items-center gap-1.5">
+                          <CalendarCheck className="w-3.5 h-3.5" /> Réservations
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1.5">
+                          <TrendingUp className="w-3.5 h-3.5 text-primary" /> Revenus
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1.5">
+                          <TrendingDown className="w-3.5 h-3.5 text-destructive" /> Dépenses
+                        </span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {weeks.map((w) => (
+                      <TableRow
+                        key={w.range}
+                        className={w.isCurrent ? "bg-primary/5" : ""}
+                      >
                         <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                              <r.icon className="w-4 h-4 text-primary" />
-                            </div>
-                            <span className="font-medium">{r.label}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium flex items-center gap-2">
+                              {w.label}
+                              {w.isCurrent && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-primary/40 text-primary text-[10px] px-1.5 py-0"
+                                >
+                                  En cours
+                                </Badge>
+                              )}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {w.range}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">{r.period}</span>
+                        <TableCell className="text-center font-mono">
+                          {w.factures}
                         </TableCell>
-                        <TableCell>
-                          <span className="font-mono text-sm inline-flex items-center gap-1">
-                            {r.limit === null ? (
-                              <>
-                                {r.used} <InfinityIcon className="w-3.5 h-3.5 text-primary" />
-                              </>
-                            ) : (
-                              formatQuota(r.used, r.limit)
-                            )}
-                          </span>
+                        <TableCell className="text-center font-mono">
+                          {w.reservations}
                         </TableCell>
-                        <TableCell>
-                          {r.limit === null ? (
-                            <div className="text-xs text-muted-foreground italic">Illimité</div>
-                          ) : (
-                            <div className="space-y-1">
-                              <Progress
-                                value={p}
-                                className={
-                                  over
-                                    ? "[&>div]:bg-destructive"
-                                    : warn
-                                      ? "[&>div]:bg-amber-500"
-                                      : ""
-                                }
-                              />
-                              <div
-                                className={`text-xs ${
-                                  over
-                                    ? "text-destructive"
-                                    : warn
-                                      ? "text-amber-500"
-                                      : "text-muted-foreground"
-                                }`}
-                              >
-                                {p}% utilisé
-                                {over && " — limite atteinte"}
-                                {warn && " — proche de la limite"}
-                              </div>
-                            </div>
-                          )}
+                        <TableCell className="text-right font-mono text-primary">
+                          {formatGNF(w.revenus)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-destructive/80">
+                          {formatGNF(w.depenses)}
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                    ))}
+                    <TableRow className="bg-muted/30 font-semibold">
+                      <TableCell>Total 4 semaines</TableCell>
+                      <TableCell className="text-center font-mono">
+                        {totals.factures}
+                      </TableCell>
+                      <TableCell className="text-center font-mono">
+                        {totals.reservations}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-primary">
+                        {formatGNF(totals.revenus)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-destructive/80">
+                        {formatGNF(totals.depenses)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </motion.div>
 
             {/* Plan features reminder */}
