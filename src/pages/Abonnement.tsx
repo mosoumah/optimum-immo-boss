@@ -580,26 +580,28 @@ const Abonnement = () => {
                   </div>
                 </div>
 
-                {/* Summary stats */}
+                {/* Summary stats — basé sur les données réelles */}
                 {(() => {
                   const totalF = weeks.reduce((s, w) => s + w.factures, 0);
                   const totalR = weeks.reduce((s, w) => s + w.reservations, 0);
-                  const avg = weeks.length ? ((totalF + totalR) / weeks.length).toFixed(1) : "0";
+                  const avgF = weeks.length ? (totalF / weeks.length).toFixed(1) : "0";
+                  const avgR = weeks.length ? (totalR / weeks.length).toFixed(1) : "0";
                   const last = weeks[weeks.length - 1];
                   const prev = weeks[weeks.length - 2];
-                  const lastTotal = (last?.factures ?? 0) + (last?.reservations ?? 0);
-                  const prevTotal = (prev?.factures ?? 0) + (prev?.reservations ?? 0);
-                  const delta = prevTotal === 0 ? (lastTotal > 0 ? 100 : 0) : Math.round(((lastTotal - prevTotal) / prevTotal) * 100);
+                  const lastF = last?.factures ?? 0;
+                  const prevF = prev?.factures ?? 0;
+                  const deltaF = prevF === 0 ? (lastF > 0 ? 100 : 0) : Math.round(((lastF - prevF) / prevF) * 100);
                   const stats = [
-                    { label: "Total factures", value: totalF, tone: "text-primary", bg: "from-primary/15 to-primary/0" },
-                    { label: "Total réservations", value: totalR, tone: "text-info", bg: "from-info/15 to-info/0" },
-                    { label: "Moyenne / semaine", value: avg, tone: "text-foreground", bg: "from-muted/40 to-muted/0" },
+                    { label: "Total factures (4 sem.)", value: totalF, tone: "text-primary", bg: "from-primary/15 to-primary/0" },
+                    { label: "Total réservations (4 sem.)", value: totalR, tone: "text-info", bg: "from-info/15 to-info/0" },
+                    { label: "Moyenne factures/sem.", value: avgF, sub: `${avgR} résa/sem.`, tone: "text-foreground", bg: "from-muted/40 to-muted/0" },
                     {
-                      label: "Évolution vs S-1",
-                      value: `${delta >= 0 ? "+" : ""}${delta}%`,
-                      tone: delta >= 0 ? "text-success" : "text-destructive",
-                      bg: delta >= 0 ? "from-success/15 to-success/0" : "from-destructive/15 to-destructive/0",
+                      label: "Factures vs sem. précédente",
+                      value: `${deltaF >= 0 ? "+" : ""}${deltaF}%`,
+                      tone: deltaF >= 0 ? "text-success" : "text-destructive",
+                      bg: deltaF >= 0 ? "from-success/15 to-success/0" : "from-destructive/15 to-destructive/0",
                       icon: TrendingUp,
+                      delta: deltaF,
                     },
                   ];
                   return (
@@ -614,8 +616,11 @@ const Abonnement = () => {
                           </div>
                           <div className={`text-xl font-bold mt-0.5 ${s.tone} flex items-center gap-1.5`}>
                             {s.value}
-                            {s.icon && <s.icon className={`w-3.5 h-3.5 ${delta < 0 ? "rotate-180" : ""}`} />}
+                            {s.icon && <s.icon className={`w-3.5 h-3.5 ${(s.delta ?? 0) < 0 ? "rotate-180" : ""}`} />}
                           </div>
+                          {s.sub && (
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{s.sub}</div>
+                          )}
                         </div>
                       ))}
                     </div>
