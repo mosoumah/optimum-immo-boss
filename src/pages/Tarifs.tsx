@@ -153,23 +153,56 @@ const Tarifs = () => {
           <div className="max-w-5xl mx-auto">
             <PaymentMethodsStrip />
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.97 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="mt-14 text-center rounded-3xl p-10 sm:p-14 border border-primary/30 bg-gradient-to-b from-primary/10 to-transparent relative overflow-hidden"
+              className="mt-14 relative rounded-[2rem] overflow-hidden border border-primary/30 bg-gradient-to-br from-card via-card/80 to-background"
             >
-              <div className="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.15),transparent_70%)]" />
-              <div className="relative">
-                <h2 className="font-display text-3xl sm:text-5xl tracking-tight leading-[1.05] mb-6">
-                  Prêt à digitaliser votre <span className="italic text-primary">agence immobilière</span> ?
+              <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(212,255,58,0.08)_1px,transparent_0)] [background-size:32px_32px] opacity-50" />
+
+              <div className="relative px-6 sm:px-12 md:px-20 py-12 sm:py-16 text-center">
+                <motion.div
+                  initial={{ scale: 0, rotate: -20 }}
+                  whileInView={{ scale: 1, rotate: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 180, damping: 14 }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-primary/30 bg-primary/10 mb-6"
+                >
+                  <Building2 className="w-7 h-7 text-primary" />
+                </motion.div>
+
+                <h2 className="font-display text-3xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05] max-w-3xl mx-auto">
+                  Prêt à transformer{" "}
+                  <span className="italic text-primary">votre agence</span> ?
                 </h2>
-                <Link to={user ? "/dashboard" : "/inscription"}>
-                  <Button size="lg" className="rounded-xl font-semibold h-13 px-8 gap-2 shadow-lg shadow-primary/30">
-                    Commencer mon essai gratuit de 14 jours
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
+                <p className="mt-5 text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
+                  Rejoignez les agences immobilières guinéennes qui ont choisi la clarté, la sérénité
+                  et un outil moderne pour développer sereinement leur activité.
+                </p>
+
+                <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+                  <Link
+                    to={user ? "/dashboard" : "/inscription"}
+                    className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-3.5 font-medium shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.9)] transition-all"
+                  >
+                    14 jours d'essai gratuits
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    to="/connexion"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-8 py-3.5 font-medium hover:bg-white/[0.05] hover:border-white/20 transition-all"
+                  >
+                    J'ai déjà un compte
+                  </Link>
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-primary" /> Données sécurisées</span>
+                  <span className="inline-flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> Mise en route immédiate</span>
+                  <span className="inline-flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-primary" /> IA incluse</span>
+                </div>
               </div>
             </motion.div>
           </div>
