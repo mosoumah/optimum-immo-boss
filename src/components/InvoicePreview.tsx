@@ -326,12 +326,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     <th 
                       className="text-left p-5 font-bold text-sm uppercase tracking-[0.2em]"
                       style={{ color: primaryTextColor }}
+                      {...ep(editable, "label-designation")}
                     >
                       Désignation du Service
                     </th>
                     <th 
                       className="text-right p-5 font-bold text-sm uppercase tracking-[0.2em] w-44"
                       style={{ color: primaryTextColor }}
+                      {...ep(editable, "label-montant")}
                     >
                       Montant HT
                     </th>
@@ -343,16 +345,18 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                       <p 
                         className="text-base font-medium mb-1"
                         style={{ color: "#333" }}
+                        {...ep(editable, "description")}
                       >
                         {facture.description || "Prestation de conseil immobilier"}
                       </p>
-                      <p className="text-xs" style={{ color: "#888" }}>
+                      <p className="text-xs" style={{ color: "#888" }} {...ep(editable, "description-sub")}>
                         Prestation réalisée conformément aux termes convenus
                       </p>
                     </td>
                     <td 
                       className="p-5 text-right font-bold text-lg"
                       style={{ color: primaryColor }}
+                      {...ep(editable, "montant")}
                     >
                       {formatCurrency(facture.montant)}
                     </td>
@@ -379,12 +383,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     <span 
                       className="font-bold text-sm uppercase tracking-[0.2em] block"
                       style={{ color: accentTextColor }}
+                      {...ep(editable, "label-total")}
                     >
                       Montant Total à Régler
                     </span>
                     <span 
                       className="text-xs mt-2 block opacity-80"
                       style={{ color: accentTextColor }}
+                      {...ep(editable, "label-total-sub")}
                     >
                       Net à payer — Arrêté à la somme indiquée ci-contre
                     </span>
@@ -395,12 +401,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                       color: accentTextColor,
                       textShadow: `0 2px 4px ${darkenColor(accentColor, 0.3)}40`
                     }}
+                    {...ep(editable, "montant-total")}
                   >
                     {formatCurrency(facture.montant)}
                   </span>
                 </div>
               </div>
             </div>
+
           </div>
 
           {/* AI Generated Content - Premium Section */}
