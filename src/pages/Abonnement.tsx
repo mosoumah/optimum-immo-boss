@@ -526,50 +526,150 @@ const Abonnement = () => {
               </div>
             </motion.div>
 
-            {/* Weekly activity chart */}
+            {/* Weekly activity chart — premium */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 mb-6"
+              className="relative rounded-3xl border border-primary/25 bg-gradient-to-br from-card via-card/85 to-background/60 backdrop-blur-xl p-6 lg:p-7 mb-6 overflow-hidden shadow-[0_10px_40px_-15px_hsl(var(--primary)/0.35)]"
             >
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <div>
-                  <h2 className="text-lg font-bold">Activité hebdomadaire</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Factures et réservations créées sur les 4 dernières semaines
-                  </p>
+              {/* Ambient glow */}
+              <div className="absolute -top-32 -right-32 w-80 h-80 bg-primary/25 blur-[110px] rounded-full pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-info/15 blur-[100px] rounded-full pointer-events-none" />
+
+              <div className="relative">
+                <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 border border-primary/30 flex items-center justify-center shadow-inner">
+                      <Activity className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg lg:text-xl font-bold tracking-tight flex items-center gap-2">
+                        Activité hebdomadaire
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      </h2>
+                      <p className="text-xs lg:text-sm text-muted-foreground">
+                        Factures et réservations créées sur les 4 dernières semaines
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary font-medium">
+                      <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                      Factures
+                    </span>
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-info/10 border border-info/25 text-info font-medium">
+                      <span className="w-2 h-2 rounded-full bg-info shadow-[0_0_8px_hsl(var(--info))]" />
+                      Réservations
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-primary" /> Factures
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-info" /> Réservations
-                  </span>
+
+                {/* Summary stats */}
+                {(() => {
+                  const totalF = weeks.reduce((s, w) => s + w.factures, 0);
+                  const totalR = weeks.reduce((s, w) => s + w.reservations, 0);
+                  const avg = weeks.length ? ((totalF + totalR) / weeks.length).toFixed(1) : "0";
+                  const last = weeks[weeks.length - 1];
+                  const prev = weeks[weeks.length - 2];
+                  const lastTotal = (last?.factures ?? 0) + (last?.reservations ?? 0);
+                  const prevTotal = (prev?.factures ?? 0) + (prev?.reservations ?? 0);
+                  const delta = prevTotal === 0 ? (lastTotal > 0 ? 100 : 0) : Math.round(((lastTotal - prevTotal) / prevTotal) * 100);
+                  const stats = [
+                    { label: "Total factures", value: totalF, tone: "text-primary", bg: "from-primary/15 to-primary/0" },
+                    { label: "Total réservations", value: totalR, tone: "text-info", bg: "from-info/15 to-info/0" },
+                    { label: "Moyenne / semaine", value: avg, tone: "text-foreground", bg: "from-muted/40 to-muted/0" },
+                    {
+                      label: "Évolution vs S-1",
+                      value: `${delta >= 0 ? "+" : ""}${delta}%`,
+                      tone: delta >= 0 ? "text-success" : "text-destructive",
+                      bg: delta >= 0 ? "from-success/15 to-success/0" : "from-destructive/15 to-destructive/0",
+                      icon: TrendingUp,
+                    },
+                  ];
+                  return (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-6">
+                      {stats.map((s) => (
+                        <div
+                          key={s.label}
+                          className={`relative rounded-xl border border-border/40 bg-gradient-to-br ${s.bg} px-3.5 py-2.5 overflow-hidden`}
+                        >
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                            {s.label}
+                          </div>
+                          <div className={`text-xl font-bold mt-0.5 ${s.tone} flex items-center gap-1.5`}>
+                            {s.value}
+                            {s.icon && <s.icon className={`w-3.5 h-3.5 ${delta < 0 ? "rotate-180" : ""}`} />}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                <div className="h-[280px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={weeks} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="gradFactures" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.55} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                        </linearGradient>
+                        <linearGradient id="gradReservations" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--info))" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="hsl(var(--info))" stopOpacity={0.5} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="4 6" stroke="hsl(var(--border))" opacity={0.25} vertical={false} />
+                      <XAxis
+                        dataKey="label"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 500 }}
+                        dy={6}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                        allowDecimals={false}
+                        width={32}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "hsl(var(--primary) / 0.06)", radius: 8 }}
+                        contentStyle={{
+                          background: "hsl(var(--card) / 0.95)",
+                          backdropFilter: "blur(12px)",
+                          border: "1px solid hsl(var(--primary) / 0.3)",
+                          borderRadius: 14,
+                          fontSize: 12,
+                          boxShadow: "0 10px 30px -10px hsl(var(--primary) / 0.4)",
+                        }}
+                        labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="factures"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2.5}
+                        fill="url(#gradFactures)"
+                        dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                        activeDot={{ r: 6, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                        name="Factures"
+                      />
+                      <Bar
+                        dataKey="reservations"
+                        fill="url(#gradReservations)"
+                        radius={[8, 8, 0, 0]}
+                        maxBarSize={34}
+                        name="Réservations"
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
                 </div>
-              </div>
-              <div className="h-[260px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weeks} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: 12,
-                        fontSize: 12,
-                      }}
-                    />
-                    <Legend wrapperStyle={{ display: "none" }} />
-                    <Bar dataKey="factures" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} maxBarSize={28} />
-                    <Bar dataKey="reservations" fill="hsl(var(--info))" radius={[6, 6, 0, 0]} maxBarSize={28} />
-                  </BarChart>
-                </ResponsiveContainer>
               </div>
             </motion.div>
+
 
             {/* Plan features reminder */}
             {planData && (
