@@ -158,6 +158,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <p 
                   className="text-xs font-medium uppercase tracking-[0.3em] mb-2"
                   style={{ color: accentColor }}
+                  {...ep(editable, "tagline")}
                 >
                   Agence Immobilière
                 </p>
@@ -167,6 +168,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                     color: primaryColor,
                     fontFamily: "'Georgia', serif"
                   }}
+                  {...ep(editable, "ent-nom")}
                 >
                   {entreprise.nom}
                 </h1>
@@ -175,18 +177,18 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}
                 />
                 <div className="text-sm" style={{ color: "#5a5a5a" }}>
-                  {entreprise.adresse && (
-                    <p className="mb-1">{entreprise.adresse}</p>
+                  {(entreprise.adresse || editable) && (
+                    <p className="mb-1" {...ep(editable, "ent-adresse")}>{entreprise.adresse || (editable ? "Adresse" : "")}</p>
                   )}
                   <p className="flex items-center gap-3 flex-wrap text-xs">
-                    {entreprise.telephone && (
+                    {(entreprise.telephone || editable) && (
                       <span className="flex items-center gap-1">
-                        <span style={{ color: primaryColor }}>✆</span> {entreprise.telephone}
+                        <span style={{ color: primaryColor }}>✆</span> <span {...ep(editable, "ent-telephone")}>{entreprise.telephone || (editable ? "Téléphone" : "")}</span>
                       </span>
                     )}
-                    {entreprise.email && (
+                    {(entreprise.email || editable) && (
                       <span className="flex items-center gap-1">
-                        <span style={{ color: primaryColor }}>✉</span> {entreprise.email}
+                        <span style={{ color: primaryColor }}>✉</span> <span {...ep(editable, "ent-email")}>{entreprise.email || (editable ? "Email" : "")}</span>
                       </span>
                     )}
                   </p>
@@ -214,6 +216,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <h2 
                   className="text-xl sm:text-2xl font-bold tracking-[0.18em] sm:tracking-[0.25em] relative z-10"
                   style={{ color: primaryTextColor }}
+                  {...ep(editable, "label-facture")}
                 >
                   FACTURE
                 </h2>
@@ -222,15 +225,17 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <p 
                   className="font-bold text-sm tracking-wide"
                   style={{ color: primaryColor }}
+                  {...ep(editable, "numero")}
                 >
                   N° FAC-{facture.id.substring(0, 8).toUpperCase()}
                 </p>
-                <p className="text-xs mt-2" style={{ color: "#666" }}>
+                <p className="text-xs mt-2" style={{ color: "#666" }} {...ep(editable, "date-emise")}>
                   Émise le {formatDate(facture.date)}
                 </p>
               </div>
             </div>
           </div>
+
 
           {/* Elegant Separator */}
           <div className="flex items-center gap-4 mb-8">
