@@ -24,21 +24,13 @@ interface InvoicePreviewProps {
   editable?: boolean;
 }
 
-// Props for editable inline text
-const editableProps = (editable: boolean, field: string) =>
+// Props for editable inline text (attributes only, styling via CSS below)
+const ep = (editable: boolean, field: string) =>
   editable
     ? {
         contentEditable: true,
         suppressContentEditableWarning: true,
         "data-field": field,
-        style: {
-          outline: "1px dashed rgba(59,130,246,0.5)",
-          outlineOffset: "2px",
-          borderRadius: "2px",
-          cursor: "text",
-          minWidth: "20px",
-          display: "inline-block",
-        } as React.CSSProperties,
       }
     : {};
 
