@@ -607,10 +607,10 @@ const Abonnement = () => {
                           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                             {s.label}
                           </div>
-                          <div className={`text-xl font-bold mt-0.5 ${s.tone} flex items-center gap-1.5`}>
-                            {s.value}
-                            {s.icon && <s.icon className={`w-3.5 h-3.5 ${(s.delta ?? 0) < 0 ? "rotate-180" : ""}`} />}
-                          </div>
+                        <div className={`text-xl font-bold mt-0.5 ${s.tone}`}>
+                          {s.value}
+                        </div>
+
                           {s.sub && (
                             <div className="text-[10px] text-muted-foreground mt-0.5">{s.sub}</div>
                           )}
