@@ -216,19 +216,41 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label>Date d'arrivée *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value })} /></div>
-            <div><Label>Date de départ *</Label><Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} /></div>
+          <div>
+            <Label>Type de location *</Label>
+            <Select
+              value={form.type_location}
+              onValueChange={(v) => setForm({ ...form, type_location: v, nombre_heures: v === "heure" ? form.nombre_heures : "" })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="jour">Par jour</SelectItem>
+                <SelectItem value="heure">Par heure</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {datesInversees && (
-            <p className="text-sm text-orange-500 -mt-2">⚠ La date de départ est avant la date d'arrivée</p>
+          {isHeure ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Date *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value, date_depart: e.target.value })} /></div>
+              <div><Label>Nombre d'heures *</Label><Input type="number" min="0" step="0.5" value={form.nombre_heures} onChange={(e) => setForm({ ...form, nombre_heures: e.target.value })} /></div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Date d'arrivée *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value })} /></div>
+                <div><Label>Date de départ *</Label><Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} /></div>
+              </div>
+              {datesInversees && (
+                <p className="text-sm text-orange-500 -mt-2">⚠ La date de départ est avant la date d'arrivée</p>
+              )}
+            </>
           )}
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>Prix unitaire (GNF)</Label><Input type="number" value={form.prix_unitaire} onChange={(e) => setForm({ ...form, prix_unitaire: e.target.value })} /></div>
+            <div><Label>Prix {isHeure ? "par heure" : "unitaire"} (GNF) *</Label><Input type="number" min="0" value={form.prix_unitaire} onChange={(e) => setForm({ ...form, prix_unitaire: e.target.value })} placeholder={isHeure ? "Saisir manuellement" : ""} /></div>
             <div>
               <Label>Montant total (auto)</Label>
               <div className={`h-10 px-3 flex items-center rounded-md text-sm font-medium ${canCalculate && montantTotal > 0 ? "bg-primary/10 text-primary font-bold" : "bg-muted text-muted-foreground"}`}>
-                {canCalculate ? formatCurrency(montantTotal) : "Remplir dates et prix"}
+                {canCalculate ? formatCurrency(montantTotal) : (isHeure ? "Remplir heures et prix" : "Remplir dates et prix")}
               </div>
               {canCalculate && montantTotal > 0 && (
                 <p className="text-xs text-muted-foreground mt-1">{unites} {typeLabel}{unites > 1 ? "s" : ""} × {formatCurrency(parseFloat(form.prix_unitaire))}</p>
