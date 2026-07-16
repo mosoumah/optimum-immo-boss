@@ -28,8 +28,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-  defs as _defs,
 } from "recharts";
 import { TrendingUp, Activity } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
