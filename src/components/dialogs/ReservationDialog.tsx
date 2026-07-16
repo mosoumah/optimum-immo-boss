@@ -281,7 +281,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <Checkbox checked={form.generer_facture} onCheckedChange={(v) => setForm({ ...form, generer_facture: !!v })} />
             <Label className="text-sm cursor-pointer">Générer facture automatiquement</Label>
           </div>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || !form.date_depart} className="w-full">
+          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || (!isHeure && !form.date_depart) || (isHeure && !form.nombre_heures) || !form.prix_unitaire} className="w-full">
             {isSubmitting ? "Enregistrement..." : reservation ? "Modifier" : "Créer la réservation"}
           </Button>
         </div>
