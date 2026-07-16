@@ -98,6 +98,19 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           fontFamily: "'Georgia', 'Times New Roman', serif"
         }}
       >
+        {editable && (
+          <style>{`
+            [data-field] {
+              outline: 1px dashed rgba(59,130,246,0.55);
+              outline-offset: 3px;
+              border-radius: 2px;
+              cursor: text;
+              transition: outline-color 0.15s;
+            }
+            [data-field]:hover { outline-color: rgba(59,130,246,0.9); }
+            [data-field]:focus { outline: 2px solid rgba(59,130,246,1); background: rgba(59,130,246,0.05); }
+          `}</style>
+        )}
         {/* Left Premium Lateral Accent */}
         <div 
           className="absolute left-0 top-0 bottom-0 w-2"
