@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2 } from "lucide-react";
+import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2, Pencil } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +39,7 @@ import {
 
 interface Facture {
   id: string;
+  client_id: string | null;
   description: string | null;
   montant: number;
   statut: string;
@@ -65,6 +66,7 @@ const Factures = () => {
   const [factures, setFactures] = useState<Facture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingFacture, setEditingFacture] = useState<Facture | null>(null);
   const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState("");
@@ -716,7 +718,7 @@ const Factures = () => {
             transition={{ delay: 0.1 }}
             className="flex justify-end mb-6"
           >
-            <Button onClick={() => setDialogOpen(true)} className="premium-button">
+            <Button onClick={() => { setEditingFacture(null); setDialogOpen(true); }} className="premium-button">
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle facture
             </Button>
@@ -764,6 +766,15 @@ const Factures = () => {
                           <CheckCircle className="w-4 h-4" />
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setEditingFacture(facture); setDialogOpen(true); }}
+                        className="h-8 w-8"
+                        title="Modifier la facture"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
                     </PermissionGate>
                     <PermissionGate permission="generer_pdf_facture">
                       <Button
@@ -823,9 +834,10 @@ const Factures = () => {
       {entrepriseId && (
         <FactureDialog
           open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditingFacture(null); }}
           entrepriseId={entrepriseId}
           onSuccess={fetchFactures}
+          facture={editingFacture}
         />
       )}
 

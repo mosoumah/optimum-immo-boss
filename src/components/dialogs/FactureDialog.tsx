@@ -19,20 +19,32 @@ interface Client {
   nom: string;
 }
 
+interface FactureEditable {
+  id: string;
+  client_id?: string | null;
+  description: string | null;
+  montant: number;
+  date: string;
+  statut?: string;
+}
+
 interface FactureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entrepriseId: string;
   onSuccess: () => void;
+  facture?: FactureEditable | null;
 }
 
-export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: FactureDialogProps) => {
+export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, facture }: FactureDialogProps) => {
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [montant, setMontant] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isEdit = !!facture;
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -49,6 +61,22 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: F
     }
   }, [open, entrepriseId]);
 
+  useEffect(() => {
+    if (open) {
+      if (facture) {
+        setClientId(facture.client_id || "");
+        setDescription(facture.description || "");
+        setMontant(facture.montant?.toString() || "");
+        setDate(facture.date ? new Date(facture.date) : new Date());
+      } else {
+        setClientId("");
+        setDescription("");
+        setMontant("");
+        setDate(new Date());
+      }
+    }
+  }, [open, facture]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientId || !montant) {
@@ -61,27 +89,37 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: F
     }
 
     setIsLoading(true);
-    const { error } = await supabase.from("factures").insert({
-      client_id: clientId,
-      description: description.trim() || null,
-      montant: parseFloat(montant),
-      date: format(date, "yyyy-MM-dd"),
-      entreprise_id: entrepriseId,
-      statut: "non_paye",
-    });
+
+    let error;
+    if (isEdit && facture) {
+      ({ error } = await supabase
+        .from("factures")
+        .update({
+          client_id: clientId,
+          description: description.trim() || null,
+          montant: parseFloat(montant),
+          date: format(date, "yyyy-MM-dd"),
+        })
+        .eq("id", facture.id));
+    } else {
+      ({ error } = await supabase.from("factures").insert({
+        client_id: clientId,
+        description: description.trim() || null,
+        montant: parseFloat(montant),
+        date: format(date, "yyyy-MM-dd"),
+        entreprise_id: entrepriseId,
+        statut: "non_paye",
+      }));
+    }
 
     setIsLoading(false);
 
     if (error) {
-      toast.error("Erreur lors de la création de la facture");
+      toast.error(isEdit ? "Erreur lors de la modification de la facture" : "Erreur lors de la création de la facture");
       return;
     }
 
-    toast.success("Facture créée avec succès");
-    setClientId("");
-    setDescription("");
-    setMontant("");
-    setDate(new Date());
+    toast.success(isEdit ? "Facture modifiée avec succès" : "Facture créée avec succès");
     onOpenChange(false);
     onSuccess();
   };
@@ -90,8 +128,10 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: F
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nouvelle facture</DialogTitle>
-          <DialogDescription>Créez une nouvelle facture pour un client.</DialogDescription>
+          <DialogTitle>{isEdit ? "Modifier la facture" : "Nouvelle facture"}</DialogTitle>
+          <DialogDescription>
+            {isEdit ? "Modifiez les informations de la facture." : "Créez une nouvelle facture pour un client."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -154,7 +194,7 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: F
               Annuler
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Enregistrement..." : "Enregistrer"}
+              {isLoading ? "Enregistrement..." : isEdit ? "Modifier" : "Enregistrer"}
             </Button>
           </div>
         </form>

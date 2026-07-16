@@ -153,21 +153,23 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       return;
     }
 
+    const propertyName = selectedProperty?.nom || form.property_name || "—";
+    const paye = parseFloat(form.montant_paye) || 0;
+    const resteDesc = paye > 0 && paye < montantTotal
+      ? ` | Payé: ${formatCurrency(paye)} — Reste: ${formatCurrency(montantTotal - paye)}`
+      : "";
+    const periode = isHeure
+      ? `le ${form.date_arrivee} — ${unites} heure${unites > 1 ? "s" : ""} × ${formatCurrency(parseFloat(form.prix_unitaire))}`
+      : `du ${form.date_arrivee} au ${form.date_depart}`;
+    const factureDescription = `Location ${propertyName} ${periode}${resteDesc}`;
+
     // Générer la facture automatiquement si coché (nouvelle réservation uniquement)
     if (form.generer_facture && !reservation && !result.error) {
-      const propertyName = selectedProperty?.nom || form.property_name || "—";
-      const paye = parseFloat(form.montant_paye) || 0;
-      const resteDesc = paye > 0 && paye < montantTotal
-        ? ` | Payé: ${formatCurrency(paye)} — Reste: ${formatCurrency(montantTotal - paye)}`
-        : "";
-      const periode = isHeure
-        ? `le ${form.date_arrivee} — ${unites} heure${unites > 1 ? "s" : ""} × ${formatCurrency(parseFloat(form.prix_unitaire))}`
-        : `du ${form.date_arrivee} au ${form.date_depart}`;
       const { error: factureError } = await supabase.from("factures").insert({
         client_id: form.client_id,
         entreprise_id: entrepriseId,
         montant: montantTotal,
-        description: `Location ${propertyName} ${periode}${resteDesc}`,
+        description: factureDescription,
         date: new Date().toISOString().split("T")[0],
         reservation_id: newReservationId,
       });
@@ -175,6 +177,30 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         toast({ title: "Attention", description: "Réservation créée mais erreur lors de la génération de la facture : " + factureError.message, variant: "destructive" });
       } else {
         toast({ title: "Succès", description: "Réservation créée et facture générée" });
+      }
+    } else if (reservation && !result.error) {
+      // Synchroniser la facture liée (si elle existe et non payée) avec le nouveau montant
+      const { data: linkedFactures } = await supabase
+        .from("factures")
+        .select("id, statut")
+        .eq("reservation_id", reservation.id);
+      const editable = (linkedFactures || []).filter((f) => f.statut !== "paye");
+      if (editable.length > 0) {
+        const { error: syncError } = await supabase
+          .from("factures")
+          .update({
+            client_id: form.client_id,
+            montant: montantTotal,
+            description: factureDescription,
+          })
+          .in("id", editable.map((f) => f.id));
+        if (syncError) {
+          toast({ title: "Attention", description: "Réservation modifiée mais la facture liée n'a pas pu être mise à jour : " + syncError.message, variant: "destructive" });
+        } else {
+          toast({ title: "Succès", description: "Réservation et facture mises à jour" });
+        }
+      } else {
+        toast({ title: "Succès", description: "Réservation modifiée" });
       }
     } else {
       toast({ title: "Succès", description: reservation ? "Réservation modifiée" : "Réservation créée" });
