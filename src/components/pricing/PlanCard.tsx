@@ -42,7 +42,7 @@ export const PlanCard = ({ plan, cycle, onSelect, index }: Props) => {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl">{plan.emoji}</span>
-          <h3 className="text-2xl font-extrabold tracking-tight">{plan.name}</h3>
+          <h3 className="font-display text-3xl tracking-tight">{plan.name}</h3>
         </div>
         <p className="text-sm text-muted-foreground">{plan.tagline}</p>
       </div>

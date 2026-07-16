@@ -12,8 +12,8 @@ export const ReassuranceBanner = () => (
     <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4">
       <div className="text-4xl">🎉</div>
       <div>
-        <h3 className="text-lg sm:text-xl font-bold mb-1">
-          Commencez dès aujourd'hui avec 14 jours d'essai gratuits
+        <h3 className="font-display text-2xl sm:text-3xl tracking-tight leading-tight mb-2">
+          Commencez dès aujourd'hui avec <span className="italic text-primary">14 jours d'essai</span> gratuits
         </h3>
         <p className="text-sm text-muted-foreground">
           Aucune carte bancaire requise. Toutes les fonctionnalités sont incluses pendant votre période d'essai.

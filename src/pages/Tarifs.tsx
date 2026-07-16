@@ -87,10 +87,11 @@ const Tarifs = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-5 leading-[1.1]"
+              className="font-display text-4xl sm:text-5xl lg:text-6xl tracking-tight mb-5 leading-[1.05]"
             >
-              Choisissez le forfait adapté à<br className="hidden sm:block" />{" "}
-              <span className="text-gradient">votre agence immobilière</span>
+              Le forfait{" "}
+              <span className="italic text-primary">taillé</span> pour<br className="hidden sm:block" />{" "}
+              votre agence immobilière
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -160,8 +161,8 @@ const Tarifs = () => {
             >
               <div className="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.15),transparent_70%)]" />
               <div className="relative">
-                <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-6">
-                  Prêt à digitaliser votre <span className="text-gradient">agence immobilière</span> ?
+                <h2 className="font-display text-3xl sm:text-5xl tracking-tight leading-[1.05] mb-6">
+                  Prêt à digitaliser votre <span className="italic text-primary">agence immobilière</span> ?
                 </h2>
                 <Link to={user ? "/dashboard" : "/inscription"}>
                   <Button size="lg" className="rounded-xl font-semibold h-13 px-8 gap-2 shadow-lg shadow-primary/30">
