@@ -951,45 +951,73 @@ const Factures = () => {
         />
       )}
 
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+      <Dialog open={previewOpen} onOpenChange={(o) => { setPreviewOpen(o); if (!o) setIsEditingPreview(false); }}>
         <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-auto p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               <FileText className="w-5 h-5" />
               Aperçu de la facture
+              {isEditingPreview && (
+                <span className="text-xs font-normal text-primary ml-2">
+                  ✏️ Mode édition — cliquez sur n'importe quel texte pour le modifier
+                </span>
+              )}
             </DialogTitle>
           </DialogHeader>
 
           <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
             <InvoicePreview
+              key={`${previewFacture?.id}-${isEditingPreview}`}
               ref={invoiceRef}
               entreprise={entreprise}
               facture={previewFacture}
               aiContent={previewContent}
               logoDataUrl={logoDataUrl}
+              editable={isEditingPreview}
             />
           </div>
 
           <div className="flex flex-wrap justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setPreviewOpen(false)} className="flex-1 sm:flex-none">
-              Fermer
-            </Button>
-            <Button variant="outline" onClick={handlePrint} className="flex-1 sm:flex-none">
-              <Printer className="w-4 h-4 mr-2" />
-              Imprimer
-            </Button>
-            <Button variant="outline" onClick={downloadAsHtml} className="flex-1 sm:flex-none">
-              <Download className="w-4 h-4 mr-2" />
-              HTML
-            </Button>
-            <Button onClick={downloadAsPdf} disabled={isDownloadingPdf} className="flex-1 sm:flex-none">
-              {isDownloadingPdf ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4 mr-2" />
-              )}
-              PDF
-            </Button>
+            {isEditingPreview ? (
+              <>
+                <Button variant="outline" onClick={() => setIsEditingPreview(false)} disabled={isSavingEdits} className="flex-1 sm:flex-none">
+                  <X className="w-4 h-4 mr-2" />
+                  Annuler
+                </Button>
+                <Button onClick={savePreviewEdits} disabled={isSavingEdits} className="flex-1 sm:flex-none">
+                  {isSavingEdits ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  Enregistrer
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setPreviewOpen(false)} className="flex-1 sm:flex-none">
+                  Fermer
+                </Button>
+                <PermissionGate permission="modifier_facture">
+                  <Button variant="outline" onClick={() => setIsEditingPreview(true)} className="flex-1 sm:flex-none">
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Éditer
+                  </Button>
+                </PermissionGate>
+                <Button variant="outline" onClick={handlePrint} className="flex-1 sm:flex-none">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimer
+                </Button>
+                <Button variant="outline" onClick={downloadAsHtml} className="flex-1 sm:flex-none">
+                  <Download className="w-4 h-4 mr-2" />
+                  HTML
+                </Button>
+                <Button onClick={downloadAsPdf} disabled={isDownloadingPdf} className="flex-1 sm:flex-none">
+                  {isDownloadingPdf ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  PDF
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
