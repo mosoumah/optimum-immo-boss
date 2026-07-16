@@ -834,9 +834,10 @@ const Factures = () => {
       {entrepriseId && (
         <FactureDialog
           open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditingFacture(null); }}
           entrepriseId={entrepriseId}
           onSuccess={fetchFactures}
+          facture={editingFacture}
         />
       )}
 
