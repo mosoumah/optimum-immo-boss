@@ -225,6 +225,114 @@ const Factures = () => {
     }
   };
 
+  const savePreviewEdits = async () => {
+    if (!invoiceRef.current || !previewFacture) return;
+
+    const canModify = await checkPermission("modifier_facture");
+    if (!canModify) {
+      toast.error("Vous n'avez pas la permission de modifier les factures");
+      return;
+    }
+
+    setIsSavingEdits(true);
+    try {
+      const root = invoiceRef.current;
+      const getVal = (field: string) => {
+        const el = root.querySelector(`[data-field="${field}"]`) as HTMLElement | null;
+        return el ? (el.innerText || "").trim() : null;
+      };
+
+      const parseAmount = (s: string | null) => {
+        if (!s) return null;
+        const digits = s.replace(/[^\d]/g, "");
+        return digits ? parseFloat(digits) : null;
+      };
+
+      const description = getVal("description");
+      const montantStr = getVal("montant");
+      const montant = parseAmount(montantStr);
+      const clientNom = getVal("client-nom");
+      const clientTel = getVal("client-telephone");
+      const clientEmail = getVal("client-email");
+      const entNom = getVal("ent-nom");
+      const entAdresse = getVal("ent-adresse");
+      const entTel = getVal("ent-telephone");
+      const entEmail = getVal("ent-email");
+      const aiText = getVal("ai-content");
+
+      // Update facture
+      const factureUpdate: Record<string, unknown> = {};
+      if (description !== null) factureUpdate.description = description;
+      if (montant !== null && montant > 0) factureUpdate.montant = montant;
+      if (Object.keys(factureUpdate).length) {
+        const { error } = await supabase.from("factures").update(factureUpdate).eq("id", previewFacture.id);
+        if (error) throw error;
+      }
+
+      // Update client
+      if (previewFacture.client_id) {
+        const clientUpdate: Record<string, unknown> = {};
+        if (clientNom) clientUpdate.nom = clientNom;
+        if (clientTel !== null) clientUpdate.telephone = clientTel || null;
+        if (clientEmail !== null) clientUpdate.email = clientEmail || null;
+        if (Object.keys(clientUpdate).length) {
+          const { error } = await supabase.from("clients").update(clientUpdate).eq("id", previewFacture.client_id);
+          if (error) throw error;
+        }
+      }
+
+      // Update entreprise
+      if (entrepriseId) {
+        const entUpdate: Record<string, unknown> = {};
+        if (entNom) entUpdate.nom = entNom;
+        if (entAdresse !== null) entUpdate.adresse = entAdresse || null;
+        if (entTel !== null) entUpdate.telephone = entTel || null;
+        if (entEmail !== null) entUpdate.email = entEmail || null;
+        if (Object.keys(entUpdate).length) {
+          const { error } = await supabase.from("entreprises").update(entUpdate).eq("id", entrepriseId);
+          if (error) throw error;
+        }
+      }
+
+      // Refresh local state so preview updates immediately
+      const newFacture: Facture = {
+        ...previewFacture,
+        description: description ?? previewFacture.description,
+        montant: montant ?? previewFacture.montant,
+        clients: previewFacture.clients
+          ? {
+              nom: clientNom || previewFacture.clients.nom,
+              telephone: clientTel !== null ? clientTel || null : previewFacture.clients.telephone,
+              email: clientEmail !== null ? clientEmail || null : previewFacture.clients.email,
+            }
+          : previewFacture.clients,
+      };
+      setPreviewFacture(newFacture);
+      if (aiText !== null) setPreviewContent(aiText);
+      setEntreprise((prev) =>
+        prev
+          ? {
+              ...prev,
+              nom: entNom || prev.nom,
+              adresse: entAdresse !== null ? entAdresse || null : prev.adresse,
+              telephone: entTel !== null ? entTel || null : prev.telephone,
+              email: entEmail !== null ? entEmail || null : prev.email,
+            }
+          : prev,
+      );
+
+      toast.success("Facture mise à jour");
+      setIsEditingPreview(false);
+      fetchFactures();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la sauvegarde");
+    } finally {
+      setIsSavingEdits(false);
+    }
+  };
+
+
   const downloadAsPdf = async () => {
     if (!previewFacture || !entreprise) return;
 
