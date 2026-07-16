@@ -67,7 +67,7 @@ const darkenColor = (hexColor: string, percent: number): string => {
 };
 
 export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
-  ({ entreprise, facture, aiContent, logoDataUrl }, ref) => {
+  ({ entreprise, facture, aiContent, logoDataUrl, editable = false }, ref) => {
     if (!facture || !entreprise) return null;
 
     const logoSrc = logoDataUrl || entreprise.logo;
