@@ -557,6 +557,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 <p 
                   className="text-xs uppercase tracking-[0.2em] font-bold mb-3"
                   style={{ color: primaryColor }}
+                  {...ep(editable, "label-signature")}
                 >
                   Signature & Cachet
                 </p>
