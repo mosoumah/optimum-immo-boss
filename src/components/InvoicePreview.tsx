@@ -273,6 +273,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               <h3 
                 className="text-xs font-bold uppercase tracking-[0.25em] mb-3"
                 style={{ color: primaryColor }}
+                {...ep(editable, "label-destinataire")}
               >
                 Destinataire
               </h3>
@@ -282,6 +283,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                   color: primaryColor,
                   fontFamily: "'Georgia', serif"
                 }}
+                {...ep(editable, "client-nom")}
               >
                 {facture.clients?.nom || "Client"}
               </p>
@@ -290,17 +292,18 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 style={{ background: accentColor }}
               />
               <div className="text-sm" style={{ color: "#666" }}>
-                {facture.clients?.telephone && (
+                {(facture.clients?.telephone || editable) && (
                   <p className="mb-1">
-                    <span style={{ color: primaryColor }}>✆</span> {facture.clients.telephone}
+                    <span style={{ color: primaryColor }}>✆</span> <span {...ep(editable, "client-telephone")}>{facture.clients?.telephone || (editable ? "Téléphone" : "")}</span>
                   </p>
                 )}
-                {facture.clients?.email && (
+                {(facture.clients?.email || editable) && (
                   <p>
-                    <span style={{ color: primaryColor }}>✉</span> {facture.clients.email}
+                    <span style={{ color: primaryColor }}>✉</span> <span {...ep(editable, "client-email")}>{facture.clients?.email || (editable ? "Email" : "")}</span>
                   </p>
                 )}
               </div>
+
             </div>
           </div>
 
