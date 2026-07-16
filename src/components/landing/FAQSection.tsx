@@ -120,10 +120,11 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
 
 export function FAQSection() {
   return (
-    <section className="py-20 sm:py-28 border-t border-white/5 relative overflow-hidden">
-      {/* ambient background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(212,255,58,0.05)_1px,transparent_0)] [background-size:32px_32px] opacity-40 pointer-events-none" />
+    <section className="py-20 sm:py-28 border-t border-white/5 relative overflow-hidden bg-background">
+      {/* clean modern background */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[720px] h-[720px] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,hsl(var(--background))_90%)] pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 relative">
         <motion.div
