@@ -849,41 +849,83 @@ export type Database = {
       subscriptions: {
         Row: {
           billing_cycle: string | null
+          cancel_at_period_end: boolean
+          cancelled_at: string | null
           created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
           end_date: string | null
           entreprise_id: string
+          expires_at: string | null
           id: string
+          last_payment_at: string | null
+          metadata: Json
+          payment_provider: string | null
           payment_reference: string | null
           plan: string
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
           start_date: string | null
+          started_at: string | null
           status: string
+          trial_end: string | null
           trial_ends_at: string | null
+          trial_start: string | null
+          trial_used: boolean
           updated_at: string | null
         }
         Insert: {
           billing_cycle?: string | null
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
           created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
           end_date?: string | null
           entreprise_id: string
+          expires_at?: string | null
           id?: string
+          last_payment_at?: string | null
+          metadata?: Json
+          payment_provider?: string | null
           payment_reference?: string | null
           plan?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
           start_date?: string | null
+          started_at?: string | null
           status?: string
+          trial_end?: string | null
           trial_ends_at?: string | null
+          trial_start?: string | null
+          trial_used?: boolean
           updated_at?: string | null
         }
         Update: {
           billing_cycle?: string | null
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
           created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
           end_date?: string | null
           entreprise_id?: string
+          expires_at?: string | null
           id?: string
+          last_payment_at?: string | null
+          metadata?: Json
+          payment_provider?: string | null
           payment_reference?: string | null
           plan?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
           start_date?: string | null
+          started_at?: string | null
           status?: string
+          trial_end?: string | null
           trial_ends_at?: string | null
+          trial_start?: string | null
+          trial_used?: boolean
           updated_at?: string | null
         }
         Relationships: [
