@@ -33,25 +33,30 @@ const Tarifs = () => {
     }
     if (!entrepriseId) return;
 
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({
-        plan: plan.id,
-        billing_cycle: cycle,
-        status: "pending_payment",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("entreprise_id", entrepriseId);
+    try {
+      const { data, error } = await supabase.functions.invoke("chariow-checkout", {
+        body: {
+          plan: plan.id,
+          billing_cycle: cycle,
+          success_url: `${window.location.origin}/abonnement?checkout=success`,
+        },
+      });
 
-    if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
-      return;
+      if (error) throw error;
+      const checkoutUrl = (data as { checkout_url?: string })?.checkout_url;
+      if (!checkoutUrl) throw new Error("URL de paiement introuvable.");
+
+      // Redirection directe vers Chariow (pas de page intermédiaire)
+      window.location.href = checkoutUrl;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erreur inconnue";
+      toast({
+        title: "Paiement indisponible",
+        description: message,
+        variant: "destructive",
+      });
+      refetch();
     }
-    toast({
-      title: "Demande enregistrée",
-      description: `Nous vous contacterons pour finaliser le paiement du forfait ${plan.name}.`,
-    });
-    refetch();
   };
 
   return (
