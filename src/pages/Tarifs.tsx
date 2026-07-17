@@ -42,12 +42,26 @@ const Tarifs = () => {
         },
       });
 
-      if (error) throw error;
-      const checkoutUrl = (data as { checkout_url?: string })?.checkout_url;
-      if (!checkoutUrl) throw new Error("URL de paiement introuvable.");
+      // supabase.functions.invoke ne rejette pas: on lit le message d'erreur renvoyé par l'edge function
+      const payload = (data ?? {}) as { checkout_url?: string; error?: string };
+      if (error || payload.error) {
+        // Tenter d'extraire un message plus précis via le body de la réponse
+        let detailedMessage = payload.error ?? "";
+        const ctx = (error as unknown as { context?: Response })?.context;
+        if (!detailedMessage && ctx && typeof ctx.text === "function") {
+          try {
+            const raw = await ctx.text();
+            const parsed = JSON.parse(raw);
+            detailedMessage = parsed?.error ?? raw;
+          } catch {
+            /* ignore */
+          }
+        }
+        throw new Error(detailedMessage || error?.message || "Erreur inconnue");
+      }
 
-      // Redirection directe vers Chariow (pas de page intermédiaire)
-      window.location.href = checkoutUrl;
+      if (!payload.checkout_url) throw new Error("URL de paiement introuvable.");
+      window.location.href = payload.checkout_url;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
       toast({
