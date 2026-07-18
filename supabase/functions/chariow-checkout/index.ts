@@ -30,25 +30,47 @@ function resolveProductId(plan: PlanId, cycle: BillingCycle): string | null {
   return Deno.env.get(key) ?? null;
 }
 
-/** Parse un numéro libre en { country_code, number }. Fallback: GN (+224). */
+/** Map d'indicatifs téléphoniques vers code ISO 3166-1 alpha-2 (Chariow attend un code pays ISO). */
+const DIAL_TO_ISO: Record<string, string> = {
+  "224": "GN", // Guinée
+  "225": "CI", // Côte d'Ivoire
+  "221": "SN", // Sénégal
+  "223": "ML", // Mali
+  "226": "BF", // Burkina Faso
+  "227": "NE", // Niger
+  "228": "TG", // Togo
+  "229": "BJ", // Bénin
+  "237": "CM", // Cameroun
+  "33": "FR",
+  "1": "US",
+  "44": "GB",
+  "32": "BE",
+  "41": "CH",
+  "212": "MA",
+  "213": "DZ",
+  "216": "TN",
+};
+
+/** Parse un numéro libre en { country_code (ISO), number }. Fallback: GN. */
 function parsePhone(raw?: string | null): { country_code: string; number: string } {
-  const fallback = { country_code: "224", number: "" };
+  const fallback = { country_code: "GN", number: "" };
   if (!raw) return fallback;
   const trimmed = raw.trim();
   // Format international: +XXX YYYYYYY
   const intl = trimmed.match(/^\+(\d{1,4})[\s\-.]*([\d\s\-.]+)$/);
   if (intl) {
+    const dial = intl[1];
     return {
-      country_code: intl[1],
+      country_code: DIAL_TO_ISO[dial] ?? "GN",
       number: intl[2].replace(/\D/g, ""),
     };
   }
   // Sinon on garde uniquement les chiffres et on suppose Guinée
   const digits = trimmed.replace(/\D/g, "");
   if (digits.startsWith("224") && digits.length > 3) {
-    return { country_code: "224", number: digits.slice(3) };
+    return { country_code: "GN", number: digits.slice(3) };
   }
-  return { country_code: "224", number: digits };
+  return { country_code: "GN", number: digits };
 }
 
 Deno.serve(async (req) => {
