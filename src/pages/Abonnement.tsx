@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -98,6 +99,7 @@ const fmtDay = (d: Date) =>
 const Abonnement = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const {
     plan,
@@ -108,6 +110,7 @@ const Abonnement = () => {
     billingCycle,
     isExpired,
     isLoading: subLoading,
+    refetch: refetchSubscription,
   } = useSubscription();
 
   const [weeks, setWeeks] = useState<WeekPoint[]>([]);
@@ -118,6 +121,40 @@ const Abonnement = () => {
     reservations_mois: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  // Retour Chariow — succès / annulation
+  useEffect(() => {
+    const result = searchParams.get("checkout");
+    if (!result) return;
+    if (result === "success") {
+      toast({
+        title: "🎉 Paiement confirmé",
+        description: "Votre abonnement est en cours d'activation. Cette page se met à jour automatiquement.",
+      });
+      // Poll refetch pendant 20s au cas où le webhook n'aurait pas encore terminé
+      let tries = 0;
+      const iv = setInterval(async () => {
+        tries++;
+        await refetchSubscription();
+        if (tries >= 10) clearInterval(iv);
+      }, 2000);
+    } else if (result === "cancel" || result === "cancelled") {
+      toast({
+        title: "Paiement annulé",
+        description: "Votre paiement a été annulé. Vous pouvez réessayer à tout moment.",
+        variant: "destructive",
+      });
+    } else if (result === "failed") {
+      toast({
+        title: "Échec du paiement",
+        description: "Le paiement n'a pas abouti. Votre abonnement actuel reste inchangé.",
+        variant: "destructive",
+      });
+    }
+    searchParams.delete("checkout");
+    setSearchParams(searchParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -383,12 +420,24 @@ const Abonnement = () => {
                         <Badge variant="destructive" className="gap-1">
                           <AlertTriangle className="w-3 h-3" /> Expiré
                         </Badge>
+                      ) : status === "payment_failed" ? (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="w-3 h-3" /> Paiement échoué
+                        </Badge>
+                      ) : status === "pending_payment" ? (
+                        <Badge className="bg-warning/15 text-warning border border-warning/30 gap-1">
+                          <Sparkles className="w-3 h-3" /> Paiement en attente
+                        </Badge>
+                      ) : status === "cancelled" ? (
+                        <Badge className="bg-muted text-muted-foreground border border-border gap-1">
+                          Annulé
+                        </Badge>
                       ) : isTrial ? (
                         <Badge className="bg-primary/15 text-primary border border-primary/30 gap-1">
                           <Sparkles className="w-3 h-3" /> Essai — {trialDaysLeft} j restant{trialDaysLeft > 1 ? "s" : ""}
                         </Badge>
                       ) : (
-                        <Badge className="bg-primary/15 text-primary border border-primary/30 gap-1">
+                        <Badge className="bg-success/15 text-success border border-success/30 gap-1">
                           <CheckCircle2 className="w-3 h-3" /> Actif
                         </Badge>
                       )}
