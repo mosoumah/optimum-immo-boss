@@ -420,12 +420,24 @@ const Abonnement = () => {
                         <Badge variant="destructive" className="gap-1">
                           <AlertTriangle className="w-3 h-3" /> Expiré
                         </Badge>
+                      ) : status === "payment_failed" ? (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="w-3 h-3" /> Paiement échoué
+                        </Badge>
+                      ) : status === "pending_payment" ? (
+                        <Badge className="bg-warning/15 text-warning border border-warning/30 gap-1">
+                          <Sparkles className="w-3 h-3" /> Paiement en attente
+                        </Badge>
+                      ) : status === "cancelled" ? (
+                        <Badge className="bg-muted text-muted-foreground border border-border gap-1">
+                          Annulé
+                        </Badge>
                       ) : isTrial ? (
                         <Badge className="bg-primary/15 text-primary border border-primary/30 gap-1">
                           <Sparkles className="w-3 h-3" /> Essai — {trialDaysLeft} j restant{trialDaysLeft > 1 ? "s" : ""}
                         </Badge>
                       ) : (
-                        <Badge className="bg-primary/15 text-primary border border-primary/30 gap-1">
+                        <Badge className="bg-success/15 text-success border border-success/30 gap-1">
                           <CheckCircle2 className="w-3 h-3" /> Actif
                         </Badge>
                       )}
