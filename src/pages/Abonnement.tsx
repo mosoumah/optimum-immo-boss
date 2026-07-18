@@ -99,6 +99,7 @@ const fmtDay = (d: Date) =>
 const Abonnement = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
   const {
     plan,
@@ -109,6 +110,7 @@ const Abonnement = () => {
     billingCycle,
     isExpired,
     isLoading: subLoading,
+    refetch: refetchSubscription,
   } = useSubscription();
 
   const [weeks, setWeeks] = useState<WeekPoint[]>([]);
@@ -119,6 +121,40 @@ const Abonnement = () => {
     reservations_mois: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  // Retour Chariow — succès / annulation
+  useEffect(() => {
+    const result = searchParams.get("checkout");
+    if (!result) return;
+    if (result === "success") {
+      toast({
+        title: "🎉 Paiement confirmé",
+        description: "Votre abonnement est en cours d'activation. Cette page se met à jour automatiquement.",
+      });
+      // Poll refetch pendant 20s au cas où le webhook n'aurait pas encore terminé
+      let tries = 0;
+      const iv = setInterval(async () => {
+        tries++;
+        await refetchSubscription();
+        if (tries >= 10) clearInterval(iv);
+      }, 2000);
+    } else if (result === "cancel" || result === "cancelled") {
+      toast({
+        title: "Paiement annulé",
+        description: "Votre paiement a été annulé. Vous pouvez réessayer à tout moment.",
+        variant: "destructive",
+      });
+    } else if (result === "failed") {
+      toast({
+        title: "Échec du paiement",
+        description: "Le paiement n'a pas abouti. Votre abonnement actuel reste inchangé.",
+        variant: "destructive",
+      });
+    }
+    searchParams.delete("checkout");
+    setSearchParams(searchParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
