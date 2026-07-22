@@ -63,7 +63,7 @@ function Card({ t, index }: { t: (typeof testimonials)[number]; index: number })
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -6 }}
-      className="group relative w-[340px] sm:w-[380px] shrink-0 rounded-3xl p-[1px] overflow-hidden"
+      className="group relative w-[280px] sm:w-[340px] md:w-[380px] shrink-0 rounded-3xl p-[1px] overflow-hidden"
     >
       {/* animated gradient border */}
       <div

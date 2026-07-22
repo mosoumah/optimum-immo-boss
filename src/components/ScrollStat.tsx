@@ -74,7 +74,7 @@ export const ScrollStat = ({
       className="text-center md:text-left"
     >
       <motion.div
-        className="font-display text-4xl sm:text-5xl md:text-6xl tracking-tight transition-colors"
+        className="font-display text-2xl sm:text-4xl md:text-6xl tracking-tight transition-colors break-words"
         style={{ color, textShadow: glow }}
       >
         {display}

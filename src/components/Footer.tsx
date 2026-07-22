@@ -7,7 +7,7 @@ export const Footer = () => {
   return (
     <footer className="relative mt-4 border-t border-white/5">
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-      <div className="container mx-auto px-6 py-14">
+      <div className="container mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
           <div className="md:col-span-5">
             <Logo size="md" animated={false} />

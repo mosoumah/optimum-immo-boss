@@ -83,12 +83,12 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="relative w-full flex items-center gap-5 text-left px-5 sm:px-7 py-5 sm:py-6"
+          className="relative w-full flex items-center gap-3 sm:gap-5 text-left px-4 sm:px-7 py-4 sm:py-6"
         >
           <span className="hidden sm:flex text-xs font-mono text-primary/70 tabular-nums w-8">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="flex-1 font-display text-lg sm:text-xl leading-snug text-foreground">
+          <span className="flex-1 font-display text-base sm:text-xl leading-snug text-foreground">
             {q}
           </span>
           <ToggleIcon open={open} />
@@ -104,7 +104,7 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="overflow-hidden"
             >
-              <div className="px-5 sm:px-7 pb-6 sm:pb-7 pl-5 sm:pl-20 pr-16 sm:pr-24">
+              <div className="px-4 sm:px-7 pb-5 sm:pb-7 pl-4 sm:pl-20 pr-4 sm:pr-24">
                 <div className="h-px w-full bg-gradient-to-r from-primary/40 via-primary/10 to-transparent mb-4" />
                 <p className="text-[15px] sm:text-base leading-relaxed text-muted-foreground">
                   {a}

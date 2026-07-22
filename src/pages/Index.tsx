@@ -113,7 +113,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-8 font-display text-[3rem] leading-[0.95] sm:text-7xl md:text-[5.5rem] lg:text-[6.5rem] tracking-tight"
+              className="mt-8 font-display text-[2.5rem] leading-[0.95] sm:text-6xl md:text-[5.5rem] lg:text-[6.5rem] tracking-tight break-words"
             >
               L'excellence{" "}
               <span className="italic text-primary [text-shadow:0_0_60px_hsl(var(--primary)/0.4)]">
@@ -216,8 +216,8 @@ const Index = () => {
 
       {/* ============== STATS BAND ============== */}
       <section ref={statsRef} className="relative py-10 border-y border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
             <ScrollStat
               scrollProgress={statsScrollProgress}
               prefix="+"
