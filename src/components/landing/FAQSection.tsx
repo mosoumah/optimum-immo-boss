@@ -83,12 +83,12 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="relative w-full flex items-center gap-5 text-left px-5 sm:px-7 py-5 sm:py-6"
+          className="relative w-full flex items-center gap-3 sm:gap-5 text-left px-4 sm:px-7 py-4 sm:py-6"
         >
           <span className="hidden sm:flex text-xs font-mono text-primary/70 tabular-nums w-8">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="flex-1 font-display text-lg sm:text-xl leading-snug text-foreground">
+          <span className="flex-1 font-display text-base sm:text-xl leading-snug text-foreground">
             {q}
           </span>
           <ToggleIcon open={open} />
