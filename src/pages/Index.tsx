@@ -216,8 +216,8 @@ const Index = () => {
 
       {/* ============== STATS BAND ============== */}
       <section ref={statsRef} className="relative py-10 border-y border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
             <ScrollStat
               scrollProgress={statsScrollProgress}
               prefix="+"
