@@ -113,7 +113,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-8 font-display text-[3rem] leading-[0.95] sm:text-7xl md:text-[5.5rem] lg:text-[6.5rem] tracking-tight"
+              className="mt-8 font-display text-[2.25rem] xs:text-[2.75rem] leading-[0.95] sm:text-6xl md:text-[5.5rem] lg:text-[6.5rem] tracking-tight break-words"
             >
               L'excellence{" "}
               <span className="italic text-primary [text-shadow:0_0_60px_hsl(var(--primary)/0.4)]">
