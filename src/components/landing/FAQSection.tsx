@@ -104,7 +104,7 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="overflow-hidden"
             >
-              <div className="px-5 sm:px-7 pb-6 sm:pb-7 pl-5 sm:pl-20 pr-16 sm:pr-24">
+              <div className="px-4 sm:px-7 pb-5 sm:pb-7 pl-4 sm:pl-20 pr-4 sm:pr-24">
                 <div className="h-px w-full bg-gradient-to-r from-primary/40 via-primary/10 to-transparent mb-4" />
                 <p className="text-[15px] sm:text-base leading-relaxed text-muted-foreground">
                   {a}
