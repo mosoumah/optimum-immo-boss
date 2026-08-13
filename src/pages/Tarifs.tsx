@@ -16,14 +16,13 @@ import { PLANS, type BillingCycle, type Plan } from "@/lib/pricing/plans";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useEntreprise } from "@/hooks/useEntreprise";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const Tarifs = () => {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
   const { user } = useAuth();
   const { entrepriseId } = useEntreprise();
-  const { isExpired, isTrial, trialDaysLeft, refetch } = useSubscription();
+  const { isExpired, isTrial, trialDaysLeft } = useSubscription();
   const navigate = useNavigate();
 
   const handleSelect = async (plan: Plan) => {
