@@ -33,44 +33,10 @@ const Tarifs = () => {
     }
     if (!entrepriseId) return;
 
-    try {
-      const { data, error } = await supabase.functions.invoke("chariow-checkout", {
-        body: {
-          plan: plan.id,
-          billing_cycle: cycle,
-          success_url: `${window.location.origin}/abonnement?checkout=success`,
-        },
-      });
-
-      // supabase.functions.invoke ne rejette pas: on lit le message d'erreur renvoyé par l'edge function
-      const payload = (data ?? {}) as { checkout_url?: string; error?: string };
-      if (error || payload.error) {
-        // Tenter d'extraire un message plus précis via le body de la réponse
-        let detailedMessage = payload.error ?? "";
-        const ctx = (error as unknown as { context?: Response })?.context;
-        if (!detailedMessage && ctx && typeof ctx.text === "function") {
-          try {
-            const raw = await ctx.text();
-            const parsed = JSON.parse(raw);
-            detailedMessage = parsed?.error ?? raw;
-          } catch {
-            /* ignore */
-          }
-        }
-        throw new Error(detailedMessage || error?.message || "Erreur inconnue");
-      }
-
-      if (!payload.checkout_url) throw new Error("URL de paiement introuvable.");
-      window.location.href = payload.checkout_url;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Erreur inconnue";
-      toast({
-        title: "Paiement indisponible",
-        description: message,
-        variant: "destructive",
-      });
-      refetch();
-    }
+    toast({
+      title: "Paiement en cours d'intégration",
+      description: `Le paiement du forfait ${plan.name} via Lengo Pay sera disponible très prochainement.`,
+    });
   };
 
   return (
