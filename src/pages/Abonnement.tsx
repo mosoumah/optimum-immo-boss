@@ -122,7 +122,7 @@ const Abonnement = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Retour Chariow — succès / annulation
+  // Retour paiement — succès / annulation
   useEffect(() => {
     const result = searchParams.get("checkout");
     if (!result) return;
