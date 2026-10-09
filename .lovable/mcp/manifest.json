@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://pldxyuesaachuhdfrfvh.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "optimum-immo-mcp",
+      "version": "0.1.0",
+      "title": "Optimum Immo MCP"
+    },
+    "tools": [
+      {
+        "name": "list_clients",
+        "title": "Lister les clients",
+        "description": "Liste les clients de l'entreprise de l'utilisateur connecté.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 20,
+              "description": "Nombre maximum de clients à retourner.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_properties",
+        "title": "Lister les biens",
+        "description": "Liste les biens immobiliers de l'entreprise de l'utilisateur connecté.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "statut": {
+              "description": "Filtrer par statut.",
+              "type": "string",
+              "enum": [
+                "disponible",
+                "reserve"
+              ]
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_reservations",
+        "title": "Lister les réservations",
+        "description": "Liste les réservations de l'entreprise de l'utilisateur connecté.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "statut": {
+              "type": "string",
+              "enum": [
+                "en_attente",
+                "en_cours",
+                "terminee",
+                "annulee"
+              ]
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_factures",
+        "title": "Lister les factures",
+        "description": "Liste les factures de l'entreprise de l'utilisateur connecté.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "statut": {
+              "type": "string",
+              "enum": [
+                "brouillon",
+                "envoyee",
+                "paye",
+                "en_retard",
+                "annulee"
+              ]
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_client",
+        "title": "Créer un client",
+        "description": "Crée un nouveau client dans l'entreprise de l'utilisateur connecté.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "nom": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nom complet du client."
+            },
+            "email": {
+              "description": "Email du client.",
+              "type": "string",
+              "format": "email",
+              "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+            },
+            "telephone": {
+              "description": "Numéro de téléphone.",
+              "type": "string"
+            },
+            "adresse": {
+              "description": "Adresse.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "nom"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
