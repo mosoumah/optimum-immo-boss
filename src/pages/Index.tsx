@@ -27,10 +27,9 @@ import { Footer } from "@/components/Footer";
 import { ScrollStat } from "@/components/ScrollStat";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { FAQSection } from "@/components/landing/FAQSection";
-import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 import dashboardHeroBg from "@/assets/dashboard-hero-bg.webp";
 
-const dashboardPreviewHostedUrl = `https://id-preview--02e776e0-6742-41b4-91f4-b05400405586.lovable.app${dashboardPreview.url}`;
+const dashboardPreviewUrl = "/dashboard-preview.png";
 
 
 
@@ -167,18 +166,12 @@ const Index = () => {
             <div className="dashboard-preview-animated relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-card/40 backdrop-blur">
               <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
               <img
-                src={dashboardPreview.url}
+                src={dashboardPreviewUrl}
                 alt="Aperçu du tableau de bord Optimum Immo"
                 className="dashboard-preview-image w-full h-auto block"
                 loading="eager"
                 fetchPriority="high"
-                onError={(event) => {
-                  const image = event.currentTarget;
-
-                  if (image.src !== dashboardPreviewHostedUrl) {
-                    image.src = dashboardPreviewHostedUrl;
-                  }
-                }}
+                onError={(event) => { event.currentTarget.style.display = "none"; }}
               />
             </div>
             {/* Floating chips */}

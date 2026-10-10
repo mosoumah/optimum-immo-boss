@@ -31,7 +31,6 @@ import Abonnement from "./pages/Abonnement";
 
 import ResetPassword from "./pages/ResetPassword";
 import AcceptInvitation from "./pages/AcceptInvitation";
-import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -53,7 +52,6 @@ const App = () => (
             <Route path="/connexion" element={<Connexion />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
-            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route
               path="/profil-entreprise"
               element={

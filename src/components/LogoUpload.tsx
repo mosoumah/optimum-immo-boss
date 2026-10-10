@@ -3,6 +3,7 @@ import { Upload, Image, Loader2, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { extractLogoColors, DEFAULT_LOGO_COLORS } from "@/lib/extractLogoColors";
 
 interface LogoUploadProps {
   entrepriseId: string;
@@ -20,20 +21,16 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const analyzeLogoColors = async (logoUrl: string) => {
+  const analyzeLogoColors = async (source: File | string) => {
     setIsAnalyzing(true);
     try {
-      const response = await supabase.functions.invoke("analyze-logo", {
-        body: { logoUrl },
-      });
-
-      if (response.error) {
-        console.error("Error analyzing logo:", response.error);
-        toast.error("Erreur lors de l'analyse des couleurs");
-        return null;
+      let colors = DEFAULT_LOGO_COLORS;
+      try {
+        colors = await extractLogoColors(source);
+      } catch (e) {
+        console.error("Error extracting logo colors:", e);
+        toast.error("Couleurs du logo illisibles, palette par défaut conservée");
       }
-
-      const colors = response.data;
       
       if (colors.couleur_primaire && colors.couleur_secondaire && colors.couleur_accent) {
         // Update entreprise with colors
@@ -120,8 +117,8 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
 
       toast.success("Logo mis à jour avec succès");
       
-      // Analyze logo colors with AI
-      const colors = await analyzeLogoColors(logoUrl);
+      // Extract logo colors locally (browser)
+      const colors = await analyzeLogoColors(file);
       onLogoUpdated(logoUrl, colors || undefined);
       
     } catch (error) {
@@ -167,7 +164,7 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
           <p className="font-medium text-sm">Logo de l'entreprise</p>
           <p className="text-xs text-muted-foreground">
             {isAnalyzing 
-              ? "Analyse IA en cours..." 
+              ? "Analyse des couleurs en cours..." 
               : isUploading 
                 ? "Upload en cours..." 
                 : currentLogo 

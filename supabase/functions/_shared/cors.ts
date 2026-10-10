@@ -1,13 +1,9 @@
 /**
  * Shared CORS helper — Optimum Immo
- * Autorise uniquement les origines connues (production + previews Lovable)
+ * Autorise uniquement les origines connues (production Hostinger + domaine APP_URL)
  */
 
 const ALLOWED_ORIGINS: RegExp[] = [
-  // Production & previews Lovable
-  /^https:\/\/.*\.lovable\.app$/,
-  /^https:\/\/.*\.lovableproject\.com$/,
-  /^https:\/\/.*\.lovable\.dev$/,
   // Production Hostinger
   /^https:\/\/.*\.hostingersite\.com$/,
   // Développement local uniquement

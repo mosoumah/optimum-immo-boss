@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     // 6. Call AI model
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const apiKey = Deno.env.get("DEEPSEEK_API_KEY");
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "Configuration IA manquante" }), {
         status: 500,
@@ -143,14 +143,14 @@ Données:
 
 Réponds uniquement avec le résumé, sans titre ni préambule.`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "deepseek-chat",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 300,
       }),
