@@ -67,9 +67,10 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Veuillez sélectionner une image (PNG, JPG, etc.)");
+    // Validate file type (raster uniquement : SVG écarté, cf. image/svg+xml)
+    const ALLOWED_LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"];
+    if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
+      toast.error("Format non supporté : utilisez PNG, JPEG ou WebP");
       return;
     }
 
@@ -88,7 +89,7 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("logos")
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { upsert: false });
 
       if (uploadError) {
         console.error("Upload error:", uploadError);
@@ -176,7 +177,7 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpeg,image/webp"
             onChange={handleLogoUpload}
             className="hidden"
             id="logo-upload"

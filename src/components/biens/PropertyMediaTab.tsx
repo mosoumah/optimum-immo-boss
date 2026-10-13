@@ -185,7 +185,7 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
           <input
             ref={imgInput}
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpeg,image/webp"
             multiple
             className="hidden"
             onChange={(e) => {

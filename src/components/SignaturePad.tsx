@@ -87,7 +87,9 @@ export const SignaturePad = ({ currentSignature, onSignatureSave }: SignaturePad
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) return;
+    // PNG/JPEG uniquement, 500 Ko maximum
+    if (file.type !== "image/png" && file.type !== "image/jpeg") return;
+    if (file.size > 500 * 1024) return;
     const reader = new FileReader();
     reader.onloadend = () => {
       onSignatureSave(reader.result as string);

@@ -67,11 +67,12 @@ const ProfilEntreprise = () => {
     const file = e.target.files?.[0];
     if (!file || !entrepriseId) return;
 
-    // Check if it's an image
-    if (!file.type.startsWith("image/")) {
+    // Check if it's an image (raster uniquement : SVG écarté, cf. image/svg+xml)
+    const ALLOWED_LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"];
+    if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
       toast({
-        title: "Fichier invalide",
-        description: "Veuillez sélectionner une image.",
+        title: "Format non supporté",
+        description: "Utilisez une image PNG, JPEG ou WebP.",
         variant: "destructive",
       });
       return;
@@ -90,14 +91,14 @@ const ProfilEntreprise = () => {
     setIsUploadingLogo(true);
 
     try {
-      // Create unique file name
+      // Nom unique horodaté : évite d'écraser le logo précédent à une URL stable
       const fileExt = file.name.split(".").pop();
-      const fileName = `${entrepriseId}/logo.${fileExt}`;
+      const fileName = `${entrepriseId}/logo-${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("logos")
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { upsert: false });
 
       if (uploadError) throw uploadError;
 
@@ -229,7 +230,7 @@ const ProfilEntreprise = () => {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleLogoUpload}
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/webp"
                     className="hidden"
                   />
                   <Button 
