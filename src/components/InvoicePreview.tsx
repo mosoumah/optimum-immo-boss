@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { sanitizeHexColor } from "@/lib/escapeHtml";
 
 interface InvoicePreviewProps {
   entreprise: {
@@ -72,10 +73,10 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
 
     const logoSrc = logoDataUrl || entreprise.logo;
     
-    // Dynamic colors from brand or defaults
-    const primaryColor = entreprise.couleur_primaire || "#1B5E3C";
-    const secondaryColor = entreprise.couleur_secondaire || "#F8F6F2";
-    const accentColor = entreprise.couleur_accent || "#C9A962";
+    // Dynamic colors from brand or defaults (valeurs hex validées)
+    const primaryColor = sanitizeHexColor(entreprise.couleur_primaire, "#1B5E3C");
+    const secondaryColor = sanitizeHexColor(entreprise.couleur_secondaire, "#F8F6F2");
+    const accentColor = sanitizeHexColor(entreprise.couleur_accent, "#C9A962");
     
     // Calculated contrast colors
     const primaryTextColor = getContrastColor(primaryColor);
