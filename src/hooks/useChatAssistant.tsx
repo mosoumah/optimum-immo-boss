@@ -64,6 +64,18 @@ const saveHistory = (convos: Conversation[]) => {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(convos.slice(0, MAX_HISTORY)));
 };
 
+/**
+ * Supprime l'historique local du chat.
+ * Appelé à la déconnexion : l'historique peut contenir des données clients.
+ */
+export const clearChatAssistantHistory = (): void => {
+  try {
+    localStorage.removeItem(HISTORY_KEY);
+  } catch {
+    // localStorage indisponible (mode privé, quota) : rien à purger.
+  }
+};
+
 export const useChatAssistant = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [history, setHistory] = useState<Conversation[]>(loadHistory);

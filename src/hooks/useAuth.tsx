@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearChatAssistantHistory } from "@/hooks/useChatAssistant";
 
 interface AuthContextType {
   user: User | null;
@@ -92,6 +93,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+
+    // Purge les données applicatives locales (peuvent contenir des données clients).
+    // La session Supabase (clé sb-*-auth-token) est retirée par signOut lui-même.
+    clearChatAssistantHistory();
+
     setUser(null);
     setSession(null);
   };
