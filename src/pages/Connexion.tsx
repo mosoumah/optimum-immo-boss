@@ -10,6 +10,36 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Valide qu'une destination post-connexion reste une route interne.
+ *
+ * Rejette tout ce que le navigateur peut réinterpréter comme une URL absolue :
+ * les barres obliques inverses (normalisées en / dans les URL spéciales) et les
+ * espaces/tabulations, qui permettaient de fabriquer une redirection externe.
+ */
+const resolveSafeNext = (raw: string | null): string | null => {
+  if (!raw) return null;
+
+  // Décoder les séquences %XX AVANT de valider : sinon /%5Cevil.com et
+  // /%09/evil.com passent la garde ici puis sont réinterprétés par le navigateur.
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+
+  if (!/^\/[^/\\\s]/.test(decoded)) return null;
+
+  try {
+    const target = new URL(decoded, window.location.origin);
+    if (target.origin !== window.location.origin) return null;
+    return target.pathname + target.search + target.hash;
+  } catch {
+    return null;
+  }
+};
+
 const Connexion = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +50,7 @@ const Connexion = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextParam = searchParams.get("next");
-  const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
+  const safeNext = resolveSafeNext(nextParam);
   const { signIn, user, isReady } = useAuth();
   const redirectingRef = useRef(false);
 
@@ -57,7 +87,7 @@ const Connexion = () => {
       }
     };
     checkRoleAndRedirect();
-  }, [user, isReady, navigate, toast]);
+  }, [user, isReady, navigate, toast, safeNext]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
