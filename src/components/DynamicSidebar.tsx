@@ -3,13 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
-  FileText,
   Receipt,
   TrendingUp,
   TrendingDown,
   CheckSquare,
-  
-  ImagePlus,
   Settings,
   LogOut,
   UserCog,

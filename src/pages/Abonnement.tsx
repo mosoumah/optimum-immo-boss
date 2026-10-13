@@ -30,7 +30,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Activity } from "lucide-react";
+import { Activity } from "lucide-react";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { Button } from "@/components/ui/button";

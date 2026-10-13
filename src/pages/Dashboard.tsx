@@ -3,11 +3,9 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Users,
-  FileText,
   Receipt,
   TrendingDown,
   CheckSquare,
-  
   Plus,
   CalendarCheck,
 } from "lucide-react";

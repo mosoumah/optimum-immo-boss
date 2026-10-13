@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Building2, LogOut, Save, ToggleLeft, PenTool } from "lucide-react";
+import { ArrowLeft, User, Building2, LogOut, Save, PenTool } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { LogoUpload } from "@/components/LogoUpload";
-import { useAgencySettings } from "@/hooks/useAgencySettings";
 import { SignaturePad } from "@/components/SignaturePad";
 
 interface Profile {

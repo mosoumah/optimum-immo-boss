@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
 import { PLANS, type BillingCycle, type Plan } from "@/lib/pricing/plans";
 import { PlanCard } from "@/components/pricing/PlanCard";
-import { BillingToggle } from "@/components/pricing/BillingToggle";
 import {
   Users,
   Receipt,
@@ -61,7 +60,7 @@ const benefits = [
 const Index = () => {
   const statsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
+  const [billingCycle] = useState<BillingCycle>("monthly");
   const { scrollYProgress: statsScrollProgress } = useScroll({
     target: statsRef,
     offset: ["start end", "end start"],

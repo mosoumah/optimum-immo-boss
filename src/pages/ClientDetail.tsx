@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, ArrowLeft, FileText, Receipt, Mail, Phone, CalendarCheck, Handshake } from "lucide-react";
+import { Users, ArrowLeft, Receipt, Mail, Phone, CalendarCheck, Handshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
