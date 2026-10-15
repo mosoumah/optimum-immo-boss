@@ -44,9 +44,11 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { PLANS, formatGNF, type PlanId } from "@/lib/pricing/plans";
 import {
   plansTable,
+  subscriptionPaymentsTable,
   type PlanRow,
   type CheckoutCreateResponse,
   type CheckoutSyncResponse,
+  type SubscriptionPaymentRow,
 } from "@/types/billing";
 
 /**
@@ -72,6 +74,20 @@ const PLAN_ICON: Record<string, typeof Rocket> = {
   starter: Rocket,
   standard: Crown,
   pro: Gem,
+};
+
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  pending: "En attente",
+  success: "Réussi",
+  failed: "Échoué",
+  cancelled: "Annulé",
+};
+
+const PAYMENT_STATUS_STYLE: Record<string, string> = {
+  pending: "border-warning/40 bg-warning/10 text-warning",
+  success: "border-success/40 bg-success/10 text-success",
+  failed: "border-destructive/40 bg-destructive/10 text-destructive",
+  cancelled: "border-border/50 bg-muted/20 text-muted-foreground",
 };
 
 const PLAN_LABEL: Record<string, string> = {
@@ -149,6 +165,35 @@ const Abonnement = () => {
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<PlanRow[]>([]);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [payments, setPayments] = useState<SubscriptionPaymentRow[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+
+  // Historique des paiements — lecture seule, reservee a l'admin, 20 dernieres.
+  useEffect(() => {
+    if (!isAdmin || !entrepriseId) return;
+    let active = true;
+
+    (async () => {
+      setPaymentsLoading(true);
+      try {
+        const { data, error } = await subscriptionPaymentsTable()
+          .select("id, entreprise_id, plan, montant, devise, statut, paid_at, created_at")
+          .eq("entreprise_id", entrepriseId)
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (error) throw error;
+        if (active) setPayments(data ?? []);
+      } catch {
+        if (active) setPayments([]);
+      } finally {
+        if (active) setPaymentsLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [isAdmin, entrepriseId]);
   // Retour SasPay : 'checking' | 'failed' | 'timeout' | null
   const [paymentSync, setPaymentSync] = useState<"checking" | "failed" | "timeout" | null>(null);
   const [syncAttempt, setSyncAttempt] = useState(0);
@@ -1165,6 +1210,73 @@ const Abonnement = () => {
                     </div>
                   ))}
                 </div>
+              </motion.div>
+            )}
+
+            {/* Historique des paiements — admin, lecture seule */}
+            {isAdmin && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-6 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-6"
+              >
+                <h3 className="font-bold mb-4 flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-primary" />
+                  Historique des paiements
+                </h3>
+
+                {paymentsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    Chargement...
+                  </div>
+                ) : payments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4">
+                    Aucun paiement enregistré pour le moment.
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs text-muted-foreground border-b border-border/50">
+                          <th className="pb-2 pr-4 font-medium">Formule</th>
+                          <th className="pb-2 pr-4 font-medium">Montant</th>
+                          <th className="pb-2 pr-4 font-medium">Statut</th>
+                          <th className="pb-2 font-medium">Payé le</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.map((p) => (
+                          <tr key={p.id} className="border-b border-border/30 last:border-0">
+                            <td className="py-2.5 pr-4 font-medium capitalize">
+                              {PLAN_LABEL[p.plan] ?? p.plan}
+                            </td>
+                            <td className="py-2.5 pr-4">
+                              {formatGNF(Number(p.montant))}
+                              <span className="text-muted-foreground"> {p.devise}</span>
+                            </td>
+                            <td className="py-2.5 pr-4">
+                              <span
+                                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${
+                                  PAYMENT_STATUS_STYLE[p.statut] ??
+                                  "border-border/50 text-muted-foreground"
+                                }`}
+                              >
+                                {PAYMENT_STATUS_LABEL[p.statut] ?? p.statut}
+                              </span>
+                            </td>
+                            <td className="py-2.5 text-muted-foreground">
+                              {p.paid_at
+                                ? new Date(p.paid_at).toLocaleDateString("fr-FR")
+                                : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </motion.div>
             )}
           </div>
