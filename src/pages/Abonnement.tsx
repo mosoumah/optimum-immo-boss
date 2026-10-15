@@ -19,6 +19,7 @@ import {
   Infinity as InfinityIcon,
   ShieldCheck,
   Zap,
+  Smartphone,
 } from "lucide-react";
 import {
   ComposedChart,
@@ -41,11 +42,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
+import { usePlans, toCycleParam, fromCycleParam } from "@/hooks/usePlans";
+import { BillingToggle } from "@/components/pricing/BillingToggle";
 import { PLANS, formatGNF, type PlanId } from "@/lib/pricing/plans";
 import {
-  plansTable,
   subscriptionPaymentsTable,
-  type PlanRow,
   type CheckoutCreateResponse,
   type CheckoutSyncResponse,
   type SubscriptionPaymentRow,
@@ -163,10 +164,18 @@ const Abonnement = () => {
     reservations_mois: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [plans, setPlans] = useState<PlanRow[]>([]);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [payments, setPayments] = useState<SubscriptionPaymentRow[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const { plans: dbPlans } = usePlans();
+
+  // Cycle affiché : initialisé depuis ?cycle= de l'URL (retour de la page Tarifs).
+  const [cycle, setCycle] = useState<"monthly" | "yearly">(() =>
+    fromCycleParam(searchParams.get("cycle")),
+  );
+
+  // Formule à mettre en évidence depuis ?plan= (aucun paiement automatique).
+  const highlightedPlan = searchParams.get("plan");
 
   // Historique des paiements — lecture seule, reservee a l'admin, 20 dernieres.
   useEffect(() => {
@@ -177,7 +186,9 @@ const Abonnement = () => {
       setPaymentsLoading(true);
       try {
         const { data, error } = await subscriptionPaymentsTable()
-          .select("id, entreprise_id, plan, montant, devise, statut, paid_at, created_at")
+          .select(
+            "id, entreprise_id, plan, montant, devise, statut, billing_cycle, paid_at, created_at",
+          )
           .eq("entreprise_id", entrepriseId)
           .order("created_at", { ascending: false })
           .limit(20);
@@ -310,14 +321,14 @@ const Abonnement = () => {
 
   /**
    * Demarre un paiement SasPay. Aucun montant n'est transmis : la fonction
-   * serveur le determine depuis le code de formule.
+   * serveur le determine depuis le code de formule et le cycle.
    */
   const handleChoosePlan = async (code: string) => {
     if (purchasing) return;
     setPurchasing(code);
     try {
       const { data, error } = await supabase.functions.invoke("saspay-checkout", {
-        body: { action: "create", plan: code },
+        body: { action: "create", plan: code, cycle: toCycleParam(cycle) },
       });
       if (error) {
         toast({
@@ -349,27 +360,6 @@ const Abonnement = () => {
       setPurchasing(null);
     }
   };
-
-  // Formules : lues depuis public.plans. En cas d'erreur ou de table vide, on
-  // retombe sur les constantes locales pour ne jamais casser la page.
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const { data, error } = await plansTable()
-          .select("code, nom, prix_mensuel_gnf, max_utilisateurs, max_factures_par_mois, actif")
-          .eq("actif", true)
-          .order("prix_mensuel_gnf", { ascending: true });
-        if (error) throw error;
-        if (active && data && data.length > 0) setPlans(data);
-      } catch {
-        // Repli silencieux : les constantes locales prennent le relais.
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Retour paiement — succès / annulation
   useEffect(() => {
@@ -541,27 +531,31 @@ const Abonnement = () => {
   const planLabel = PLAN_LABEL[plan] ?? plan;
 
   // Référentiel DB indexé par code (vide si la table est indisponible).
-  const plansByCode = new Map(plans.map((p) => [p.code, p]));
+  const plansByCode = new Map(dbPlans.map((p) => [p.code, p]));
 
-  const fallbackPlanData = PLANS.find((p) => p.id === (plan as PlanId));
-  const dbPlan = plansByCode.get(plan);
-  const fallbackQuota = PLAN_QUOTAS[plan] ?? PLAN_QUOTAS.trial;
+  // Formule mise en avant : celle venue de ?plan= (choix en cours), sinon la
+  // formule active. Permet d'afficher les limites de la formule choisie.
+  const displayCode =
+    highlightedPlan && plansByCode.has(highlightedPlan) ? highlightedPlan : plan;
+
+  const fallbackPlanData = PLANS.find((p) => p.id === (displayCode as PlanId));
+  const dbPlan = plansByCode.get(displayCode);
+  const fallbackQuota = PLAN_QUOTAS[displayCode] ?? PLAN_QUOTAS.trial;
 
   // Prix et nom : base si disponible, sinon constantes locales.
+  // Le prix annuel vient de plans.prix_annuel_gnf (calculé par la base), jamais d'un x10 local.
   const planData = dbPlan
     ? {
         name: dbPlan.nom,
-        priceMonthly: Number(dbPlan.prix_mensuel_gnf),
-        priceYearly: Number(dbPlan.prix_mensuel_gnf) * 10,
+        priceMonthly: dbPlan.monthly,
+        priceYearly: dbPlan.annual,
       }
     : fallbackPlanData;
 
   // Limites : base si disponible (NULL = illimité), sinon constantes locales.
   const quota: PlanQuota = {
-    factures_mois: dbPlan
-      ? dbPlan.max_factures_par_mois
-      : fallbackQuota.factures_mois,
-    utilisateurs: dbPlan ? dbPlan.max_utilisateurs : fallbackQuota.utilisateurs,
+    factures_mois: dbPlan ? dbPlan.maxFacturesParMois : fallbackQuota.factures_mois,
+    utilisateurs: dbPlan ? dbPlan.maxUtilisateurs : fallbackQuota.utilisateurs,
     biens: fallbackQuota.biens,
     reservations_mois: fallbackQuota.reservations_mois,
   };
@@ -757,76 +751,95 @@ const Abonnement = () => {
             )}
 
             {/* Choix de formule — achat SasPay, reserve a l'admin */}
-            {plans.length > 0 && (
+            {dbPlans.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.03 }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+                className="mb-6"
               >
-                {plans.map((dbPlan) => {
-                  const PlanCardIcon = PLAN_ICON[dbPlan.code] ?? Sparkles;
-                  const isCurrent = plan === dbPlan.code;
-                  const canChoose = isAdmin && !isCurrent;
+                <div className="flex justify-center mb-5">
+                  <BillingToggle value={cycle} onChange={setCycle} />
+                </div>
 
-                  return (
-                    <div
-                      key={dbPlan.code}
-                      className={`rounded-2xl border p-5 backdrop-blur-sm ${
-                        isCurrent
-                          ? "border-primary/50 bg-primary/5"
-                          : "border-border/50 bg-card/60"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
-                          <PlanCardIcon className="w-5 h-5 text-primary" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {dbPlans.map((dbPlan) => {
+                    const PlanCardIcon = PLAN_ICON[dbPlan.code] ?? Sparkles;
+                    const isCurrent = plan === dbPlan.code;
+                    const isHighlighted = highlightedPlan === dbPlan.code;
+                    const canChoose = isAdmin && !isCurrent;
+
+                    return (
+                      <div
+                        key={dbPlan.code}
+                        className={`rounded-2xl border p-5 backdrop-blur-sm transition-all ${
+                          isCurrent
+                            ? "border-primary/50 bg-primary/5"
+                            : isHighlighted
+                              ? "border-primary/60 bg-primary/[0.07] ring-2 ring-primary/30"
+                              : "border-border/50 bg-card/60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
+                            <PlanCardIcon className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-bold">{dbPlan.nom}</div>
+                            {isCurrent && (
+                              <div className="text-xs text-primary">Forfait actuel</div>
+                            )}
+                            {isHighlighted && !isCurrent && (
+                              <div className="text-xs text-primary">Formule sélectionnée</div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <div className="font-bold">{dbPlan.nom}</div>
-                          {isCurrent && (
-                            <div className="text-xs text-primary">Forfait actuel</div>
+
+                        <div className="mb-4">
+                          <span className="text-2xl font-bold">
+                            {formatGNF(cycle === "yearly" ? dbPlan.annual : dbPlan.monthly)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {" "}/ {cycle === "yearly" ? "an" : "mois"}
+                          </span>
+                          {cycle === "yearly" && (
+                            <div className="text-xs font-semibold text-primary mt-1">
+                              2 mois offerts
+                            </div>
                           )}
                         </div>
-                      </div>
 
-                      <div className="mb-4">
-                        <span className="text-2xl font-bold">
-                          {formatGNF(Number(dbPlan.prix_mensuel_gnf))}
-                        </span>
-                        <span className="text-xs text-muted-foreground"> / mois</span>
-                      </div>
+                        <div className="text-xs text-muted-foreground mb-4">
+                          {dbPlan.maxUtilisateurs ?? "Illimité"} utilisateur
+                          {dbPlan.maxUtilisateurs === 1 ? "" : "s"} ·{" "}
+                          {dbPlan.maxFacturesParMois ?? "Illimité"} facture
+                          {dbPlan.maxFacturesParMois === 1 ? "" : "s"} / mois
+                        </div>
 
-                      <div className="text-xs text-muted-foreground mb-4">
-                        {dbPlan.max_utilisateurs ?? "Illimité"} utilisateur
-                        {dbPlan.max_utilisateurs === 1 ? "" : "s"} ·{" "}
-                        {dbPlan.max_factures_par_mois ?? "Illimité"} facture
-                        {dbPlan.max_factures_par_mois === 1 ? "" : "s"} / mois
+                        {canChoose && (
+                          <Button
+                            type="button"
+                            className="w-full rounded-xl gap-2"
+                            disabled={purchasing !== null}
+                            onClick={() => handleChoosePlan(dbPlan.code)}
+                          >
+                            {purchasing === dbPlan.code ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                                Redirection...
+                              </>
+                            ) : (
+                              <>
+                                Choisir {dbPlan.nom}
+                                <ArrowUpRight className="w-4 h-4" />
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
-
-                      {canChoose && (
-                        <Button
-                          type="button"
-                          className="w-full rounded-xl gap-2"
-                          disabled={purchasing !== null}
-                          onClick={() => handleChoosePlan(dbPlan.code)}
-                        >
-                          {purchasing === dbPlan.code ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                              Redirection...
-                            </>
-                          ) : (
-                            <>
-                              Choisir {dbPlan.nom}
-                              <ArrowUpRight className="w-4 h-4" />
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </motion.div>
             )}
 
@@ -1241,6 +1254,7 @@ const Abonnement = () => {
                       <thead>
                         <tr className="text-left text-xs text-muted-foreground border-b border-border/50">
                           <th className="pb-2 pr-4 font-medium">Formule</th>
+                          <th className="pb-2 pr-4 font-medium">Période</th>
                           <th className="pb-2 pr-4 font-medium">Montant</th>
                           <th className="pb-2 pr-4 font-medium">Statut</th>
                           <th className="pb-2 font-medium">Payé le</th>
@@ -1251,6 +1265,9 @@ const Abonnement = () => {
                           <tr key={p.id} className="border-b border-border/30 last:border-0">
                             <td className="py-2.5 pr-4 font-medium capitalize">
                               {PLAN_LABEL[p.plan] ?? p.plan}
+                            </td>
+                            <td className="py-2.5 pr-4 text-muted-foreground">
+                              {p.billing_cycle === "annual" ? "Annuel" : "Mensuel"}
                             </td>
                             <td className="py-2.5 pr-4">
                               {formatGNF(Number(p.montant))}
@@ -1279,6 +1296,20 @@ const Abonnement = () => {
                 )}
               </motion.div>
             )}
+
+            {/* Moyens de paiement */}
+            <div className="mt-6 text-center">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-semibold">
+                Moyen de paiement accepté
+              </p>
+              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 text-sm font-semibold">
+                <Smartphone className="w-4 h-4" />
+                MTN Mobile Money
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Vous n'avez pas de compte Mobile Money ? Contactez-nous.
+              </p>
+            </div>
           </div>
         </div>
       </main>

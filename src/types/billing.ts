@@ -10,12 +10,17 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type PlanCode = "starter" | "standard" | "pro";
 
+/** Cycle de facturation tel qu'attendu par saspay-checkout et les paramètres d'URL. */
+export type BillingCycleParam = "monthly" | "annual";
+
 /** Ligne de public.plans */
 export interface PlanRow {
   code: string;
   nom: string;
   /** numeric : peut arriver en chaîne selon le driver PostgREST. */
   prix_mensuel_gnf: number | string;
+  /** numeric, calculé par la base (mensuel x 10, 2 mois offerts). */
+  prix_annuel_gnf: number | string;
   /** NULL = illimité */
   max_utilisateurs: number | null;
   /** NULL = illimité */
@@ -33,6 +38,7 @@ export interface SubscriptionPaymentRow {
   montant: number | string;
   devise: string;
   statut: PaymentStatus;
+  billing_cycle: BillingCycleParam | null;
   saspay_session_id: string | null;
   saspay_payment_id: string | null;
   saspay_reference: string | null;
