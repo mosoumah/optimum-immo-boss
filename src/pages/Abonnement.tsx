@@ -41,6 +41,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLANS, formatGNF, type PlanId } from "@/lib/pricing/plans";
+import { plansTable, type PlanRow } from "@/types/billing";
 
 const PLAN_ICON: Record<string, typeof Rocket> = {
   trial: Sparkles,
@@ -121,6 +122,28 @@ const Abonnement = () => {
     reservations_mois: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [plans, setPlans] = useState<PlanRow[]>([]);
+
+  // Formules : lues depuis public.plans. En cas d'erreur ou de table vide, on
+  // retombe sur les constantes locales pour ne jamais casser la page.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await plansTable()
+          .select("code, nom, prix_mensuel_gnf, max_utilisateurs, max_factures_par_mois, actif")
+          .eq("actif", true)
+          .order("prix_mensuel_gnf", { ascending: true });
+        if (error) throw error;
+        if (active && data && data.length > 0) setPlans(data);
+      } catch {
+        // Repli silencieux : les constantes locales prennent le relais.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Retour paiement — succès / annulation
   useEffect(() => {
@@ -290,8 +313,32 @@ const Abonnement = () => {
 
   const PlanIcon = PLAN_ICON[plan] ?? Sparkles;
   const planLabel = PLAN_LABEL[plan] ?? plan;
-  const planData = PLANS.find((p) => p.id === (plan as PlanId));
-  const quota = PLAN_QUOTAS[plan] ?? PLAN_QUOTAS.trial;
+
+  // Référentiel DB indexé par code (vide si la table est indisponible).
+  const plansByCode = new Map(plans.map((p) => [p.code, p]));
+
+  const fallbackPlanData = PLANS.find((p) => p.id === (plan as PlanId));
+  const dbPlan = plansByCode.get(plan);
+  const fallbackQuota = PLAN_QUOTAS[plan] ?? PLAN_QUOTAS.trial;
+
+  // Prix et nom : base si disponible, sinon constantes locales.
+  const planData = dbPlan
+    ? {
+        name: dbPlan.nom,
+        priceMonthly: Number(dbPlan.prix_mensuel_gnf),
+        priceYearly: Number(dbPlan.prix_mensuel_gnf) * 10,
+      }
+    : fallbackPlanData;
+
+  // Limites : base si disponible (NULL = illimité), sinon constantes locales.
+  const quota: PlanQuota = {
+    factures_mois: dbPlan
+      ? dbPlan.max_factures_par_mois
+      : fallbackQuota.factures_mois,
+    utilisateurs: dbPlan ? dbPlan.max_utilisateurs : fallbackQuota.utilisateurs,
+    biens: fallbackQuota.biens,
+    reservations_mois: fallbackQuota.reservations_mois,
+  };
 
   const quotaItems: {
     key: keyof UsageCounts;
@@ -734,7 +781,7 @@ const Abonnement = () => {
 
 
             {/* Plan features reminder */}
-            {planData && (
+            {planData && fallbackPlanData && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -746,7 +793,7 @@ const Abonnement = () => {
                   Inclus dans votre forfait {planData.name}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {planData.features.map((f) => (
+                  {fallbackPlanData.features.map((f) => (
                     <div key={f} className="flex items-start gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       <span>{f}</span>
