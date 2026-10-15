@@ -40,8 +40,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useUserRole } from "@/hooks/useUserRole";
 import { PLANS, formatGNF, type PlanId } from "@/lib/pricing/plans";
-import { plansTable, type PlanRow } from "@/types/billing";
+import {
+  plansTable,
+  type PlanRow,
+  type CheckoutCreateResponse,
+} from "@/types/billing";
+
+/**
+ * Extrait le message d'erreur reel d'une Edge Function.
+ * Un statut non-2xx donne une FunctionsHttpError dont le message est generique :
+ * le corps JSON { error } porte le vrai motif.
+ */
+const readFunctionError = async (error: unknown, fallback: string): Promise<string> => {
+  const context = (error as { context?: { json?: () => Promise<unknown> } } | null)?.context;
+  if (context && typeof context.json === "function") {
+    try {
+      const body = (await context.json()) as { error?: string } | null;
+      if (body?.error) return body.error;
+    } catch {
+      // Corps illisible : on garde le message de repli.
+    }
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
+};
 
 const PLAN_ICON: Record<string, typeof Rocket> = {
   trial: Sparkles,
@@ -102,6 +125,7 @@ const Abonnement = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
+  const { isAdmin } = useUserRole();
   const {
     plan,
     status,
@@ -123,6 +147,49 @@ const Abonnement = () => {
   });
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<PlanRow[]>([]);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+
+  /**
+   * Demarre un paiement SasPay. Aucun montant n'est transmis : la fonction
+   * serveur le determine depuis le code de formule.
+   */
+  const handleChoosePlan = async (code: string) => {
+    if (purchasing) return;
+    setPurchasing(code);
+    try {
+      const { data, error } = await supabase.functions.invoke("saspay-checkout", {
+        body: { action: "create", plan: code },
+      });
+      if (error) {
+        toast({
+          title: "Paiement impossible",
+          description: await readFunctionError(error, "Le service de paiement est indisponible."),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const url = (data as CheckoutCreateResponse | null)?.checkout_url;
+      if (!url) {
+        toast({
+          title: "Paiement impossible",
+          description: "Aucune page de paiement renvoyée par le serveur.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      window.location.href = url;
+    } catch (err) {
+      toast({
+        title: "Paiement impossible",
+        description: await readFunctionError(err, "Erreur inattendue lors de l'initialisation du paiement."),
+        variant: "destructive",
+      });
+    } finally {
+      setPurchasing(null);
+    }
+  };
 
   // Formules : lues depuis public.plans. En cas d'erreur ou de table vide, on
   // retombe sur les constantes locales pour ne jamais casser la page.
@@ -419,6 +486,80 @@ const Abonnement = () => {
                 </Button>
               </Link>
             </motion.div>
+
+            {/* Choix de formule — achat SasPay, reserve a l'admin */}
+            {plans.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.03 }}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+              >
+                {plans.map((dbPlan) => {
+                  const PlanCardIcon = PLAN_ICON[dbPlan.code] ?? Sparkles;
+                  const isCurrent = plan === dbPlan.code;
+                  const canChoose = isAdmin && !isCurrent;
+
+                  return (
+                    <div
+                      key={dbPlan.code}
+                      className={`rounded-2xl border p-5 backdrop-blur-sm ${
+                        isCurrent
+                          ? "border-primary/50 bg-primary/5"
+                          : "border-border/50 bg-card/60"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
+                          <PlanCardIcon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold">{dbPlan.nom}</div>
+                          {isCurrent && (
+                            <div className="text-xs text-primary">Forfait actuel</div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <span className="text-2xl font-bold">
+                          {formatGNF(Number(dbPlan.prix_mensuel_gnf))}
+                        </span>
+                        <span className="text-xs text-muted-foreground"> / mois</span>
+                      </div>
+
+                      <div className="text-xs text-muted-foreground mb-4">
+                        {dbPlan.max_utilisateurs ?? "Illimité"} utilisateur
+                        {dbPlan.max_utilisateurs === 1 ? "" : "s"} ·{" "}
+                        {dbPlan.max_factures_par_mois ?? "Illimité"} facture
+                        {dbPlan.max_factures_par_mois === 1 ? "" : "s"} / mois
+                      </div>
+
+                      {canChoose && (
+                        <Button
+                          type="button"
+                          className="w-full rounded-xl gap-2"
+                          disabled={purchasing !== null}
+                          onClick={() => handleChoosePlan(dbPlan.code)}
+                        >
+                          {purchasing === dbPlan.code ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                              Redirection...
+                            </>
+                          ) : (
+                            <>
+                              Choisir {dbPlan.nom}
+                              <ArrowUpRight className="w-4 h-4" />
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
 
             {/* Trial expired banner */}
             {isExpired && (
