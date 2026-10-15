@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -29,6 +29,19 @@ const Inscription = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Forfait et cycle choisis sur la page Tarifs, a reprendre apres l'inscription.
+  const plansQuery = useMemo(() => {
+    const query = new URLSearchParams();
+    const plan = searchParams.get("plan");
+    if (plan) query.set("plan", plan);
+    const cycle = searchParams.get("cycle");
+    if (cycle) query.set("cycle", cycle);
+    return query.toString();
+  }, [searchParams]);
+
+  const plansSuffix = plansQuery ? `?${plansQuery}` : "";
 
   const [formData, setFormData] = useState({
     nom: "",
@@ -38,8 +51,8 @@ const Inscription = () => {
   });
 
   useEffect(() => {
-    if (user) navigate("/dashboard");
-  }, [user, navigate]);
+    if (user) navigate(`/dashboard${plansSuffix}`);
+  }, [user, navigate, plansSuffix]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +97,7 @@ const Inscription = () => {
     });
 
     setIsLoading(false);
-    navigate("/profil-entreprise");
+    navigate(`/profil-entreprise${plansSuffix}`);
   };
 
   return (
@@ -149,7 +162,7 @@ const Inscription = () => {
                     <span className="text-primary">100&nbsp;% gratuits</span>
                   </div>
                   <div className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-[240px]">
-                    Sans carte bancaire. Sans engagement. Toutes les fonctionnalités débloquées.
+                    Aucun paiement requis. Sans engagement. Toutes les fonctionnalités débloquées.
                   </div>
                 </div>
               </div>
@@ -258,7 +271,7 @@ const Inscription = () => {
               <div className="text-4xl font-black leading-none text-primary">14</div>
               <div>
                 <div className="text-sm font-semibold">jours d'essai gratuits</div>
-                <div className="text-[11px] text-muted-foreground">Sans carte bancaire · Tout inclus</div>
+                <div className="text-[11px] text-muted-foreground">Aucun paiement · Tout inclus</div>
               </div>
             </div>
 
@@ -382,7 +395,7 @@ const Inscription = () => {
               <div className="flex items-center justify-center gap-4 pt-1 text-[11px] text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3 h-3 text-primary" />
-                  <span>Sans carte bancaire</span>
+                  <span>Aucun paiement requis</span>
                 </div>
                 <div className="w-1 h-1 rounded-full bg-border" />
                 <div className="flex items-center gap-1.5">

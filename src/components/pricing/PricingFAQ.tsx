@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: "Comment se déroule concrètement le paiement en Guinée ?",
-    a: "Nous acceptons Orange Money, MTN Mobile Money, Carte Visa, Mastercard et virement bancaire local. Après avoir sélectionné votre forfait, notre équipe vous contacte sous 24h pour finaliser l'activation via le moyen de paiement de votre choix. Aucune carte n'est requise pour démarrer l'essai.",
+    a: "Le paiement se fait par MTN Mobile Money, via notre partenaire de paiement SasPay. Après avoir sélectionné votre forfait, vous êtes redirigé vers la page de paiement sécurisée pour finaliser l'activation. Si vous n'avez pas de compte Mobile Money, contactez-nous. Aucun paiement n'est requis pour démarrer l'essai.",
   },
   {
     q: "Mes données sont-elles réellement isolées des autres agences ?",

@@ -66,8 +66,11 @@ const Index = () => {
     offset: ["start end", "end start"],
   });
 
-  const handlePlanSelect = (_plan: Plan) => {
-    navigate("/tarifs");
+  const handlePlanSelect = (plan: Plan) => {
+    // La page Tarifs reprend le cycle ; le parcours de paiement part de la.
+    navigate(
+      `/tarifs?plan=${plan.id}&cycle=${billingCycle === "yearly" ? "annual" : "monthly"}`,
+    );
   };
 
   return (
@@ -102,7 +105,7 @@ const Index = () => {
               </span>
               <span className="relative hidden sm:block h-4 w-px bg-primary/30" />
               <span className="relative text-[11px] sm:text-xs font-medium text-foreground/80 tracking-wide">
-                Aucune carte bancaire requise · Toutes les fonctionnalités incluses
+                Aucun paiement requis · Toutes les fonctionnalités incluses
               </span>
             </motion.div>
 
@@ -496,7 +499,7 @@ const Index = () => {
               <span className="italic text-primary">votre agence</span>.
             </h2>
             <p className="mt-5 text-sm sm:text-base text-muted-foreground">
-              Testez toutes les fonctionnalités pendant 14 jours, sans carte bancaire et sans
+              Testez toutes les fonctionnalités pendant 14 jours, sans aucun paiement et sans
               engagement. Choisissez ensuite le forfait qui accompagne la croissance de votre agence.
             </p>
           </motion.div>

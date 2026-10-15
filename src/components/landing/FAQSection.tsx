@@ -8,7 +8,7 @@ const faqs = [
     a: "Dès votre inscription, votre agence bénéficie automatiquement d'un essai gratuit de 14 jours. Pendant cette période, vous avez accès à toutes les fonctionnalités d'Optimum Immo, sans engagement et sans renseigner de moyen de paiement. À la fin de l'essai, il vous suffit de choisir un abonnement afin de continuer à utiliser la plateforme.",
   },
   {
-    q: "Dois-je renseigner une carte bancaire lors de l'inscription ?",
+    q: "Dois-je renseigner un moyen de paiement lors de l'inscription ?",
     a: "Non. Aucun moyen de paiement n'est demandé lors de votre inscription. Vous créez votre compte, vous testez la plateforme et vous décidez ensuite en toute liberté.",
   },
   {
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Quels moyens de paiement acceptez-vous ?",
-    a: "Orange Money, MTN Mobile Money, Carte Visa, Mastercard et virement bancaire. Nous privilégions les moyens de paiement les plus utilisés en Guinée.",
+    a: "MTN Mobile Money uniquement, via notre partenaire de paiement SasPay. Si vous n'avez pas de compte Mobile Money, contactez-nous.",
   },
   {
     q: "Puis-je résilier mon abonnement ?",

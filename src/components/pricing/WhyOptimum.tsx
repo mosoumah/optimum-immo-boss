@@ -3,7 +3,7 @@ import { Gift, CreditCard, Shield, Cloud, Bot, Smartphone, RefreshCw, MapPin } f
 
 const items = [
   { icon: Gift, label: "14 jours d'essai gratuits" },
-  { icon: CreditCard, label: "Sans carte bancaire à l'inscription" },
+  { icon: CreditCard, label: "Aucun paiement à l'inscription" },
   { icon: Shield, label: "Données totalement sécurisées" },
   { icon: Cloud, label: "Hébergement Cloud fiable" },
   { icon: Bot, label: "Assistant IA spécialisé immobilier" },

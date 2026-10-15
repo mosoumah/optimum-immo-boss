@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Sparkles, Building2, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
@@ -12,30 +12,51 @@ import { ReassuranceBanner } from "@/components/pricing/ReassuranceBanner";
 import { WhyOptimum } from "@/components/pricing/WhyOptimum";
 import { PricingFAQ } from "@/components/pricing/PricingFAQ";
 import { PaymentMethodsStrip } from "@/components/pricing/PaymentMethodsStrip";
-import { PLANS, type BillingCycle, type Plan } from "@/lib/pricing/plans";
+import { type BillingCycle, type Plan, type PlanId } from "@/lib/pricing/plans";
+import { usePlans, toCycleParam, fromCycleParam } from "@/hooks/usePlans";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useEntreprise } from "@/hooks/useEntreprise";
-import { toast } from "@/hooks/use-toast";
 
 const Tarifs = () => {
-  const [cycle, setCycle] = useState<BillingCycle>("monthly");
+  const [searchParams] = useSearchParams();
+  const [cycle, setCycle] = useState<BillingCycle>(() =>
+    fromCycleParam(searchParams.get("cycle")),
+  );
   const { user } = useAuth();
-  const { entrepriseId } = useEntreprise();
   const { isExpired, isTrial, trialDaysLeft } = useSubscription();
   const navigate = useNavigate();
+  const { plans } = usePlans();
 
-  const handleSelect = async (plan: Plan) => {
-    if (!user) {
-      navigate("/inscription");
-      return;
-    }
-    if (!entrepriseId) return;
+  // Prix lus dans plans (repli sur les constantes locales) ; les champs
+  // d'affichage viennent du référentiel local.
+  const planCards: Plan[] = useMemo(
+    () =>
+      plans.map((p) => ({
+        id: p.code as PlanId,
+        name: p.nom,
+        accent: p.meta?.accent ?? "primary",
+        emoji: p.meta?.emoji ?? "🏠",
+        popular: p.meta?.popular,
+        tagline: p.meta?.tagline ?? "",
+        priceMonthly: p.monthly,
+        priceYearly: p.annual,
+        savingsYearly: p.meta?.savingsYearly ?? 0,
+        features: p.meta?.features ?? [],
+        cta: p.meta?.cta ?? `Choisir ${p.nom}`,
+      })),
+    [plans],
+  );
 
-    toast({
-      title: "Paiement en cours d'intégration",
-      description: `Le paiement du forfait ${plan.name} via Lengo Pay sera disponible très prochainement.`,
+  /**
+   * Parcours interne : non connecté -> inscription, connecté -> abonnement.
+   * Le forfait et le cycle sont transmis pour être repris sur la page d'arrivée.
+   */
+  const handleSelect = (plan: Plan) => {
+    const params = new URLSearchParams({
+      plan: plan.id,
+      cycle: toCycleParam(cycle),
     });
+    navigate(`${user ? "/abonnement" : "/inscription"}?${params.toString()}`);
   };
 
   return (
@@ -83,7 +104,7 @@ const Tarifs = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8"
             >
-              Commencez gratuitement pendant 14 jours. Sans carte bancaire. Sans engagement.
+              Commencez gratuitement pendant 14 jours. Aucun paiement requis. Sans engagement.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -107,7 +128,7 @@ const Tarifs = () => {
         {/* PLANS */}
         <section className="px-4 pb-14">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
-            {PLANS.map((plan, i) => (
+            {planCards.map((plan, i) => (
               <PlanCard key={plan.id} plan={plan} cycle={cycle} onSelect={handleSelect} index={i} />
             ))}
           </div>

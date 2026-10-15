@@ -16,7 +16,7 @@ export const ReassuranceBanner = () => (
           Commencez dès aujourd'hui avec <span className="italic text-primary">14 jours d'essai</span> gratuits
         </h3>
         <p className="text-sm text-muted-foreground">
-          Aucune carte bancaire requise. Toutes les fonctionnalités sont incluses pendant votre période d'essai.
+          Aucun paiement requis. Toutes les fonctionnalités sont incluses pendant votre période d'essai.
         </p>
       </div>
     </div>
