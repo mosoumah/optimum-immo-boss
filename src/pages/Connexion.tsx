@@ -40,6 +40,19 @@ const resolveSafeNext = (raw: string | null): string | null => {
   }
 };
 
+/**
+ * Apres une inscription, /connexion?plan=...&cycle=... doit mener au choix du
+ * forfait. La destination est ensuite revalidee par resolveSafeNext.
+ */
+const buildPlansTarget = (params: URLSearchParams): string | null => {
+  const plan = params.get("plan");
+  if (!plan) return null;
+  const query = new URLSearchParams({ plan });
+  const cycle = params.get("cycle");
+  if (cycle) query.set("cycle", cycle);
+  return `/abonnement?${query.toString()}`;
+};
+
 const Connexion = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +63,7 @@ const Connexion = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextParam = searchParams.get("next");
-  const safeNext = resolveSafeNext(nextParam);
+  const safeNext = resolveSafeNext(nextParam) ?? resolveSafeNext(buildPlansTarget(searchParams));
   const { signIn, user, isReady } = useAuth();
   const redirectingRef = useRef(false);
 
