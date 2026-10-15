@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -46,6 +46,7 @@ import {
   plansTable,
   type PlanRow,
   type CheckoutCreateResponse,
+  type CheckoutSyncResponse,
 } from "@/types/billing";
 
 /**
@@ -148,6 +149,119 @@ const Abonnement = () => {
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<PlanRow[]>([]);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  // Retour SasPay : 'checking' | 'failed' | 'timeout' | null
+  const [paymentSync, setPaymentSync] = useState<"checking" | "failed" | "timeout" | null>(null);
+  const [syncAttempt, setSyncAttempt] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const syncInFlight = useRef(false);
+
+  /** Retire ?paiement de l'URL sans recharger la page. */
+  const clearPaymentParam = useCallback(() => {
+    const next = new URLSearchParams(window.location.search);
+    next.delete("paiement");
+    const query = next.toString();
+    window.history.replaceState(
+      {},
+      "",
+      window.location.pathname + (query ? `?${query}` : ""),
+    );
+  }, []);
+
+  /**
+   * Verifie l'etat du paiement aupres de saspay-checkout (action "sync").
+   * Aucun identifiant n'est transmis : la fonction se base sur l'utilisateur connecte.
+   * Renvoie le statut, ou null si l'appel a echoue.
+   */
+  const runPaymentSync = async (): Promise<"success" | "pending" | "failed" | "cancelled" | "none" | null> => {
+    if (syncInFlight.current) return null;
+    syncInFlight.current = true;
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("saspay-checkout", {
+        body: { action: "sync" },
+      });
+      if (error) {
+        toast({
+          title: "Vérification impossible",
+          description: await readFunctionError(error, "Le service de paiement est indisponible."),
+          variant: "destructive",
+        });
+        return null;
+      }
+      return (data as CheckoutSyncResponse | null)?.status ?? "none";
+    } catch (err) {
+      toast({
+        title: "Vérification impossible",
+        description: await readFunctionError(err, "Erreur réseau pendant la vérification."),
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      syncInFlight.current = false;
+      setIsSyncing(false);
+    }
+  };
+
+  // Retour de paiement SasPay : ?paiement=retour -> polling /sync toutes les 4 s, 30 fois max.
+  useEffect(() => {
+    if (searchParams.get("paiement") !== "retour") return;
+    if (!entrepriseId) return;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
+      setSyncAttempt((n) => n + 1);
+
+      const status = await runPaymentSync();
+      if (cancelled) return;
+
+      if (status === "success") {
+        await refetchSubscription();
+        if (cancelled) return;
+        toast({
+          title: "Paiement confirmé",
+          description: "Votre abonnement a été activé avec succès.",
+        });
+        setPaymentSync(null);
+        setSyncAttempt(0);
+        clearPaymentParam();
+        return;
+      }
+
+      if (status === "failed" || status === "cancelled") {
+        toast({
+          title: status === "failed" ? "Échec du paiement" : "Paiement annulé",
+          description:
+            status === "failed"
+              ? "Le paiement n'a pas abouti. Votre abonnement reste inchangé."
+              : "Vous avez annulé le paiement. Vous pouvez réessayer.",
+          variant: "destructive",
+        });
+        setPaymentSync("failed");
+        return;
+      }
+
+      // 'pending' | 'none' | echec d'appel : on poursuit jusqu'a 30 tentatives.
+      setSyncAttempt((n) => {
+        if (n >= 30) {
+          setPaymentSync("timeout");
+          clearPaymentParam();
+          return n;
+        }
+        window.setTimeout(poll, 4000);
+        return n;
+      });
+    };
+
+    setPaymentSync("checking");
+    setSyncAttempt(0);
+    poll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [entrepriseId, clearPaymentParam, refetchSubscription, searchParams]);
 
   /**
    * Demarre un paiement SasPay. Aucun montant n'est transmis : la fonction
@@ -486,6 +600,116 @@ const Abonnement = () => {
                 </Button>
               </Link>
             </motion.div>
+
+            {/* Retour de paiement SasPay */}
+            {(paymentSync === "checking" || paymentSync === "failed") && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-6 rounded-2xl border p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 ${
+                  paymentSync === "failed"
+                    ? "border-destructive/40 bg-destructive/5"
+                    : "border-primary/30 bg-primary/5"
+                }`}
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+                  {paymentSync === "failed" ? (
+                    <AlertTriangle className="w-6 h-6 text-destructive" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold mb-1">
+                    {paymentSync === "failed"
+                      ? "Le paiement n'a pas abouti"
+                      : "Vérification du paiement..."}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {paymentSync === "failed"
+                      ? "Votre abonnement reste inchangé. Vous pouvez relancer un paiement depuis les formules ci-dessous."
+                      : `Nous confirmons votre paiement auprès de SasPay (tentative ${syncAttempt}/30).`}
+                  </p>
+                </div>
+                {paymentSync === "failed" && (
+                  <Button
+                    type="button"
+                    className="rounded-xl gap-2"
+                    disabled={isSyncing}
+                    onClick={async () => {
+                      setSyncAttempt(0);
+                      setPaymentSync("checking");
+                      const status = await runPaymentSync();
+                      if (status === "success") {
+                        toast({
+                          title: "Paiement confirmé",
+                          description: "Votre abonnement a été activé avec succès.",
+                        });
+                        await refetchSubscription();
+                        setPaymentSync(null);
+                        clearPaymentParam();
+                      } else if (status === "failed" || status === "cancelled") {
+                        setPaymentSync("failed");
+                      } else {
+                        setPaymentSync("checking");
+                        setSyncAttempt(1);
+                        window.setTimeout(async () => {
+                          const retry = await runPaymentSync();
+                          if (retry === "success") {
+                            toast({
+                              title: "Paiement confirmé",
+                              description: "Votre abonnement a été activé avec succès.",
+                            });
+                            await refetchSubscription();
+                            setPaymentSync(null);
+                            clearPaymentParam();
+                          } else if (retry === "failed" || retry === "cancelled") {
+                            setPaymentSync("failed");
+                          } else {
+                            setPaymentSync("timeout");
+                            clearPaymentParam();
+                          }
+                        }, 4000);
+                      }
+                    }}
+                  >
+                    {isSyncing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                        Vérification...
+                      </>
+                    ) : (
+                      <>
+                        Réessayer
+                        <ArrowUpRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                )}
+              </motion.div>
+            )}
+
+            {/* Paiement en attente de confirmation après 30 tentatives */}
+            {paymentSync === "timeout" && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-2xl border border-warning/40 bg-warning/5 p-5 flex items-start gap-4"
+              >
+                <div className="w-12 h-12 rounded-xl bg-warning/10 border border-warning/30 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-warning" />
+                </div>
+                <div>
+                  <h3 className="font-bold mb-1">
+                    Paiement en cours de confirmation
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Votre paiement est en cours de confirmation, revenez dans quelques
+                    minutes. Votre abonnement se mettra à jour automatiquement.
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
             {/* Choix de formule — achat SasPay, reserve a l'admin */}
             {plans.length > 0 && (
