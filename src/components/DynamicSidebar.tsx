@@ -16,6 +16,7 @@ import {
   Building,
   CalendarCheck,
   Sparkles,
+  Activity,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -41,6 +42,7 @@ const sidebarItems: SidebarItem[] = [
   { icon: TrendingUp, label: "Revenus", path: "/revenus", roles: ["admin"] },
   { icon: TrendingDown, label: "Dépenses", path: "/depenses", roles: ["admin"] },
   { icon: CheckSquare, label: "Tâches", path: "/taches", roles: ["admin", "agent"] },
+  { icon: Activity, label: "Activité", path: "/activite", roles: ["admin", "agent"] },
   
   
   { icon: UserCog, label: "Utilisateurs", path: "/utilisateurs", roles: ["admin"] },

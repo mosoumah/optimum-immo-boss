@@ -22,6 +22,7 @@ import Factures from "./pages/Factures";
 import Revenus from "./pages/Revenus";
 import Depenses from "./pages/Depenses";
 import Taches from "./pages/Taches";
+import Activite from "./pages/Activite";
 
 
 import Parametres from "./pages/Parametres";
@@ -122,6 +123,14 @@ const App = () => (
               element={
                 <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
                   <Taches />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/activite"
+              element={
+                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                  <Activite />
                 </RoleProtectedRoute>
               }
             />
