@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
 import type { Database } from "@/integrations/supabase/types";
 
 // Use a simple typed wrapper to avoid 'as any' on view names
@@ -55,6 +56,12 @@ export const useDashboardData = (
   mode: "simple" | "advanced",
   isPremium: boolean
 ) => {
+  const { has, isLoading: planLoading } = usePlanAccess();
+  // Blocs avances (vues v_dashboard_advanced_* uniquement) : reserves aux
+  // formules incluant 'advanced_dashboard'. Pendant le chargement des formules,
+  // aucune requete avancee n'est lancee (ni verrou, ni faux positif).
+  const advancedAllowed = !planLoading && has("advanced_dashboard");
+
   const simpleQuery = useQuery({
     queryKey: ["dashboard-simple", entrepriseId],
     queryFn: async () => {
@@ -81,7 +88,7 @@ export const useDashboardData = (
       if (error) throw error;
       return data as AdvancedFinanceData | null;
     },
-    enabled: !!entrepriseId && mode === "advanced" && isPremium,
+    enabled: !!entrepriseId && mode === "advanced" && isPremium && advancedAllowed,
     staleTime: 2 * 60 * 1000,
   });
 
@@ -96,7 +103,7 @@ export const useDashboardData = (
       if (error) throw error;
       return data as AdvancedPropertyData | null;
     },
-    enabled: !!entrepriseId && mode === "advanced" && isPremium,
+    enabled: !!entrepriseId && mode === "advanced" && isPremium && advancedAllowed,
     staleTime: 2 * 60 * 1000,
   });
 
