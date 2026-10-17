@@ -26,6 +26,7 @@ import { TacheDetailDialog } from "@/components/dialogs/TacheDetailDialog";
 import { DirectMessagePanel } from "@/components/DirectMessagePanel";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { checkPermission } from "@/lib/checkPermission";
 
 interface Tache {
@@ -132,6 +133,8 @@ const Taches = () => {
     const { error } = await supabase.from("taches").delete().eq("id", tache.id).eq("entreprise_id", entrepriseId);
 
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       toast.error("Erreur lors de la suppression");
       return;
     }

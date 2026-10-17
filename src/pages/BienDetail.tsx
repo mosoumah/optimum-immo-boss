@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useToast } from "@/hooks/use-toast";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { usePropertyMedia } from "@/hooks/usePropertyMedia";
 import { usePropertyStats } from "@/hooks/usePropertyStats";
 import { PropertyGallery } from "@/components/biens/PropertyGallery";
@@ -149,6 +150,8 @@ const BienDetail = () => {
     const { error } = await supabase.from("properties").delete().eq("id", id).eq("entreprise_id", entrepriseId);
     setIsDeleting(false);
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toast, navigate })) return;
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Succès", description: "Bien supprimé" });

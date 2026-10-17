@@ -21,6 +21,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 
 interface Revenu {
   id: string;
@@ -145,6 +146,8 @@ const Revenus = () => {
     const { error } = await supabase.from("revenus").delete().eq("id", selectedRevenu.id).eq("entreprise_id", entrepriseId);
     setDeleting(false);
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       toast.error("Erreur lors de la suppression");
       return;
     }

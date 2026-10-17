@@ -239,6 +239,49 @@ export async function handleSubscriptionExpiredFunctionError(
   return handleSubscriptionExpiredCode(body?.code, ctx);
 }
 
+/** Indices d'un refus de droits sans marqueur explicite (stockage notamment). */
+const PERMISSION_DENIED_HINTS = [
+  "row-level security",
+  "permission denied",
+  "not authorized",
+  "unauthorized",
+  "access denied",
+  "403",
+];
+
+/** Vrai si le message ressemble à un refus de droits (403 / RLS). */
+export const isPermissionDeniedMessage = (message: string | null | undefined): boolean => {
+  if (typeof message !== "string") return false;
+  const lower = message.toLowerCase();
+  return PERMISSION_DENIED_HINTS.some((hint) => lower.includes(hint));
+};
+
+/**
+ * Traite un échec d'opération de stockage.
+ *
+ * Le stockage ne renvoie pas toujours le mot SUBSCRIPTION_EXPIRED : on affiche
+ * le message d'abonnement expiré seulement si useSubscription indique
+ * `is_expired` ET que l'échec ressemble à un refus de droits. Sinon l'appelant
+ * conserve son message habituel.
+ *
+ * Renvoie true si le cas a été traité (toast affiché).
+ */
+export function handleStorageRefusal(
+  message: string | null | undefined,
+  isExpired: boolean,
+  ctx: PlanLimitContext,
+): boolean {
+  if (isSubscriptionExpiredMessage(message)) {
+    showSubscriptionExpired(ctx);
+    return true;
+  }
+  if (isExpired && isPermissionDeniedMessage(message)) {
+    showSubscriptionExpired(ctx);
+    return true;
+  }
+  return false;
+}
+
 /**
  * Lit le message d'erreur et affiche le toast adéquat.
  * Renvoie true si un marqueur de formule a été reconnu (l'appelant peut alors

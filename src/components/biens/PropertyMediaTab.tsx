@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
+import { handleStorageRefusal } from "@/lib/planLimitToast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePropertyMedia, type PropertyMediaItem } from "@/hooks/usePropertyMedia";
 
@@ -26,6 +29,16 @@ interface PropertyMediaTabProps {
 
 export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUrlChange }: PropertyMediaTabProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isExpired } = useSubscription();
+
+  /**
+   * Un échec de stockage ne contient pas toujours SUBSCRIPTION_EXPIRED : on
+   * n'affiche le message d'abonnement que si is_expired est vrai et que l'échec
+   * ressemble à un refus de droits. Sinon on garde le message habituel.
+   */
+  const handleMediaFailure = (message: string | undefined): boolean =>
+    handleStorageRefusal(message, isExpired, { toast, navigate });
   const { media, isLoading, refresh } = usePropertyMedia(propertyId);
   const [uploading, setUploading] = useState(false);
   const imgInput = useRef<HTMLInputElement>(null);
@@ -104,9 +117,11 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
       await refresh();
       toast({ title: "Téléversement réussi" });
     } catch (e) {
+      const message = e instanceof Error ? e.message : undefined;
+      if (handleMediaFailure(message)) return;
       toast({
         title: "Erreur",
-        description: e instanceof Error ? e.message : "Échec du téléversement",
+        description: message ?? "Échec du téléversement",
         variant: "destructive",
       });
     } finally {
@@ -116,17 +131,39 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
 
   const removeMedia = async (m: PropertyMediaItem) => {
     try {
-      await supabase.storage.from(m.bucket).remove([m.storage_path]);
-      await supabase.from("property_media").delete().eq("id", m.id).eq("entreprise_id", entrepriseId);
-      if (m.is_cover) {
-        await supabase.from("properties").update({ cover_image_url: null }).eq("id", propertyId).eq("entreprise_id", entrepriseId);
+      // Les erreurs de stockage étaient ignorées : on les remonte pour pouvoir
+      // distinguer un refus de droits (abonnement expiré) d'un vrai incident.
+      const { error: rmErr } = await supabase.storage.from(m.bucket).remove([m.storage_path]);
+      const { error: delErr } = await supabase
+        .from("property_media")
+        .delete()
+        .eq("id", m.id)
+        .eq("entreprise_id", entrepriseId);
+
+      let failure = rmErr?.message ?? delErr?.message ?? null;
+
+      if (!failure && m.is_cover) {
+        const { error: coverErr } = await supabase
+          .from("properties")
+          .update({ cover_image_url: null })
+          .eq("id", propertyId)
+          .eq("entreprise_id", entrepriseId);
+        failure = coverErr?.message ?? null;
       }
+
+      if (failure) {
+        if (handleMediaFailure(failure)) return;
+        throw new Error(failure);
+      }
+
       await refresh();
       toast({ title: "Supprimé" });
     } catch (e) {
+      const message = e instanceof Error ? e.message : undefined;
+      if (handleMediaFailure(message)) return;
       toast({
         title: "Erreur",
-        description: e instanceof Error ? e.message : "Échec de la suppression",
+        description: message ?? "Échec de la suppression",
         variant: "destructive",
       });
     }
@@ -159,9 +196,11 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
       await refresh();
       toast({ title: "Image principale mise à jour" });
     } catch (e) {
+      const message = e instanceof Error ? e.message : undefined;
+      if (handleMediaFailure(message)) return;
       toast({
         title: "Erreur",
-        description: e instanceof Error ? e.message : "Échec",
+        description: message ?? "Échec",
         variant: "destructive",
       });
     }
