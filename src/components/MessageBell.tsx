@@ -10,11 +10,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
 import { DirectMessagePanel } from "@/components/DirectMessagePanel";
 
 export const MessageBell = () => {
   const [open, setOpen] = useState(false);
-  const { unreadCount } = useUnreadMessages();
+  const { has, isLoading, lockMessage } = usePlanAccess();
+  // Formule sans messagerie : le compteur et son abonnement realtime sont coupés.
+  const locked = !isLoading && !has("messaging");
+  const { unreadCount } = useUnreadMessages(!locked);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -41,6 +45,14 @@ export const MessageBell = () => {
               </motion.span>
             )}
           </AnimatePresence>
+          {locked && (
+            <span
+              title={lockMessage("messaging")}
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-full bg-primary text-primary-foreground text-[9px] font-bold leading-none shadow ring-1 ring-background"
+            >
+              Pro
+            </span>
+          )}
         </motion.div>
       </SheetTrigger>
 

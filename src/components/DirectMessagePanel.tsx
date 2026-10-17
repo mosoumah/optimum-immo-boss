@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/sheet";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { PlanUpgradeNotice } from "@/components/PlanUpgradeNotice";
 import { QuickTaskDialog } from "@/components/dialogs/QuickTaskDialog";
 import { PermissionGate } from "@/components/PermissionGate";
 import { cn } from "@/lib/utils";
@@ -47,7 +49,7 @@ const roleLabels: Record<AppRole, string> = {
   client: "Client",
 };
 
-export const DirectMessagePanel = ({
+const DirectMessagePanelContent = ({
   open,
   onOpenChange,
   isEmbedded = false,
@@ -426,4 +428,26 @@ export const DirectMessagePanel = ({
       )}
     </>
   );
+};
+
+/**
+ * Messagerie interne (formule Pro).
+ *
+ * Le verrou est vérifié AVANT tout hook de messagerie : en formule sans
+ * messagerie, aucun appel aux messages ni abonnement realtime n'est lancé.
+ * Pendant le chargement des formules on n'affiche pas de verrou (le serveur
+ * protège déjà) afin d'éviter un faux verrou chez un client Pro.
+ */
+export const DirectMessagePanel = (props: DirectMessagePanelProps) => {
+  const { has, isLoading, lockMessage } = usePlanAccess();
+
+  if (!isLoading && !has("messaging")) {
+    return (
+      <div className="p-6">
+        <PlanUpgradeNotice message={lockMessage("messaging")} variant="block" />
+      </div>
+    );
+  }
+
+  return <DirectMessagePanelContent {...props} />;
 };

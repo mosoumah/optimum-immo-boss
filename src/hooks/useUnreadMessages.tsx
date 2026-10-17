@@ -3,13 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
 
-export const useUnreadMessages = () => {
+/**
+ * Compteur de messages non lus.
+ * `enabled = false` (formule sans messagerie) : ni requête ni abonnement realtime.
+ */
+export const useUnreadMessages = (enabled = true) => {
   const { user } = useAuth();
   const { entrepriseId } = useEntreprise();
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchCount = useCallback(async () => {
-    if (!user) return;
+    if (!enabled || !user) return;
     const { count, error } = await supabase
       .from("direct_messages")
       .select("id", { count: "exact", head: true })
@@ -19,14 +23,18 @@ export const useUnreadMessages = () => {
     if (!error && count !== null) {
       setUnreadCount(count);
     }
-  }, [user]);
+  }, [enabled, user]);
 
   useEffect(() => {
+    if (!enabled) {
+      setUnreadCount(0);
+      return;
+    }
     fetchCount();
-  }, [fetchCount]);
+  }, [enabled, fetchCount]);
 
   useEffect(() => {
-    if (!user || !entrepriseId) return;
+    if (!enabled || !user || !entrepriseId) return;
 
     const channel = supabase
       .channel("unread-messages-count")
@@ -42,7 +50,7 @@ export const useUnreadMessages = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, entrepriseId, fetchCount]);
+  }, [enabled, user, entrepriseId, fetchCount]);
 
   return { unreadCount };
 };
