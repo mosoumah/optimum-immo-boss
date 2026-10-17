@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatMessage } from "./ChatMessage";
 import { useChatAssistant, type Conversation } from "@/hooks/useChatAssistant";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { PlanUpgradeNotice } from "@/components/PlanUpgradeNotice";
 import chatbotIcon from "@/assets/chatbot-icon.png";
 
 interface AIChatBotProps {
@@ -104,7 +106,7 @@ const groupHistoryByDate = (history: Conversation[]) => {
   return Object.entries(groups).filter(([, list]) => list.length > 0);
 };
 
-export const AIChatBot = ({ userName }: AIChatBotProps) => {
+const AIChatBotContent = ({ userName }: AIChatBotProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [activeTab, setActiveTab] = useState("discussion");
@@ -549,4 +551,76 @@ export const AIChatBot = ({ userName }: AIChatBotProps) => {
       </AnimatePresence>
     </>
   );
+};
+
+/**
+ * Assistant IA (formule Standard et plus).
+ *
+ * Le verrou est évalué avant le contenu : en Starter, le bouton reste visible
+ * mais la zone de conversation est remplacée par une notice, et aucun appel à
+ * chat-assistant n'est effectué. Pendant le chargement des formules, aucun
+ * verrou n'est affiché.
+ */
+export const AIChatBot = (props: AIChatBotProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { has, isLoading, lockMessage } = usePlanAccess();
+
+  if (!isLoading && !has("ai_assistant")) {
+    return (
+      <>
+        <AnimatePresence>
+          {!isOpen && (
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={() => setIsOpen(true)}
+              className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden flex items-center justify-center group ring-1 ring-primary/30 backdrop-blur-xl"
+            >
+              <img
+                src={chatbotIcon}
+                alt="Assistant IA"
+                className="w-full h-full object-cover object-center scale-[1.22] relative z-10"
+              />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.92 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed inset-x-2 bottom-2 top-2 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto z-50 sm:w-[440px] sm:max-w-[calc(100vw-1rem)] rounded-3xl flex flex-col overflow-hidden"
+              style={{
+                background:
+                  "linear-gradient(180deg, hsl(220, 22%, 8%) 0%, hsl(220, 28%, 4%) 100%)",
+              }}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-border/30">
+                <span className="font-semibold text-sm">Assistant IA</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Fermer"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="p-4">
+                <PlanUpgradeNotice message={lockMessage("ai_assistant")} variant="block" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
+
+  return <AIChatBotContent {...props} />;
 };
