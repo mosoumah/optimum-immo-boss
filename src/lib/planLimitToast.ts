@@ -10,8 +10,8 @@ import { ToastAction, type ToastActionElement } from "@/components/ui/toast";
  * - "PLAN_FEATURE_MESSAGING" pour l'envoi d'un message interne ;
  * - "PLAN_FEATURE_PERMISSIONS" pour la modification de permissions ;
  * - code "plan_limit_users" dans la réponse de admin-create-user ;
- * - HTTP 403 avec code "plan_feature_ai" pour chat-assistant, suggest-tasks et
- *   dashboard-ai-summary.
+ * - HTTP 403 avec code "plan_feature_ai" pour chat-assistant (seule fonction IA
+ *   encore appelée par le frontend).
  *
  * Dans tous les cas on affiche le texte fourni par le serveur (jamais réécrit)
  * et un bouton menant aux formules.
