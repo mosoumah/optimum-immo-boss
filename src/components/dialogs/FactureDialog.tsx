@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isFacturePlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
 
 interface Client {
   id: string;
@@ -43,6 +45,7 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
   const [date, setDate] = useState<Date>(new Date());
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const isEdit = !!facture;
 
@@ -115,6 +118,11 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
     setIsLoading(false);
 
     if (error) {
+      // Refus de quota : la base renvoie un message prefixe PLAN_LIMIT_FACTURES.
+      if (!isEdit && isFacturePlanLimit(error.message)) {
+        showPlanLimitToast("factures", error.message, { toastSonner: toast, navigate });
+        return;
+      }
       toast.error(isEdit ? "Erreur lors de la modification de la facture" : "Erreur lors de la création de la facture");
       return;
     }

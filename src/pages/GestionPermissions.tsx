@@ -12,6 +12,7 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAuth } from "@/hooks/useAuth";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
+import { isPermissionsPlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
 import {
   PERMISSION_CATEGORIES,
   PERMISSION_LABELS,
@@ -186,6 +187,12 @@ const GestionPermissions = () => {
 
       toast.success("Permissions mises à jour avec succès");
     } catch (error) {
+      // Formule sans gestion des permissions : PLAN_FEATURE_PERMISSIONS.
+      const message = error instanceof Error ? error.message : "";
+      if (isPermissionsPlanLimit(message)) {
+        showPlanLimitToast("permissions", message, { toastSonner: toast, navigate });
+        return;
+      }
       console.error("Error saving permissions:", error);
       toast.error("Erreur lors de la sauvegarde des permissions");
     } finally {

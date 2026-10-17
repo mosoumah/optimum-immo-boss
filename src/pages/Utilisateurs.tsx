@@ -48,7 +48,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { showPlanLimitToast } from "@/lib/planLimitToast";import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
@@ -196,13 +196,37 @@ const Utilisateurs = () => {
         },
       });
 
-      if (error) {
-        console.error("Edge function error:", error);
-        throw new Error(error.message || "Erreur lors de la création");
+      // Corps de la reponse : soit dans data (HTTP 200), soit dans error.context (non-2xx).
+      let body: { error?: string; code?: string } | null =
+        data && typeof data === "object" ? (data as { error?: string; code?: string }) : null;
+
+      if (!body && error) {
+        const ctx = (error as { context?: { json?: () => Promise<unknown> } }).context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            body = (await ctx.json()) as { error?: string; code?: string };
+          } catch {
+            body = null;
+          }
+        }
       }
 
-      if (data?.error) {
-        throw new Error(data.error);
+      // Quota d'utilisateurs atteint : message serveur + acces aux formules.
+      if (body && body.code === "plan_limit_users") {
+        showPlanLimitToast("users", body.error ?? "Limite d'utilisateurs de votre formule atteinte.", {
+          toast,
+          navigate,
+        });
+        return;
+      }
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(body?.error || error.message || "Erreur lors de la création");
+      }
+
+      if (body?.error) {
+        throw new Error(body.error);
       }
 
       toast({

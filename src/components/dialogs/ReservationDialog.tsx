@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
+import { isFacturePlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
 import { differenceInDays } from "date-fns";
 
 import type { Database } from "@/integrations/supabase/types";
@@ -24,6 +26,7 @@ interface ReservationDialogProps {
 
 export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }: ReservationDialogProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { entrepriseId } = useEntreprise();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
@@ -174,7 +177,13 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         reservation_id: newReservationId,
       });
       if (factureError) {
-        toast({ title: "Attention", description: "Réservation créée mais erreur lors de la génération de la facture : " + factureError.message, variant: "destructive" });
+        // Quota de factures atteint : la réservation reste créée, seule la
+        // facture est refusée. Le message serveur est affiché tel quel.
+        if (isFacturePlanLimit(factureError.message)) {
+          showPlanLimitToast("factures", factureError.message, { toast, navigate });
+        } else {
+          toast({ title: "Attention", description: "Réservation créée mais erreur lors de la génération de la facture : " + factureError.message, variant: "destructive" });
+        }
       } else {
         toast({ title: "Succès", description: "Réservation créée et facture générée" });
       }

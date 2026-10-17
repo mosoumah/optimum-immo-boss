@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { detectAiPlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
 
 export type MessageStatus = "sending" | "processing" | "completed" | "failed";
 
@@ -77,6 +79,7 @@ export const clearChatAssistantHistory = (): void => {
 };
 
 export const useChatAssistant = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [history, setHistory] = useState<Conversation[]>(loadHistory);
   const [currentConvoId, setCurrentConvoId] = useState<string | null>(null);
@@ -173,7 +176,24 @@ export const useChatAssistant = () => {
         body: { messages: payload },
       });
 
-      if (error) throw new Error(error.message || "Erreur de communication");
+      if (error) {
+        // Formule sans assistant IA : 403 + code plan_feature_ai.
+        if (await detectAiPlanLimit(error)) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? { ...m, status: "failed" as MessageStatus, error: "Formule insuffisante" }
+                : m,
+            ),
+          );
+          showPlanLimitToast("ai", "L'assistant IA nécessite la formule Standard.", {
+            toastSonner: toast,
+            navigate,
+          });
+          return;
+        }
+        throw new Error(error.message || "Erreur de communication");
+      }
       if (data?.error) throw new Error(data.error);
 
       const responseText = data?.response || "Je n'ai pas pu traiter votre demande.";
@@ -207,7 +227,7 @@ export const useChatAssistant = () => {
         void processQueue();
       }
     }
-  }, [persistConvo]);
+  }, [persistConvo, navigate]);
 
   const sendMessage = useCallback(
     (input: string) => {

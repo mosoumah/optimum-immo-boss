@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { isMessagingPlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -26,6 +29,7 @@ interface DirectMessage {
 export const useDirectMessages = () => {
   const { user } = useAuth();
   const { entrepriseId } = useEntreprise();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -134,7 +138,12 @@ export const useDirectMessages = () => {
       });
 
       if (error) {
-        console.error("Error sending message:", error);
+        // Formule sans messagerie : le serveur renvoie PLAN_FEATURE_MESSAGING.
+        if (isMessagingPlanLimit(error.message)) {
+          showPlanLimitToast("messaging", error.message, { toastSonner: toast, navigate });
+        } else {
+          console.error("Error sending message:", error);
+        }
         return false;
       }
 
