@@ -41,3 +41,7 @@ dist-ssr
 *.pfx
 secrets/
 credentials/
+
+# Artefacts de patch (generes localement, jamais versionnes)
+*.patch
+*.patch.bak
