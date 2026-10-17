@@ -5,11 +5,11 @@ import { Sparkles } from "lucide-react";
 const faqs = [
   {
     q: "Que comprend exactement l'essai gratuit de 14 jours ?",
-    a: "Dès votre inscription, votre agence débloque un accès complet à Optimum Immo pendant 14 jours : gestion des biens, clients, réservations, factures, revenus, dépenses, tableau de bord avancé et assistant IA. Aucune fonctionnalité n'est bridée. À la fin de la période, vous choisissez sereinement le forfait qui correspond à votre activité, sans aucune interruption de vos données.",
+    a: "Dès votre inscription, votre agence débloque un accès complet à Optimum Immo pendant 14 jours : gestion des biens, clients, réservations, factures, revenus, dépenses et assistant IA. Aucune fonctionnalité n'est bridée. À la fin de la période, vous choisissez sereinement le forfait qui correspond à votre activité, sans aucune interruption de vos données.",
   },
   {
     q: "Quelle est la différence concrète entre Starter, Standard et Pro ?",
-    a: "Starter est pensé pour les agences qui se lancent et gèrent l'essentiel (clients, biens, réservations, jusqu'à 100 factures/mois, 2 utilisateurs). Standard ajoute l'assistant IA, la gestion fine des permissions, le tableau de bord avancé et jusqu'à 5 utilisateurs (500 factures/mois). Pro débride tout : factures illimitées, utilisateurs illimités, messagerie interne, IA avancée et support premium dédié.",
+    a: "Starter est pensé pour les agences qui se lancent et gèrent l'essentiel (clients, biens, réservations, jusqu'à 100 factures/mois, 2 utilisateurs). Standard ajoute l'assistant IA en lecture, le journal d'activité de la journée, la gestion fine des permissions et jusqu'à 5 utilisateurs (500 factures/mois). Pro débride tout : factures illimitées, utilisateurs illimités, messagerie interne, assistant IA qui agit pour vous et support premium dédié.",
   },
   {
     q: "Le paiement annuel est-il réellement avantageux ?",
