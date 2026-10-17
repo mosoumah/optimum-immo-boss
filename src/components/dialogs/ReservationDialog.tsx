@@ -11,6 +11,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { isFacturePlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
+import {
+  reservationsTimesTable,
+  reservationTimes,
+  toTimeInput,
+  timeToMinutes,
+  timeDurationHours,
+  formatDuration,
+} from "@/types/reservations";
 import { differenceInDays } from "date-fns";
 
 import type { Database } from "@/integrations/supabase/types";
@@ -39,7 +47,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     type_location: "jour",
     date_arrivee: "",
     date_depart: "",
-    nombre_heures: "",
+    heure_debut: "",
+    heure_fin: "",
     prix_unitaire: "",
     montant_paye: "",
     caution: "",
@@ -61,10 +70,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
 
   useEffect(() => {
     if (reservation) {
-      const isHeure = reservation.type_location === "heure";
-      const nbHeures = isHeure && reservation.prix_unitaire > 0
-        ? Math.round((Number(reservation.montant_total) / Number(reservation.prix_unitaire)) * 100) / 100
-        : 0;
+      const times = reservationTimes(reservation);
       setForm({
         client_id: reservation.client_id || "",
         property_id: reservation.property_id || "",
@@ -72,7 +78,9 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         type_location: reservation.type_location || "jour",
         date_arrivee: reservation.date_arrivee || "",
         date_depart: reservation.date_depart || "",
-        nombre_heures: nbHeures ? nbHeures.toString() : "",
+        // Tronque "HH:MM:SS" en "HH:MM" ; champs vides si heures absentes.
+        heure_debut: toTimeInput(times.heure_debut),
+        heure_fin: toTimeInput(times.heure_fin),
         prix_unitaire: reservation.prix_unitaire?.toString() || "",
         montant_paye: reservation.montant_paye?.toString() || "",
         caution: reservation.caution?.toString() || "",
@@ -81,7 +89,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         notes: reservation.notes || "",
       });
     } else {
-      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", nombre_heures: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "en_attente", generer_facture: false, notes: "" });
+      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", heure_debut: "", heure_fin: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "en_attente", generer_facture: false, notes: "" });
     }
   }, [reservation, open]);
 
@@ -90,10 +98,12 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
   const { montantTotal, unites, resteAPayer } = useMemo(() => {
     const prix = parseFloat(form.prix_unitaire) || 0;
     if (isHeure) {
-      const h = parseFloat(form.nombre_heures) || 0;
-      const total = h * prix;
+      // Durée exacte en heures décimales (14:30 -> 15:45 = 1.25).
+      // Aucun arrondi avant la multiplication par le prix horaire.
+      const duree = timeDurationHours(form.heure_debut, form.heure_fin);
+      const total = duree * prix;
       const paye = parseFloat(form.montant_paye) || 0;
-      return { montantTotal: total, unites: h, resteAPayer: Math.max(total - paye, 0) };
+      return { montantTotal: total, unites: duree, resteAPayer: Math.max(total - paye, 0) };
     }
     if (!form.date_arrivee || !form.date_depart || !form.prix_unitaire) return { montantTotal: 0, unites: 0, resteAPayer: 0 };
     const start = new Date(form.date_arrivee);
@@ -102,12 +112,19 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     const total = units * prix;
     const paye = parseFloat(form.montant_paye) || 0;
     return { montantTotal: total, unites: units, resteAPayer: Math.max(total - paye, 0) };
-  }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.montant_paye, form.nombre_heures, isHeure]);
+  }, [form.date_arrivee, form.date_depart, form.prix_unitaire, form.montant_paye, form.heure_debut, form.heure_fin, isHeure]);
 
   const datesInversees = !isHeure && form.date_arrivee && form.date_depart && new Date(form.date_depart) < new Date(form.date_arrivee);
+
+  // Pas de réservation à l'heure à cheval sur deux jours : la fin doit suivre le début.
+  const debutMinutes = timeToMinutes(form.heure_debut);
+  const finMinutes = timeToMinutes(form.heure_fin);
+  const heuresInvalides =
+    isHeure && debutMinutes !== null && finMinutes !== null && finMinutes <= debutMinutes;
+
   const typeLabel = isHeure ? "heure" : "jour";
   const canCalculate = isHeure
-    ? !!(form.nombre_heures && form.prix_unitaire)
+    ? !!(form.heure_debut && form.heure_fin && form.prix_unitaire) && !heuresInvalides
     : !!(form.date_arrivee && form.date_depart && form.prix_unitaire);
 
   const formatCurrency = (amount: number) =>
@@ -128,8 +145,13 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       property_id: form.property_id || null,
       property_name: selectedProperty?.nom || form.property_name || "—",
       type_location: form.type_location,
+      // date_arrivee / date_depart restent des DATE : jamais d'heure dedans.
+      // À l'heure, les deux valent la même journée et les heures vont dans
+      // heure_debut / heure_fin.
       date_arrivee: form.date_arrivee,
-      date_depart: isHeure ? (form.date_depart || form.date_arrivee) : form.date_depart,
+      date_depart: isHeure ? form.date_arrivee : form.date_depart,
+      heure_debut: isHeure ? form.heure_debut || null : null,
+      heure_fin: isHeure ? form.heure_fin || null : null,
       prix_unitaire: parseFloat(form.prix_unitaire) || 0,
       montant_total: montantTotal,
       montant_paye: parseFloat(form.montant_paye) || 0,
@@ -142,9 +164,9 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     let result;
     let newReservationId: string | null = null;
     if (reservation) {
-      result = await supabase.from("reservations").update(payload).eq("id", reservation.id);
+      result = await reservationsTimesTable().update(payload).eq("id", reservation.id);
     } else {
-      result = await supabase.from("reservations").insert(payload).select("id").single();
+      result = await reservationsTimesTable().insert(payload).select("id").single();
       if (result.data) {
         newReservationId = result.data.id;
       }
@@ -162,7 +184,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       ? ` | Payé: ${formatCurrency(paye)} — Reste: ${formatCurrency(montantTotal - paye)}`
       : "";
     const periode = isHeure
-      ? `le ${form.date_arrivee} — ${unites} heure${unites > 1 ? "s" : ""} × ${formatCurrency(parseFloat(form.prix_unitaire))}`
+      ? `le ${form.date_arrivee} de ${form.heure_debut} à ${form.heure_fin} (${formatDuration(unites)}) × ${formatCurrency(parseFloat(form.prix_unitaire))}`
       : `du ${form.date_arrivee} au ${form.date_depart}`;
     const factureDescription = `Location ${propertyName} ${periode}${resteDesc}`;
 
@@ -269,7 +291,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
                   setForm({
                     ...form,
                     type_location: v,
-                    nombre_heures: "",
+                    heure_debut: "",
+                    heure_fin: "",
                     prix_unitaire: selected?.prix ? selected.prix.toString() : form.prix_unitaire,
                   });
                 }
@@ -283,27 +306,31 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             </Select>
           </div>
           {isHeure ? (
-            <div>
-              <Label>Nombre d'heures *</Label>
-              <Select
-                value={form.nombre_heures}
-                onValueChange={(v) => {
-                  const today = new Date();
-                  const y = today.getFullYear();
-                  const m = String(today.getMonth() + 1).padStart(2, "0");
-                  const d = String(today.getDate()).padStart(2, "0");
-                  const todayStr = form.date_arrivee || `${y}-${m}-${d}`;
-                  setForm({ ...form, nombre_heures: v, date_arrivee: todayStr, date_depart: todayStr });
-                }}
-              >
-                <SelectTrigger><SelectValue placeholder="Sélectionner la durée" /></SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24].map((h) => (
-                    <SelectItem key={h} value={h.toString()}>{h} heure{h > 1 ? "s" : ""}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div>
+                <Label>Date *</Label>
+                <Input
+                  type="date"
+                  value={form.date_arrivee}
+                  onChange={(e) => setForm({ ...form, date_arrivee: e.target.value, date_depart: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Heure de début *</Label>
+                  <Input type="time" value={form.heure_debut} onChange={(e) => setForm({ ...form, heure_debut: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Heure de fin *</Label>
+                  <Input type="time" value={form.heure_fin} onChange={(e) => setForm({ ...form, heure_fin: e.target.value })} />
+                </div>
+              </div>
+              {heuresInvalides && (
+                <p className="text-sm text-orange-500 -mt-2">
+                  ⚠ L'heure de fin doit être après l'heure de début (réservation sur une seule journée)
+                </p>
+              )}
+            </>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4">
@@ -323,7 +350,9 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
                 {canCalculate ? formatCurrency(montantTotal) : (isHeure ? "Remplir heures et prix" : "Remplir dates et prix")}
               </div>
               {canCalculate && montantTotal > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">{unites} {typeLabel}{unites > 1 ? "s" : ""} × {formatCurrency(parseFloat(form.prix_unitaire))}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isHeure ? formatDuration(unites) : `${unites} ${typeLabel}${unites > 1 ? "s" : ""}`} × {formatCurrency(parseFloat(form.prix_unitaire))}
+                </p>
               )}
               {canCalculate && resteAPayer > 0 && resteAPayer < montantTotal && (
                 <p className="text-xs text-primary font-semibold mt-1">Reste à payer : {formatCurrency(resteAPayer)}</p>
@@ -351,7 +380,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <Checkbox checked={form.generer_facture} onCheckedChange={(v) => setForm({ ...form, generer_facture: !!v })} />
             <Label className="text-sm cursor-pointer">Générer facture automatiquement</Label>
           </div>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || (!isHeure && !form.date_depart) || (isHeure && !form.nombre_heures) || !form.prix_unitaire} className="w-full">
+          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || (!isHeure && !form.date_depart) || (isHeure && (!form.heure_debut || !form.heure_fin || heuresInvalides)) || !form.prix_unitaire} className="w-full">
             {isSubmitting ? "Enregistrement..." : reservation ? "Modifier" : "Créer la réservation"}
           </Button>
         </div>

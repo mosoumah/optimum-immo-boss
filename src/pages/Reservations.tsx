@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { PermissionGate } from "@/components/PermissionGate";
 import type { Database } from "@/integrations/supabase/types";
+import { reservationTimes, toTimeInput } from "@/types/reservations";
 
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
 
@@ -25,6 +26,22 @@ const statutLabels: Record<string, string> = {
   en_cours: "En cours",
   terminee: "Terminée",
   annulee: "Annulée",
+};
+
+/** "14:30" -> "14h30" */
+const toHourLabel = (value: string) => value.replace(":", "h");
+
+/**
+ * Créneau horaire d'une réservation à l'heure, quand les heures existent.
+ * Renvoie " · 14h30 – 15h45", ou "" (jour/mensuel ou heures absentes).
+ */
+const hourRangeSuffix = (r: Reservation): string => {
+  if (r.type_location !== "heure") return "";
+  const times = reservationTimes(r);
+  const debut = toTimeInput(times.heure_debut);
+  const fin = toTimeInput(times.heure_fin);
+  if (!debut || !fin) return "";
+  return ` · ${toHourLabel(debut)} – ${toHourLabel(fin)}`;
 };
 
 const Reservations = () => {
@@ -149,7 +166,7 @@ const Reservations = () => {
                     >
                       <td className="p-3 text-sm">{clientsMap[r.client_id] || "—"}</td>
                       <td className="p-3 text-sm">{(r.property_id && propertiesMap[r.property_id]) || r.property_name}</td>
-                      <td className="p-3 text-sm hidden md:table-cell">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}</td>
+                      <td className="p-3 text-sm hidden md:table-cell">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatCurrency(r.montant_total)}</td>
                       <td className="p-3"><Badge className={statutColors[r.statut]}>{statutLabels[r.statut] || r.statut}</Badge></td>
                     </tr>
