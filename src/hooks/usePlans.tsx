@@ -2,6 +2,32 @@ import { useEffect, useState } from "react";
 import { PLANS, type Plan } from "@/lib/pricing/plans";
 import { plansTable, type PlanRow, type BillingCycleParam } from "@/types/billing";
 
+/** Fonctionnalités pilotées par la formule, telles que stockées dans plans.features. */
+export type PlanFeature =
+  | "ai_assistant"
+  | "permissions"
+  | "advanced_dashboard"
+  | "messaging"
+  | "advanced_ai"
+  | "premium_dashboard";
+
+/**
+ * Repli local si plans.features est indisponible (table illisible ou vide).
+ * Reproduit exactement la répartition décrite par le serveur.
+ */
+const FALLBACK_FEATURES: Record<string, PlanFeature[]> = {
+  starter: [],
+  standard: ["ai_assistant", "permissions", "advanced_dashboard"],
+  pro: [
+    "ai_assistant",
+    "permissions",
+    "advanced_dashboard",
+    "messaging",
+    "advanced_ai",
+    "premium_dashboard",
+  ],
+};
+
 export interface PlanPrice {
   code: string;
   nom: string;
@@ -11,11 +37,20 @@ export interface PlanPrice {
   annual: number;
   maxUtilisateurs: number | null;
   maxFacturesParMois: number | null;
+  /** Fonctionnalités incluses (plans.features, ou repli local). */
+  features: PlanFeature[];
   /** Champs d'affichage issus des constantes locales (emoji, accroche, features). */
   meta: Plan | undefined;
   /** Vrai si la ligne provient de public.plans. */
   fromDatabase: boolean;
 }
+
+const toFeatureList = (raw: unknown, code: string): PlanFeature[] => {
+  if (Array.isArray(raw)) {
+    return raw.filter((v): v is PlanFeature => typeof v === "string") as PlanFeature[];
+  }
+  return FALLBACK_FEATURES[code] ?? [];
+};
 
 /**
  * Lit les formules depuis public.plans, avec repli sur les constantes locales
@@ -34,7 +69,7 @@ export function usePlans() {
       try {
         const { data, error } = await plansTable()
           .select(
-            "code, nom, prix_mensuel_gnf, prix_annuel_gnf, max_utilisateurs, max_factures_par_mois, actif",
+            "code, nom, prix_mensuel_gnf, prix_annuel_gnf, max_utilisateurs, max_factures_par_mois, features, actif",
           )
           .eq("actif", true)
           .order("prix_mensuel_gnf", { ascending: true });
@@ -63,6 +98,7 @@ export function usePlans() {
           annual: Number(r.prix_annuel_gnf),
           maxUtilisateurs: r.max_utilisateurs,
           maxFacturesParMois: r.max_factures_par_mois,
+          features: toFeatureList(r.features, r.code),
           meta: PLANS.find((p) => p.id === r.code),
           fromDatabase: true,
         };
@@ -74,6 +110,7 @@ export function usePlans() {
         annual: p.priceYearly,
         maxUtilisateurs: p.id === "starter" ? 2 : p.id === "standard" ? 5 : null,
         maxFacturesParMois: p.id === "starter" ? 100 : p.id === "standard" ? 500 : null,
+        features: FALLBACK_FEATURES[p.id] ?? [],
         meta: p,
         fromDatabase: false,
       }));

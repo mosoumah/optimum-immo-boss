@@ -25,6 +25,8 @@ export interface PlanRow {
   max_utilisateurs: number | null;
   /** NULL = illimité */
   max_factures_par_mois: number | null;
+  /** Fonctionnalités incluses (text[]) : ai_assistant, permissions, etc. */
+  features: string[] | null;
   actif: boolean;
 }
 
