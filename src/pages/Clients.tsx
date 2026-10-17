@@ -14,6 +14,7 @@ import { EditClientDialog } from "@/components/dialogs/EditClientDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
 import { checkPermission } from "@/lib/checkPermission";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,6 +98,8 @@ const Clients = () => {
       .eq("id", selectedClient.id);
 
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       toast.error("Erreur lors de la suppression du client");
       return;
     }
