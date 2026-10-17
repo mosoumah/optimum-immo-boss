@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { cn } from "@/lib/utils";
 
 interface QuickTaskDialogProps {
@@ -39,6 +41,7 @@ export const QuickTaskDialog = ({
   entrepriseId,
   onSuccess,
 }: QuickTaskDialogProps) => {
+  const navigate = useNavigate();
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState<Date>(new Date());
@@ -79,6 +82,15 @@ export const QuickTaskDialog = ({
       onSuccess();
       onOpenChange(false);
     } catch (error: unknown) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (
+        handleSubscriptionExpiredMessage(
+          error instanceof Error ? error.message : "",
+          { toastSonner: toast, navigate },
+        )
+      ) {
+        return;
+      }
       toast.error("Erreur lors de la création de la tâche");
       console.error(error);
     } finally {

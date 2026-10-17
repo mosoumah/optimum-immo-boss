@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
-import { isFacturePlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
+import { isFacturePlanLimit, showPlanLimitToast, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import {
   reservationsTimesTable,
   reservationTimes,
@@ -174,6 +174,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
 
     if (result.error) {
       setIsSubmitting(false);
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(result.error.message, { toast, navigate })) return;
       toast({ title: "Erreur", description: result.error.message, variant: "destructive" });
       return;
     }
@@ -199,9 +201,10 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         reservation_id: newReservationId,
       });
       if (factureError) {
-        // Quota de factures atteint : la réservation reste créée, seule la
-        // facture est refusée. Le message serveur est affiché tel quel.
-        if (isFacturePlanLimit(factureError.message)) {
+        // Abonnement expiré : la réservation est refusée aussi, on priorise ce message.
+        if (handleSubscriptionExpiredMessage(factureError.message, { toast, navigate })) {
+          // rien de plus : la réservation a déjà été rejetée par le serveur
+        } else if (isFacturePlanLimit(factureError.message)) {
           showPlanLimitToast("factures", factureError.message, { toast, navigate });
         } else {
           toast({ title: "Attention", description: "Réservation créée mais erreur lors de la génération de la facture : " + factureError.message, variant: "destructive" });

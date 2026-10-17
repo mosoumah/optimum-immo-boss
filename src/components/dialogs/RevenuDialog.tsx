@@ -12,6 +12,8 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 
 interface RevenuDialogProps {
   open: boolean;
@@ -21,6 +23,7 @@ interface RevenuDialogProps {
 }
 
 export const RevenuDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: RevenuDialogProps) => {
+  const navigate = useNavigate();
   const [source, setSource] = useState("");
   const [montant, setMontant] = useState("");
   const [date, setDate] = useState<Date>(new Date());
@@ -49,6 +52,8 @@ export const RevenuDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Re
     setIsLoading(false);
 
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       toast.error("Erreur lors de la création du revenu");
       return;
     }

@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 
 interface Client {
   id: string;
@@ -21,6 +23,7 @@ interface EditClientDialogProps {
 }
 
 export const EditClientDialog = ({ open, onOpenChange, client, onSuccess }: EditClientDialogProps) => {
+  const navigate = useNavigate();
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
   const [email, setEmail] = useState("");
@@ -54,6 +57,8 @@ export const EditClientDialog = ({ open, onOpenChange, client, onSuccess }: Edit
     setIsLoading(false);
 
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       toast.error("Erreur lors de la modification du client");
       return;
     }

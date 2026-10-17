@@ -17,6 +17,8 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -49,6 +51,7 @@ export const TacheDetailDialog = ({
   onOpenChange,
   tache,
 }: TacheDetailDialogProps) => {
+  const navigate = useNavigate();
   const [userSelectorOpen, setUserSelectorOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -128,6 +131,15 @@ export const TacheDetailDialog = ({
       setUserSelectorOpen(false);
       onOpenChange(false);
     } catch (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (
+        handleSubscriptionExpiredMessage(
+          error instanceof Error ? error.message : "",
+          { toastSonner: toast, navigate },
+        )
+      ) {
+        return;
+      }
       console.error("Error assigning task:", error);
       toast.error("Erreur lors de l'assignation");
     } finally {

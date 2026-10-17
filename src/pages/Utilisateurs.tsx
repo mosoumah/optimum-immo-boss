@@ -48,7 +48,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { showPlanLimitToast } from "@/lib/planLimitToast";import { useAuth } from "@/hooks/useAuth";
+import { showPlanLimitToast, handleSubscriptionExpiredCode } from "@/lib/planLimitToast";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
@@ -210,6 +211,9 @@ const Utilisateurs = () => {
           }
         }
       }
+
+      // Abonnement expiré : lecture seule, aucune création possible.
+      if (handleSubscriptionExpiredCode(body?.code, { toast, navigate })) return;
 
       // Quota d'utilisateurs atteint : message serveur + acces aux formules.
       if (body && body.code === "plan_limit_users") {

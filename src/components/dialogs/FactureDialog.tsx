@@ -14,7 +14,7 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { isFacturePlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
+import { isFacturePlanLimit, showPlanLimitToast, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 
 interface Client {
   id: string;
@@ -118,6 +118,8 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
     setIsLoading(false);
 
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       // Refus de quota : la base renvoie un message prefixe PLAN_LIMIT_FACTURES.
       if (!isEdit && isFacturePlanLimit(error.message)) {
         showPlanLimitToast("factures", error.message, { toastSonner: toast, navigate });

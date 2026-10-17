@@ -22,7 +22,8 @@ export type PlanLimitKind =
   | "users"
   | "messaging"
   | "permissions"
-  | "ai";
+  | "ai"
+  | "subscription";
 
 const MESSAGE_PREFIXES: Record<"factures" | "messaging" | "permissions", string> = {
   factures: "PLAN_LIMIT_FACTURES",
@@ -32,6 +33,10 @@ const MESSAGE_PREFIXES: Record<"factures" | "messaging" | "permissions", string>
 
 const USERS_CODE = "plan_limit_users";
 const AI_CODE = "plan_feature_ai";
+/** Erreur SQL renvoyée par le serveur quand l'abonnement est expiré. */
+const SUBSCRIPTION_MESSAGE = "SUBSCRIPTION_EXPIRED";
+/** Code renvoyé par les Edge Functions (admin-create-user, generate-facture). */
+const SUBSCRIPTION_CODE = "subscription_expired";
 
 const TITLES: Record<PlanLimitKind, string> = {
   factures: "Limite de factures atteinte",
@@ -39,6 +44,22 @@ const TITLES: Record<PlanLimitKind, string> = {
   messaging: "Messagerie non incluse dans votre formule",
   permissions: "Gestion des permissions non incluse",
   ai: "Assistant IA non inclus dans votre formule",
+  subscription: "Abonnement expiré",
+};
+
+/** Libellé du bouton d'action, par type de refus. */
+const ACTION_LABELS: Record<PlanLimitKind, string> = {
+  factures: "Voir les formules",
+  users: "Voir les formules",
+  messaging: "Voir les formules",
+  permissions: "Voir les formules",
+  ai: "Voir les formules",
+  subscription: "Voir les abonnements",
+};
+
+/** Messages fixes : le message brut du serveur n'est pas présentable. */
+const FIXED_MESSAGES: Partial<Record<PlanLimitKind, string>> = {
+  subscription: "Votre abonnement a expiré. Vous êtes en lecture seule.",
 };
 
 /** Détecte un refus de quota pour la création de facture. */
@@ -63,6 +84,19 @@ export const isAiPlanLimit = (payload: unknown): boolean => {
   return value === AI_CODE;
 };
 
+/** Détecte l'erreur SQL d'abonnement expiré (marqueur présent dans le message). */
+export const isSubscriptionExpiredMessage = (message: string | null | undefined): boolean =>
+  typeof message === "string" && message.includes(SUBSCRIPTION_MESSAGE);
+
+/** Détecte le code d'abonnement expiré renvoyé par une Edge Function. */
+export const isSubscriptionExpiredCode = (code: unknown): boolean => code === SUBSCRIPTION_CODE;
+
+/** Détecte le code depuis un corps de réponse JSON. */
+export const isSubscriptionExpiredPayload = (payload: unknown): boolean => {
+  if (!payload || typeof payload !== "object") return false;
+  return (payload as { code?: unknown }).code === SUBSCRIPTION_CODE;
+};
+
 /**
  * Reconnaît n'importe quel marqueur de formule à partir d'un message d'erreur.
  * Renvoie null si le message n'en contient aucun.
@@ -71,6 +105,8 @@ export function detectPlanLimitFromMessage(
   message: string | null | undefined,
 ): PlanLimitKind | null {
   if (typeof message !== "string") return null;
+  // Le marqueur d'abonnement peut être noyé dans un message SQL plus long.
+  if (message.includes(SUBSCRIPTION_MESSAGE)) return "subscription";
   if (message.startsWith(MESSAGE_PREFIXES.factures)) return "factures";
   if (message.startsWith(MESSAGE_PREFIXES.messaging)) return "messaging";
   if (message.startsWith(MESSAGE_PREFIXES.permissions)) return "permissions";
@@ -123,26 +159,84 @@ export function showPlanLimitToast(
   ctx: PlanLimitContext,
 ): void {
   const title = TITLES[kind];
+  const description = FIXED_MESSAGES[kind] ?? message;
+  const actionLabel = ACTION_LABELS[kind];
   const goToPlans = () => ctx.navigate("/abonnement");
 
   if (ctx.toastSonner) {
     ctx.toastSonner.error(title, {
-      description: message,
-      action: { label: "Voir les formules", onClick: goToPlans },
+      description,
+      action: { label: actionLabel, onClick: goToPlans },
     });
     return;
   }
 
   ctx.toast?.({
     title,
-    description: message,
+    description,
     variant: "destructive",
     action: createElement(
       ToastAction,
-      { altText: "Voir les formules", onClick: goToPlans },
-      "Voir les formules",
+      { altText: actionLabel, onClick: goToPlans },
+      actionLabel,
     ) as unknown as ToastActionElement,
   });
+}
+
+/** Affiche le toast « abonnement expiré, lecture seule ». */
+export function showSubscriptionExpired(ctx: PlanLimitContext): void {
+  showPlanLimitToast("subscription", "", ctx);
+}
+
+/**
+ * Affiche le toast si le message est une erreur SQL d'abonnement expiré.
+ * Renvoie true si le cas a été traité (l'appelant peut s'arrêter là).
+ */
+export function handleSubscriptionExpiredMessage(
+  message: string | null | undefined,
+  ctx: PlanLimitContext,
+): boolean {
+  if (!isSubscriptionExpiredMessage(message)) return false;
+  showSubscriptionExpired(ctx);
+  return true;
+}
+
+/** Idem, à partir du code renvoyé par une Edge Function. */
+export function handleSubscriptionExpiredCode(
+  code: unknown,
+  ctx: PlanLimitContext,
+): boolean {
+  if (!isSubscriptionExpiredCode(code)) return false;
+  showSubscriptionExpired(ctx);
+  return true;
+}
+
+/** Lit le corps JSON d'une erreur d'Edge Function (FunctionsHttpError). */
+export async function readFunctionErrorBody(
+  error: unknown,
+): Promise<{ error?: string; code?: string } | null> {
+  const ctx = (error as { context?: { json?: () => Promise<unknown> } } | null)?.context;
+  if (!ctx || typeof ctx.json !== "function") return null;
+  try {
+    const body = await ctx.json();
+    return body && typeof body === "object"
+      ? (body as { error?: string; code?: string })
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Traite le refus d'abonnement expiré renvoyé par une Edge Function.
+ * Renvoie true si le cas a été traité (toast affiché).
+ */
+export async function handleSubscriptionExpiredFunctionError(
+  error: unknown,
+  ctx: PlanLimitContext,
+): Promise<boolean> {
+  const body = await readFunctionErrorBody(error);
+  return handleSubscriptionExpiredCode(body?.code, ctx);
 }
 
 /**

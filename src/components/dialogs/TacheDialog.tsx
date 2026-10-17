@@ -13,6 +13,8 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface Agent {
@@ -34,6 +36,7 @@ interface TacheDialogProps {
 }
 
 export const TacheDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: TacheDialogProps) => {
+  const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
@@ -111,6 +114,8 @@ export const TacheDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Tac
     setIsLoading(false);
 
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       console.error("Error creating task:", error);
       toast.error("Erreur lors de la création de la tâche");
       return;

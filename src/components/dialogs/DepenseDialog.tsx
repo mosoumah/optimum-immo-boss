@@ -12,6 +12,8 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import {
   Select,
   SelectContent,
@@ -42,6 +44,7 @@ const typesDepense = [
 ];
 
 export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: DepenseDialogProps) => {
+  const navigate = useNavigate();
   const [typeDepense, setTypeDepense] = useState("");
   const [description, setDescription] = useState("");
   const [montant, setMontant] = useState("");
@@ -74,6 +77,8 @@ export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: D
     setIsLoading(false);
 
     if (error) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (handleSubscriptionExpiredMessage(error.message, { toastSonner: toast, navigate })) return;
       toast.error("Erreur lors de la création de la dépense");
       return;
     }

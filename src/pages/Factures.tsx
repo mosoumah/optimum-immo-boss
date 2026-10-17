@@ -26,6 +26,7 @@ import { LogoUpload } from "@/components/LogoUpload";
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
+import { handleSubscriptionExpiredFunctionError, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { checkPermission } from "@/lib/checkPermission";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -211,6 +212,15 @@ const Factures = () => {
       });
 
       if (response.error) {
+        // Abonnement expiré (code subscription_expired) : lecture seule.
+        if (
+          await handleSubscriptionExpiredFunctionError(response.error, {
+            toastSonner: toast,
+            navigate,
+          })
+        ) {
+          return;
+        }
         throw new Error(response.error.message);
       }
 
@@ -326,6 +336,15 @@ const Factures = () => {
       fetchFactures();
     } catch (err) {
       console.error(err);
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (
+        handleSubscriptionExpiredMessage(
+          err instanceof Error ? err.message : "",
+          { toastSonner: toast, navigate },
+        )
+      ) {
+        return;
+      }
       toast.error("Erreur lors de la sauvegarde");
     } finally {
       setIsSavingEdits(false);

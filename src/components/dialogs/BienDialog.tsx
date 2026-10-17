@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +42,7 @@ const defaultForm = {
 
 export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDialogProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { entrepriseId } = useEntreprise();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,6 +124,15 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
         onOpenChange(false);
       }
     } catch (e) {
+      // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
+      if (
+        handleSubscriptionExpiredMessage(
+          e instanceof Error ? e.message : "",
+          { toast, navigate },
+        )
+      ) {
+        return;
+      }
       toast({
         title: "Erreur",
         description: e instanceof Error ? e.message : "Une erreur est survenue",

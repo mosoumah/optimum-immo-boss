@@ -34,6 +34,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SubscriptionExpiredBanner } from "@/components/SubscriptionExpiredBanner";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <SubscriptionExpiredBanner />
             <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/tarifs" element={<Tarifs />} />
