@@ -3,12 +3,18 @@ import { motion } from "framer-motion";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { PlanUpgradeNotice } from "@/components/PlanUpgradeNotice";
 
 interface Props {
   entrepriseId: string;
 }
 
 export const AdvancedAISummary = ({ entrepriseId }: Props) => {
+  const { has, isLoading: planLoading, lockMessage } = usePlanAccess();
+  // Formule sans assistant IA : la requête reste désactivée (aucun appel).
+  const aiAllowed = has("ai_assistant");
+
   const { data: summary, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard-ai-summary", entrepriseId],
     queryFn: async () => {
@@ -30,7 +36,7 @@ export const AdvancedAISummary = ({ entrepriseId }: Props) => {
       }
       return data?.summary as string || "Résumé indisponible.";
     },
-    enabled: !!entrepriseId,
+    enabled: !!entrepriseId && aiAllowed,
     staleTime: 60 * 60 * 1000, // 1h
     retry: (failureCount, error) => {
       // Don't retry on rate limit
@@ -38,6 +44,45 @@ export const AdvancedAISummary = ({ entrepriseId }: Props) => {
       return failureCount < 1;
     },
   });
+
+  // Pendant le chargement des formules : ni verrou ni appel, simple attente.
+  if (planLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+        className="p-3 lg:p-4 rounded-2xl card-premium h-full flex flex-col"
+      >
+        <h2 className="section-title-premium flex items-center gap-3 mb-3">
+          <Sparkles className="w-5 h-5 text-primary" />
+          Résumé IA du mois
+        </h2>
+        <div className="flex items-center gap-3 py-4">
+          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-sm text-muted-foreground">Chargement...</span>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Formule sans assistant IA : notice a la place du resume.
+  if (!aiAllowed) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+        className="p-3 lg:p-4 rounded-2xl card-premium h-full flex flex-col"
+      >
+        <h2 className="section-title-premium flex items-center gap-3 mb-3">
+          <Sparkles className="w-5 h-5 text-primary" />
+          Résumé IA du mois
+        </h2>
+        <PlanUpgradeNotice message={lockMessage("ai_assistant")} variant="block" />
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
