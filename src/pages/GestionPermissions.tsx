@@ -13,6 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
 import { isPermissionsPlanLimit, showPlanLimitToast } from "@/lib/planLimitToast";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { PlanUpgradeNotice } from "@/components/PlanUpgradeNotice";
 import {
   PERMISSION_CATEGORIES,
   PERMISSION_LABELS,
@@ -34,7 +36,7 @@ interface UserPermission {
   granted: boolean;
 }
 
-const GestionPermissions = () => {
+const GestionPermissionsContent = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { entrepriseId, isLoading: entrepriseLoading } = useEntreprise();
@@ -400,6 +402,29 @@ const GestionPermissions = () => {
       </main>
     </div>
   );
+};
+
+/**
+ * Gestion des permissions (a partir de la formule Standard).
+ *
+ * Le verrou est évalué avant le contenu : en Starter, aucun chargement
+ * d'utilisateurs ni de permissions n'est lancé. Pendant le chargement des
+ * formules, aucun verrou n'est affiché (le serveur protège déjà).
+ */
+const GestionPermissions = () => {
+  const { has, isLoading, lockMessage } = usePlanAccess();
+
+  if (!isLoading && !has("permissions")) {
+    return (
+      <div className="min-h-screen mesh-gradient flex items-center justify-center p-6">
+        <div className="max-w-lg w-full">
+          <PlanUpgradeNotice message={lockMessage("permissions")} variant="block" />
+        </div>
+      </div>
+    );
+  }
+
+  return <GestionPermissionsContent />;
 };
 
 export default GestionPermissions;
