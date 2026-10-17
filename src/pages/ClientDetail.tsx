@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAgencySettings } from "@/hooks/useAgencySettings";
 import type { Database } from "@/integrations/supabase/types";
+import { formatDateGN } from "@/lib/dateGuinee";
 
 type ReservationRow = Pick<Database["public"]["Tables"]["reservations"]["Row"],
   "id" | "property_name" | "date_arrivee" | "date_depart" | "montant_total" | "statut"
@@ -111,7 +112,7 @@ const ClientDetail = () => {
   }, [entrepriseId, id, fetchClientData]);
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("fr-FR");
+    return formatDateGN(date);
   };
 
   const formatCurrency = (amount: number) => {

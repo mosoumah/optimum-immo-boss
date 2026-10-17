@@ -23,6 +23,7 @@ import { useChatAssistant, type Conversation } from "@/hooks/useChatAssistant";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
 import { PlanUpgradeNotice } from "@/components/PlanUpgradeNotice";
 import chatbotIcon from "@/assets/chatbot-icon.png";
+import { addDaysGN, formatDateGN, startOfDayGN, startOfTodayGN, todayGN } from "@/lib/dateGuinee";
 
 interface AIChatBotProps {
   userName?: string;
@@ -81,12 +82,10 @@ const TypingIndicator = () => (
 );
 
 const groupHistoryByDate = (history: Conversation[]) => {
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfYesterday = new Date(startOfToday);
-  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-  const startOfWeek = new Date(startOfToday);
-  startOfWeek.setDate(startOfWeek.getDate() - 7);
+  // Bornes calées sur le jour guinéen (minuit Africa/Conakry).
+  const todayStart = new Date(startOfTodayGN());
+  const startOfYesterday = new Date(startOfDayGN(addDaysGN(todayGN(), -1)) ?? startOfTodayGN());
+  const startOfWeek = new Date(startOfDayGN(addDaysGN(todayGN(), -7)) ?? startOfTodayGN());
 
   const groups: Record<string, Conversation[]> = {
     "Aujourd'hui": [],
@@ -97,7 +96,9 @@ const groupHistoryByDate = (history: Conversation[]) => {
 
   for (const c of history) {
     const d = new Date(c.createdAt);
-    if (d >= startOfToday) groups["Aujourd'hui"].push(c);
+    if (Number.isNaN(d.getTime())) {
+      groups["Plus ancien"].push(c);
+    } else if (d >= todayStart) groups["Aujourd'hui"].push(c);
     else if (d >= startOfYesterday) groups["Hier"].push(c);
     else if (d >= startOfWeek) groups["Cette semaine"].push(c);
     else groups["Plus ancien"].push(c);
@@ -520,9 +521,7 @@ const AIChatBotContent = ({ userName }: AIChatBotProps) => {
                                     {convo.title}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                                    {new Date(convo.createdAt).toLocaleDateString(
-                                      "fr-FR"
-                                    )}
+                                    {formatDateGN(convo.createdAt)}
                                   </p>
                                 </div>
                                 <Button

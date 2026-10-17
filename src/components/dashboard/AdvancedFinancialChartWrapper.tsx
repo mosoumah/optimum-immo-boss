@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { dayOfMonthGN, daysInMonthGN, monthBoundsGN } from "@/lib/dateGuinee";
 
 interface Props {
   entrepriseId: string;
@@ -25,12 +26,8 @@ export const AdvancedFinancialChartWrapper = ({ entrepriseId }: Props) => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      const startStr = startOfMonth.toISOString().split("T")[0];
-
-      const now = new Date();
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const startStr = monthBoundsGN().start;
+      const daysInMonth = daysInMonthGN();
 
       // Fetch reservations for court_sejour and mensuel
       const { data: reservations } = await supabase
@@ -58,13 +55,15 @@ export const AdvancedFinancialChartWrapper = ({ entrepriseId }: Props) => {
       }
 
       reservations?.forEach((r) => {
-        const day = String(new Date(r.date_arrivee).getDate());
+        const day = dayOfMonthGN(r.date_arrivee);
+        if (!day) return;
         if (r.type_location === "court_sejour") csMap[day] = (csMap[day] || 0) + Number(r.montant_total);
         else if (r.type_location === "mensuel") msMap[day] = (msMap[day] || 0) + Number(r.montant_total);
       });
 
       sales?.forEach((s) => {
-        const day = String(new Date(s.date_vente).getDate());
+        const day = dayOfMonthGN(s.date_vente);
+        if (!day) return;
         vtMap[day] = (vtMap[day] || 0) + Number(s.montant_vente);
       });
 

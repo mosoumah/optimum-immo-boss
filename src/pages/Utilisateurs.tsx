@@ -54,6 +54,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import type { Database } from "@/integrations/supabase/types";
+import { formatDateGN } from "@/lib/dateGuinee";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -601,7 +602,7 @@ const Utilisateurs = () => {
                         </div>
                       </td>
                       <td className="p-4 text-muted-foreground">
-                        {new Date(u.created_at).toLocaleDateString("fr-FR")}
+                        {formatDateGN(u.created_at)}
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end">
@@ -656,7 +657,7 @@ const Utilisateurs = () => {
                         {getRoleLabel(u.role)}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(u.created_at).toLocaleDateString("fr-FR")}
+                        {formatDateGN(u.created_at)}
                       </span>
                     </div>
                   </div>

@@ -11,7 +11,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
 import { DepenseDialog } from "@/components/dialogs/DepenseDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
-import { isToday, isThisWeek, isThisMonth } from "date-fns";
+import { formatDateGN, isThisMonthGN, isThisWeekGN, isTodayGN } from "@/lib/dateGuinee";
 
 interface Depense {
   id: string;
@@ -63,18 +63,17 @@ const Depenses = () => {
     }
   }, [entrepriseId, fetchDepenses]);
 
+  // Comparaison sur le jour guinéen : `date` est une DATE (YYYY-MM-DD).
   const filterByPeriod = useCallback((dateStr: string, period: FilterPeriod): boolean => {
     if (!dateStr) return false;
-    const parsedDate = new Date(dateStr);
-    if (isNaN(parsedDate.getTime())) return false;
-    
+
     switch (period) {
       case 'today':
-        return isToday(parsedDate);
+        return isTodayGN(dateStr);
       case 'week':
-        return isThisWeek(parsedDate, { weekStartsOn: 1 });
+        return isThisWeekGN(dateStr);
       case 'month':
-        return isThisMonth(parsedDate);
+        return isThisMonthGN(dateStr);
       case 'all':
         return true;
       default:
@@ -95,7 +94,7 @@ const Depenses = () => {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("fr-FR");
+    return formatDateGN(date);
   };
 
   if (entrepriseLoading || isLoading || permissionsLoading) {

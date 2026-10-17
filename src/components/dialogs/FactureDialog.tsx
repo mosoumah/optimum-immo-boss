@@ -12,6 +12,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { todayPickerDate, toPickerDate } from "@/lib/dateGuinee";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isFacturePlanLimit, showPlanLimitToast, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
@@ -42,7 +43,7 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [montant, setMontant] = useState("");
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(todayPickerDate());
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -70,12 +71,12 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
         setClientId(facture.client_id || "");
         setDescription(facture.description || "");
         setMontant(facture.montant?.toString() || "");
-        setDate(facture.date ? new Date(facture.date) : new Date());
+        setDate(facture.date ? (toPickerDate(facture.date) ?? todayPickerDate()) : todayPickerDate());
       } else {
         setClientId("");
         setDescription("");
         setMontant("");
-        setDate(new Date());
+        setDate(todayPickerDate());
       }
     }
   }, [open, facture]);

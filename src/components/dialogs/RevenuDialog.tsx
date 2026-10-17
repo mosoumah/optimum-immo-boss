@@ -10,6 +10,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { todayPickerDate } from "@/lib/dateGuinee";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +27,7 @@ export const RevenuDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Re
   const navigate = useNavigate();
   const [source, setSource] = useState("");
   const [montant, setMontant] = useState("");
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(todayPickerDate());
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +62,7 @@ export const RevenuDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Re
     toast.success("Revenu ajouté avec succès");
     setSource("");
     setMontant("");
-    setDate(new Date());
+    setDate(todayPickerDate());
     onOpenChange(false);
     onSuccess();
   };

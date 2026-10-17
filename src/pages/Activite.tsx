@@ -23,6 +23,7 @@ import { FloatingParticles } from "@/components/FloatingParticles";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { formatTimeGN, hourGN, startOfTodayGN } from "@/lib/dateGuinee";
 import {
   activityLogTable,
   profileNamesTable,
@@ -85,8 +86,8 @@ const FILTERS: { value: ActivityEntityType | "all"; label: string }[] = [
   { value: "bien", label: "Biens" },
 ];
 
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+// Heures affichées et regroupées en heure de Guinée, jamais celle de l'appareil.
+const formatTime = (iso: string) => formatTimeGN(iso);
 
 const hourRangeLabel = (hour: number) =>
   `${String(hour).padStart(2, "0")}:00 – ${String(hour).padStart(2, "0")}:59`;
@@ -122,16 +123,15 @@ const Activite = () => {
     setError(null);
 
     try {
-      // Depuis 00:00 heure locale (converti en ISO pour la comparaison).
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
+      // Depuis 00:00 heure de Guinée (instant ISO pour la comparaison).
+      const start = startOfTodayGN();
 
       const { data, error: queryError } = await activityLogTable()
         .select(
           "id, entreprise_id, actor_id, action, entity_type, entity_id, summary, details, created_at",
         )
         .eq("entreprise_id", entrepriseId)
-        .gte("created_at", start.toISOString())
+        .gte("created_at", start)
         .order("created_at", { ascending: false })
         .limit(LIMIT);
 
@@ -187,7 +187,7 @@ const Activite = () => {
   const groups = useMemo(() => {
     const byHour = new Map<number, ActivityRow[]>();
     for (const event of filtered) {
-      const hour = new Date(event.created_at).getHours();
+      const hour = hourGN(event.created_at) ?? 0;
       const list = byHour.get(hour) ?? [];
       list.push(event);
       byHour.set(hour, list);

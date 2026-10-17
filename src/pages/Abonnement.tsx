@@ -46,6 +46,15 @@ import { usePlans, toCycleParam, fromCycleParam } from "@/hooks/usePlans";
 import { BillingToggle } from "@/components/pricing/BillingToggle";
 import { PLANS, formatGNF, type PlanId } from "@/lib/pricing/plans";
 import {
+  addDaysGN,
+  formatDateGN,
+  formatDayMonthGN,
+  monthBoundsGN,
+  startOfDayGN,
+  startOfWeekGN,
+  toDateOnly,
+} from "@/lib/dateGuinee";
+import {
   subscriptionPaymentsTable,
   type CheckoutCreateResponse,
   type CheckoutSyncResponse,
@@ -125,18 +134,6 @@ interface UsageCounts {
   biens: number;
   reservations_mois: number;
 }
-
-const startOfWeek = (d: Date) => {
-  const day = d.getDay();
-  const diff = (day + 6) % 7;
-  const res = new Date(d);
-  res.setHours(0, 0, 0, 0);
-  res.setDate(res.getDate() - diff);
-  return res;
-};
-
-const fmtDay = (d: Date) =>
-  d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
 
 const Abonnement = () => {
   const { signOut } = useAuth();
@@ -404,22 +401,16 @@ const Abonnement = () => {
     if (!entrepriseId) return;
     setLoading(true);
 
-    const now = new Date();
-
-    // Weekly range: 4 weeks (this + 3 previous)
-    const currentWeekStart = startOfWeek(now);
-    const weekStarts: Date[] = [];
+    const currentWeekStart = startOfWeekGN(); // lundi du jour guinéen courant
+    const weekStarts: string[] = [];
     for (let i = 3; i >= 0; i--) {
-      const d = new Date(currentWeekStart);
-      d.setDate(d.getDate() - i * 7);
-      weekStarts.push(d);
+      weekStarts.push(addDaysGN(currentWeekStart, -i * 7));
     }
-    const rangeStart = weekStarts[0];
-    const rangeEnd = new Date(currentWeekStart);
-    rangeEnd.setDate(rangeEnd.getDate() + 7);
+    const rangeStart = startOfDayGN(weekStarts[0]) ?? "";
+    const rangeEnd = startOfDayGN(addDaysGN(currentWeekStart, 7)) ?? "";
 
-    // Month range for quota counters
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    // Bornes du mois guinéen courant pour les compteurs de quota.
+    const monthStart = startOfDayGN(monthBoundsGN().start) ?? "";
 
     const [
       facturesWeekRes,
@@ -433,24 +424,24 @@ const Abonnement = () => {
         .from("factures")
         .select("created_at")
         .eq("entreprise_id", entrepriseId)
-        .gte("created_at", rangeStart.toISOString())
-        .lt("created_at", rangeEnd.toISOString()),
+        .gte("created_at", rangeStart)
+        .lt("created_at", rangeEnd),
       supabase
         .from("reservations")
         .select("created_at")
         .eq("entreprise_id", entrepriseId)
-        .gte("created_at", rangeStart.toISOString())
-        .lt("created_at", rangeEnd.toISOString()),
+        .gte("created_at", rangeStart)
+        .lt("created_at", rangeEnd),
       supabase
         .from("factures")
         .select("id", { count: "exact", head: true })
         .eq("entreprise_id", entrepriseId)
-        .gte("created_at", monthStart.toISOString()),
+        .gte("created_at", monthStart),
       supabase
         .from("reservations")
         .select("id", { count: "exact", head: true })
         .eq("entreprise_id", entrepriseId)
-        .gte("created_at", monthStart.toISOString()),
+        .gte("created_at", monthStart),
       supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
@@ -461,32 +452,27 @@ const Abonnement = () => {
         .eq("entreprise_id", entrepriseId),
     ]);
 
-    const bucket = (d: Date) => {
+    const bucket = (createdAt: string) => {
+      const day = toDateOnly(createdAt);
+      if (!day) return -1;
       for (let i = weekStarts.length - 1; i >= 0; i--) {
-        if (d >= weekStarts[i]) return i;
+        if (day >= weekStarts[i]) return i;
       }
       return -1;
     };
 
-    const points: WeekPoint[] = weekStarts.map((ws, i) => {
-      const we = new Date(ws);
-      we.setDate(we.getDate() + 6);
-      return {
-        label:
-          i === weekStarts.length - 1
-            ? "Cette sem."
-            : `${fmtDay(ws)}`,
-        factures: 0,
-        reservations: 0,
-      };
-    });
+    const points: WeekPoint[] = weekStarts.map((ws, i) => ({
+      label: i === weekStarts.length - 1 ? "Cette sem." : formatDayMonthGN(ws),
+      factures: 0,
+      reservations: 0,
+    }));
 
     (facturesWeekRes.data ?? []).forEach((r) => {
-      const idx = bucket(new Date(r.created_at));
+      const idx = bucket(r.created_at);
       if (idx >= 0) points[idx].factures += 1;
     });
     (reservationsWeekRes.data ?? []).forEach((r) => {
-      const idx = bucket(new Date(r.created_at));
+      const idx = bucket(r.created_at);
       if (idx >= 0) points[idx].reservations += 1;
     });
 
@@ -942,7 +928,7 @@ const Abonnement = () => {
                         <Calendar className="w-3 h-3" /> Fin de l'essai
                       </div>
                       <div className="font-semibold text-base">
-                        {trialEndsAt.toLocaleDateString("fr-FR")}
+                        {formatDateGN(trialEndsAt)}
                       </div>
                     </div>
                   )}
@@ -1285,7 +1271,7 @@ const Abonnement = () => {
                             </td>
                             <td className="py-2.5 text-muted-foreground">
                               {p.paid_at
-                                ? new Date(p.paid_at).toLocaleDateString("fr-FR")
+                                ? formatDateGN(p.paid_at)
                                 : "—"}
                             </td>
                           </tr>

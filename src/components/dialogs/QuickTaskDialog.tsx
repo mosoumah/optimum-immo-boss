@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { cn } from "@/lib/utils";
+import { todayPickerDate } from "@/lib/dateGuinee";
 
 interface QuickTaskDialogProps {
   open: boolean;
@@ -44,7 +45,7 @@ export const QuickTaskDialog = ({
   const navigate = useNavigate();
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(todayPickerDate());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,7 +79,7 @@ export const QuickTaskDialog = ({
       toast.success("Tâche envoyée avec succès");
       setTitre("");
       setDescription("");
-      setDate(new Date());
+      setDate(todayPickerDate());
       onSuccess();
       onOpenChange(false);
     } catch (error: unknown) {

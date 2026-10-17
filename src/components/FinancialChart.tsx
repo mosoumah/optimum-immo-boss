@@ -3,6 +3,13 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp, TrendingDown, Calendar, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  addDaysGN,
+  daysInMonthGN,
+  monthBoundsGN,
+  todayGN,
+  weekDayShortGN,
+} from "@/lib/dateGuinee";
 
 interface FinancialChartProps {
   entrepriseId: string;
@@ -32,13 +39,6 @@ interface ReservationRange {
   date_depart: string;
   statut: string;
 }
-
-const formatLocalDate = (date: Date): string => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
 
 const ACTIVE_STATUTS = new Set(["en_attente", "en_cours", "confirmee", "confirmée"]);
 
@@ -86,31 +86,27 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const now = new Date();
-      let startDate: Date;
-      let endDate: Date;
-      let prevStartDate: Date;
-      let prevEndDate: Date;
+      // Bornes calculées en jours guinéens (chaînes YYYY-MM-DD, colonnes DATE).
+      const today = todayGN();
+      let startDateStr: string;
+      let endDateStr: string;
+      let prevStartStr: string;
+      let prevEndStr: string;
 
       if (period === "week") {
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 6);
-        endDate = new Date(now);
-        prevStartDate = new Date(startDate);
-        prevStartDate.setDate(prevStartDate.getDate() - 7);
-        prevEndDate = new Date(startDate);
-        prevEndDate.setDate(prevEndDate.getDate() - 1);
+        // 7 derniers jours, aujourd'hui inclus.
+        startDateStr = addDaysGN(today, -6);
+        endDateStr = today;
+        prevStartStr = addDaysGN(startDateStr, -7);
+        prevEndStr = addDaysGN(startDateStr, -1);
       } else {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        prevStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        prevEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
+        const currentMonth = monthBoundsGN(today);
+        const previousMonth = monthBoundsGN(addDaysGN(currentMonth.start, -1));
+        startDateStr = currentMonth.start;
+        endDateStr = currentMonth.end;
+        prevStartStr = previousMonth.start;
+        prevEndStr = previousMonth.end;
       }
-
-      const startDateStr = formatLocalDate(startDate);
-      const endDateStr = formatLocalDate(endDate);
-      const prevStartStr = formatLocalDate(prevStartDate);
-      const prevEndStr = formatLocalDate(prevEndDate);
 
       const [revenusRes, depensesRes, prevRevenusRes, prevDepensesRes, resaRes, prevResaRes, biensRes] = await Promise.all([
         supabase.from("revenus").select("date, montant").eq("entreprise_id", entrepriseId).gte("date", startDateStr),
@@ -156,27 +152,24 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   };
 
   const chartData = useMemo(() => {
-    const now = new Date();
     const data: ChartDataPoint[] = [];
+    const today = todayGN();
 
     if (period === "week") {
-      const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
       for (let i = 6; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(now.getDate() - i);
-        const dateStr = formatLocalDate(date);
+        const dateStr = addDaysGN(today, -i);
         data.push({
-          label: dayNames[date.getDay()],
+          label: weekDayShortGN(dateStr),
           revenus: revenus.filter((r) => r.date === dateStr).reduce((sum, r) => sum + Number(r.montant), 0),
           depenses: depenses.filter((d) => d.date === dateStr).reduce((sum, d) => sum + Number(d.montant), 0),
           taux: computeTaux(dateStr),
         });
       }
     } else {
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(now.getFullYear(), now.getMonth(), day);
-        const dateStr = formatLocalDate(date);
+      const { month } = monthBoundsGN(today);
+      const totalDays = daysInMonthGN(today);
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${month}-${String(day).padStart(2, "0")}`;
         data.push({
           label: String(day),
           revenus: revenus.filter((r) => r.date === dateStr).reduce((sum, r) => sum + Number(r.montant), 0),
@@ -199,7 +192,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     const tauxPic = chartData.length > 0 ? Math.max(...chartData.map((d) => d.taux)) : 0;
     const tauxCreux = chartData.length > 0 ? Math.min(...chartData.map((d) => d.taux)) : 0;
 
-    const todayStr = formatLocalDate(new Date());
+    const todayStr = todayGN();
     const biensOccupesAujourdhui = reservations.filter(
       (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= todayStr && r.date_depart >= todayStr
     ).length;
@@ -207,13 +200,11 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     // Prev period mean taux
     let prevTauxMoyen = 0;
     if (totalBiens > 0 && periodRange) {
-      const start = new Date(periodRange.prevStart);
-      const end = new Date(periodRange.prevEnd);
       const days: string[] = [];
-      const cur = new Date(start);
-      while (cur <= end) {
-        days.push(formatLocalDate(cur));
-        cur.setDate(cur.getDate() + 1);
+      let cur = periodRange.prevStart;
+      while (cur <= periodRange.prevEnd) {
+        days.push(cur);
+        cur = addDaysGN(cur, 1);
       }
       if (days.length > 0) {
         const sum = days.reduce((acc, ds) => {

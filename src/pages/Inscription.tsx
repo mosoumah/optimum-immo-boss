@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { currentYearGN } from "@/lib/dateGuinee";
 
 const Inscription = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -245,7 +246,7 @@ const Inscription = () => {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Optimum Immo — Conçu en Guinée 🇬🇳
+            © {currentYearGN()} Optimum Immo — Conçu en Guinée 🇬🇳
           </p>
         </div>
 

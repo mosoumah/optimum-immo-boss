@@ -12,7 +12,6 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { useUserRole } from "@/hooks/useUserRole";
-import { isToday, isThisWeek, isThisMonth } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
+import { formatDateGN, isThisMonthGN, isThisWeekGN, isTodayGN } from "@/lib/dateGuinee";
 
 interface Revenu {
   id: string;
@@ -79,18 +79,17 @@ const Revenus = () => {
     }
   }, [entrepriseId, fetchRevenus]);
 
+  // Comparaison sur le jour guinéen : `date` est une DATE (YYYY-MM-DD).
   const filterByPeriod = useCallback((dateStr: string, period: FilterPeriod): boolean => {
     if (!dateStr) return false;
-    const parsedDate = new Date(dateStr);
-    if (isNaN(parsedDate.getTime())) return false;
-    
+
     switch (period) {
       case 'today':
-        return isToday(parsedDate);
+        return isTodayGN(dateStr);
       case 'week':
-        return isThisWeek(parsedDate, { weekStartsOn: 1 });
+        return isThisWeekGN(dateStr);
       case 'month':
-        return isThisMonth(parsedDate);
+        return isThisMonthGN(dateStr);
       case 'all':
         return true;
       default:
@@ -115,7 +114,7 @@ const Revenus = () => {
 
   const formatDate = (revenu: Revenu) => {
     const effectiveDate = revenu.factures?.date || revenu.date;
-    return new Date(effectiveDate).toLocaleDateString("fr-FR");
+    return formatDateGN(effectiveDate);
   };
 
   const getRevenuTitle = (revenu: Revenu) => {

@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Logo } from "./Logo";
+import { currentYearGN } from "@/lib/dateGuinee";
 
 export const Footer = () => {
-  const year = new Date().getFullYear();
+  const year = currentYearGN();
 
   return (
     <footer className="relative mt-4 border-t border-white/5">

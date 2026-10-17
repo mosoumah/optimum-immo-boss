@@ -26,6 +26,7 @@ import { PropertyGallery } from "@/components/biens/PropertyGallery";
 import { PropertyStatsCards } from "@/components/biens/PropertyStatsCards";
 import { BienDialog } from "@/components/dialogs/BienDialog";
 import type { Database } from "@/integrations/supabase/types";
+import { formatDateGN, todayGN } from "@/lib/dateGuinee";
 
 type Property = Database["public"]["Tables"]["properties"]["Row"];
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
@@ -54,7 +55,7 @@ const statutLabels: Record<string, string> = {
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
 
-const formatDate = (date: string) => new Date(date).toLocaleDateString("fr-FR");
+const formatDate = (date: string) => formatDateGN(date);
 
 const getVideoEmbed = (url: string): string | null => {
   if (!url) return null;
@@ -113,7 +114,7 @@ const BienDetail = () => {
   const documents = useMemo(() => media.filter((m) => m.media_type === "document"), [media]);
   const uploadedVideos = useMemo(() => media.filter((m) => m.media_type === "video"), [media]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayGN();
   const now = reservations.filter((r) => r.statut === "en_cours" || (r.date_arrivee <= today && r.date_depart >= today));
   const upcoming = reservations.filter((r) => r.date_arrivee > today);
   const past = reservations.filter((r) => r.date_depart < today || r.statut === "terminee");

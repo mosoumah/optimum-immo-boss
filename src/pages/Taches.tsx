@@ -28,6 +28,7 @@ import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
 import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { checkPermission } from "@/lib/checkPermission";
+import { formatDateGN } from "@/lib/dateGuinee";
 
 interface Tache {
   id: string;
@@ -103,7 +104,7 @@ const Taches = () => {
   }, [entrepriseId, fetchTaches]);
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("fr-FR");
+    return formatDateGN(date);
   };
 
   const toggleStatut = async (tache: Tache) => {

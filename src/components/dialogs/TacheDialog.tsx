@@ -11,6 +11,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { todayPickerDate } from "@/lib/dateGuinee";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -40,7 +41,7 @@ export const TacheDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Tac
   const { isAdmin } = useUserRole();
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(todayPickerDate());
   const [assignedTo, setAssignedTo] = useState<string>("");
   const [agents, setAgents] = useState<Agent[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -124,7 +125,7 @@ export const TacheDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: Tac
     toast.success("Tâche créée avec succès");
     setTitre("");
     setDescription("");
-    setDate(new Date());
+    setDate(todayPickerDate());
     setAssignedTo("");
     setSelectedClientId("");
     onOpenChange(false);

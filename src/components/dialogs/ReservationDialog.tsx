@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { isFacturePlanLimit, showPlanLimitToast, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
+import { todayGN } from "@/lib/dateGuinee";
 import {
   reservationsTimesTable,
   reservationTimes,
@@ -197,7 +198,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         entreprise_id: entrepriseId,
         montant: montantTotal,
         description: factureDescription,
-        date: new Date().toISOString().split("T")[0],
+        date: todayGN(),
         reservation_id: newReservationId,
       });
       if (factureError) {

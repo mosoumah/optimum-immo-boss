@@ -31,6 +31,7 @@ import { checkPermission } from "@/lib/checkPermission";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { escapeHtml, sanitizeHexColor } from "@/lib/escapeHtml";
+import { formatDateGN } from "@/lib/dateGuinee";
 import {
   Dialog,
   DialogContent,
@@ -206,7 +207,7 @@ const Factures = () => {
           clientEmail: facture.clients?.email,
           description: facture.description,
           montant: facture.montant,
-          date: new Date(facture.date).toLocaleDateString("fr-FR"),
+          date: formatDateGN(facture.date),
           numeroFacture: `FAC-${facture.id.substring(0, 8).toUpperCase()}`,
         },
       });
@@ -421,7 +422,7 @@ const Factures = () => {
           <div class="invoice-title">
             <h2>FACTURE</h2>
             <p>N°: FAC-${escapeHtml(previewFacture.id.substring(0, 8).toUpperCase())}</p>
-            <p>Date: ${new Date(previewFacture.date).toLocaleDateString("fr-FR")}</p>
+            <p>Date: ${formatDateGN(previewFacture.date)}</p>
           </div>
         </div>
         <div class="client-section">
@@ -591,7 +592,7 @@ const Factures = () => {
             <div class="invoice-title">
               <h2>FACTURE</h2>
               <p>N°: FAC-${escapeHtml(previewFacture?.id.substring(0, 8).toUpperCase())}</p>
-              <p>Date: ${previewFacture ? new Date(previewFacture.date).toLocaleDateString("fr-FR") : ''}</p>
+              <p>Date: ${previewFacture ? formatDateGN(previewFacture.date) : ''}</p>
             </div>
           </div>
           <div class="client-section">
@@ -709,7 +710,7 @@ const Factures = () => {
     <div class="invoice-title">
       <h2>FACTURE</h2>
       <p>N°: FAC-${escapeHtml(previewFacture.id.substring(0, 8).toUpperCase())}</p>
-      <p>Date: ${new Date(previewFacture.date).toLocaleDateString("fr-FR")}</p>
+      <p>Date: ${formatDateGN(previewFacture.date)}</p>
     </div>
   </div>
   
@@ -885,7 +886,7 @@ const Factures = () => {
                           {facture.statut === "paye" ? "Payée" : "Non payée"}
                         </Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{new Date(facture.date).toLocaleDateString("fr-FR")}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{formatDateGN(facture.date)}</div>
                     </div>
                   </div>
                   <div className="flex items-center justify-center sm:justify-end gap-1 mt-2 pt-2 border-t border-border/30 w-full">

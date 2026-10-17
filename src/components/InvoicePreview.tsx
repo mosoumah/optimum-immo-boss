@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { sanitizeHexColor } from "@/lib/escapeHtml";
+import { formatDateLongGN } from "@/lib/dateGuinee";
 
 interface InvoicePreviewProps {
   entreprise: {
@@ -82,13 +83,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     const primaryTextColor = getContrastColor(primaryColor);
     const accentTextColor = getContrastColor(accentColor);
 
-    const formatDate = (dateStr: string) => {
-      return new Date(dateStr).toLocaleDateString("fr-FR", { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
-      });
-    };
+    const formatDate = (dateStr: string) => formatDateLongGN(dateStr);
 
     return (
       <div

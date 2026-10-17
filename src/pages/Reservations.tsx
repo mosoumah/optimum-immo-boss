@@ -11,6 +11,7 @@ import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { PermissionGate } from "@/components/PermissionGate";
 import type { Database } from "@/integrations/supabase/types";
 import { reservationTimes, toTimeInput } from "@/types/reservations";
+import { formatDateGN, todayGN } from "@/lib/dateGuinee";
 
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
 
@@ -87,13 +88,7 @@ const Reservations = () => {
     if (entrepriseId) fetchReservations();
   }, [entrepriseId, fetchReservations]);
 
-  const formatLocalDate = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  };
-  const today = formatLocalDate(new Date());
+  const today = todayGN();
   const arriveesToday = reservations.filter((r) => r.date_arrivee === today && ["en_attente", "en_cours"].includes(r.statut)).length;
   const departsToday = reservations.filter((r) => r.date_depart === today && ["en_attente", "en_cours"].includes(r.statut)).length;
   const enCours = reservations.filter((r) => ["en_cours", "en_attente"].includes(r.statut) && r.date_arrivee <= today && r.date_depart >= today).length;
@@ -101,7 +96,7 @@ const Reservations = () => {
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
-  const formatDate = (date: string) => new Date(date).toLocaleDateString("fr-FR");
+  const formatDate = (date: string) => formatDateGN(date);
 
   return (
     <div className="min-h-screen bg-background flex">

@@ -1,13 +1,16 @@
 import { useMemo } from "react";
 import type { Database } from "@/integrations/supabase/types";
+import { diffDaysGN, toDateOnly, todayGN } from "@/lib/dateGuinee";
 
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
 type Property = Database["public"]["Tables"]["properties"]["Row"];
 
+// Écart en jours calendaires guinéens (les colonnes de dates sont des DATE).
 const dayDiff = (a: string | Date, b: string | Date) => {
-  const d1 = new Date(a);
-  const d2 = new Date(b);
-  return Math.max(0, Math.ceil((d2.getTime() - d1.getTime()) / 86400000));
+  const from = toDateOnly(a);
+  const to = toDateOnly(b);
+  if (!from || !to) return 0;
+  return Math.max(0, diffDaysGN(from, to));
 };
 
 export const usePropertyStats = (property: Property | null, reservations: Reservation[]) => {
@@ -19,7 +22,7 @@ export const usePropertyStats = (property: Property | null, reservations: Reserv
       .reduce((s, r) => s + dayDiff(r.date_arrivee, r.date_depart), 0);
 
     const totalDays = property?.created_at
-      ? Math.max(1, dayDiff(property.created_at, new Date()))
+      ? Math.max(1, dayDiff(property.created_at, todayGN()))
       : 1;
     const occupancyRate = Math.min(100, Math.round((occupiedDays / totalDays) * 100));
 

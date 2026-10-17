@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { Loader2, Check, Clock, User, ClipboardList } from "lucide-react";
 import {
   Dialog,
@@ -20,6 +18,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import type { Database } from "@/integrations/supabase/types";
+import { formatDateLongGN } from "@/lib/dateGuinee";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -188,7 +187,7 @@ export const TacheDetailDialog = ({
               {tache.statut === "fait" ? "Fait" : "À faire"}
             </Badge>
             <span className="text-primary/50">•</span>
-            <span>{format(new Date(tache.date), "d MMMM yyyy", { locale: fr })}</span>
+            <span>{formatDateLongGN(tache.date)}</span>
             {tache.assignee_name && (
               <>
                 <span className="text-primary/50">•</span>
