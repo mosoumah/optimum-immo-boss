@@ -40,7 +40,14 @@ interface ReservationRange {
   statut: string;
 }
 
-const ACTIVE_STATUTS = new Set(["en_attente", "en_cours", "confirmee", "confirmée"]);
+/**
+ * Une réservation occupe le bien sauf si elle est annulée. Les séjours terminés
+ * comptent donc toujours : sans cela, tous les jours passés retombent à 0 %.
+ */
+const CANCELLED_STATUTS = new Set(["annulee", "annulée", "annule", "annulé"]);
+
+const isOccupying = (statut: string | null | undefined): boolean =>
+  !CANCELLED_STATUTS.has(String(statut ?? "").trim().toLowerCase());
 
 export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const [period, setPeriod] = useState<Period>("week");
@@ -145,7 +152,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const computeTaux = (dateStr: string): number => {
     if (totalBiens <= 0) return 0;
     const occupes = reservations.filter(
-      (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= dateStr && r.date_depart >= dateStr
+      (r) => isOccupying(r.statut) && r.date_arrivee <= dateStr && r.date_depart >= dateStr
     ).length;
     const ratio = (occupes / totalBiens) * 100;
     return Math.min(100, Math.round(ratio * 10) / 10);
@@ -194,7 +201,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
 
     const todayStr = todayGN();
     const biensOccupesAujourdhui = reservations.filter(
-      (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= todayStr && r.date_depart >= todayStr
+      (r) => isOccupying(r.statut) && r.date_arrivee <= todayStr && r.date_depart >= todayStr
     ).length;
 
     // Prev period mean taux
@@ -209,7 +216,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       if (days.length > 0) {
         const sum = days.reduce((acc, ds) => {
           const occ = prevReservations.filter(
-            (r) => ACTIVE_STATUTS.has(r.statut) && r.date_arrivee <= ds && r.date_depart >= ds
+            (r) => isOccupying(r.statut) && r.date_arrivee <= ds && r.date_depart >= ds
           ).length;
           return acc + (occ / totalBiens) * 100;
         }, 0);
