@@ -228,6 +228,9 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     const prevTotalRevenus = prevRevenus.reduce((sum, r) => sum + Number(r.montant), 0);
     const prevTotalDepenses = prevDepenses.reduce((sum, d) => sum + Number(d.montant), 0);
     const prevBenefice = prevTotalRevenus - prevTotalDepenses;
+    // Aucune donnée (ni revenu ni dépense) sur la période précédente : la
+    // variation n'a pas de sens, on affichera un badge neutre « Nouveau ».
+    const hasPrevData = prevTotalRevenus > 0 || prevTotalDepenses > 0;
 
     let variation = 0;
     if (prevBenefice !== 0) {
@@ -236,7 +239,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
       variation = 100;
     }
 
-    return { revenus: totalRevenus, depenses: totalDepenses, benefice, variation, tauxMoyen, tauxPic, tauxCreux, tauxVariation, biensOccupesAujourdhui, totalBiens };
+    return { revenus: totalRevenus, depenses: totalDepenses, benefice, variation, hasPrevData, tauxMoyen, tauxPic, tauxCreux, tauxVariation, biensOccupesAujourdhui, totalBiens };
   }, [chartData, prevRevenus, prevDepenses, reservations, prevReservations, totalBiens, periodRange]);
 
   const formatCurrency = (value: number) => {
@@ -330,10 +333,16 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
               {formatCurrency(totals.benefice)}
             </span>
             <span className="text-[11px] font-normal text-muted-foreground/80">GNF</span>
-            <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold ${isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-              {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-              {isPositive ? "+" : ""}{totals.variation.toFixed(1)}%
-            </div>
+            {totals.hasPrevData ? (
+              <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold ${isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {isPositive ? "+" : ""}{totals.variation.toFixed(1)}%
+              </div>
+            ) : (
+              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold bg-muted/30 text-muted-foreground">
+                Nouveau
+              </div>
+            )}
           </div>
           <span className="text-[10px] text-muted-foreground/70 leading-none">
             vs {period === "week" ? "sem." : "mois"} préc.
