@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare,
@@ -15,6 +16,8 @@ import {
   Building,
   Sparkles,
   ArrowDown,
+  Activity,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,13 +32,28 @@ interface AIChatBotProps {
   userName?: string;
 }
 
-const suggestions = [
+interface AIChatBotContentProps extends AIChatBotProps {
+  /** Formule Standard / essai : l'assistant répond mais n'exécute pas d'action. */
+  readOnly?: boolean;
+}
+
+const ACTION_SUGGESTIONS = [
   { text: "Créer un client", icon: UserPlus },
   { text: "Factures impayées", icon: FileText },
   { text: "Bénéfice du mois", icon: TrendingUp },
   { text: "Réservations semaine", icon: Calendar },
   { text: "Créer une tâche", icon: CheckSquare },
   { text: "Biens disponibles", icon: Building },
+];
+
+/**
+ * En Standard (et en essai), l'assistant ne déclenche aucune action : on ne
+ * propose que des suggestions de lecture. En Pro, rien ne change.
+ */
+const READ_ONLY_SUGGESTIONS = [
+  { text: "Que s'est-il passé aujourd'hui ?", icon: Activity },
+  { text: "Résume mes revenus du mois", icon: TrendingUp },
+  { text: "Quelles réservations arrivent cette semaine ?", icon: Calendar },
 ];
 
 const TypingIndicator = () => (
@@ -107,7 +125,7 @@ const groupHistoryByDate = (history: Conversation[]) => {
   return Object.entries(groups).filter(([, list]) => list.length > 0);
 };
 
-const AIChatBotContent = ({ userName }: AIChatBotProps) => {
+const AIChatBotContent = ({ userName, readOnly = false }: AIChatBotContentProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [activeTab, setActiveTab] = useState("discussion");
@@ -322,6 +340,28 @@ const AIChatBotContent = ({ userName }: AIChatBotProps) => {
                 </div>
               )}
 
+              {readOnly && (
+                <div className="mt-2 flex items-start gap-2 rounded-xl border border-border/15 px-2.5 py-1.5"
+                  style={{ background: "hsl(220, 18%, 10%)" }}
+                >
+                  <span className="mt-[1px] inline-flex flex-shrink-0 items-center gap-1 rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Lock className="w-2.5 h-2.5" />
+                    Lecture seule
+                  </span>
+                  <p className="text-[10px] leading-snug text-muted-foreground/80">
+                    Les actions (créer clients, factures, réservations) sont disponibles avec la
+                    formule Pro.{" "}
+                    <Link
+                      to="/abonnement"
+                      onClick={() => setIsOpen(false)}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Voir les formules
+                    </Link>
+                  </p>
+                </div>
+              )}
+
               <div className="absolute bottom-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent shadow-[0_0_8px_hsl(72,100%,50%,0.2)]" />
             </div>
 
@@ -366,7 +406,7 @@ const AIChatBotContent = ({ userName }: AIChatBotProps) => {
                   >
                     {messages.length === 0 ? (
                       <div className="grid grid-cols-2 gap-2.5 pt-2">
-                        {suggestions.map((s) => {
+                        {(readOnly ? READ_ONLY_SUGGESTIONS : ACTION_SUGGESTIONS).map((s) => {
                           const Icon = s.icon;
                           return (
                             <motion.button
@@ -621,5 +661,13 @@ export const AIChatBot = (props: AIChatBotProps) => {
     );
   }
 
-  return <AIChatBotContent {...props} />;
+  // Standard et essai donnent accès à l'assistant mais pas à advanced_ai :
+  // le chat reste en lecture seule (aucune action). Le calcul réutilise le
+  // hook déjà appelé ci-dessus, donc aucun appel serveur supplémentaire.
+  return (
+    <AIChatBotContent
+      {...props}
+      readOnly={has("ai_assistant") && !has("advanced_ai")}
+    />
+  );
 };
