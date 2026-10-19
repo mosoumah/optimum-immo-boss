@@ -17,8 +17,10 @@ export const usePropertyStats = (property: Property | null, reservations: Reserv
   return useMemo(() => {
     const total = reservations.length;
     const revenue = reservations.reduce((s, r) => s + Number(r.montant_total || 0), 0);
+    // Jours occupés : séjours confirmés, en cours ou terminés (jamais en
+    // attente, jamais annulés).
     const occupiedDays = reservations
-      .filter((r) => r.statut === "en_cours" || r.statut === "terminee")
+      .filter((r) => r.statut === "en_cours" || r.statut === "terminee" || r.statut === "confirmee")
       .reduce((s, r) => s + dayDiff(r.date_arrivee, r.date_depart), 0);
 
     const totalDays = property?.created_at
