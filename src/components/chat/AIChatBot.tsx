@@ -35,6 +35,8 @@ interface AIChatBotProps {
 interface AIChatBotContentProps extends AIChatBotProps {
   /** Formule Standard / essai : l'assistant répond mais n'exécute pas d'action. */
   readOnly?: boolean;
+  /** Les formules sont encore en cours de chargement : formule inconnue. */
+  planLoading?: boolean;
 }
 
 const ACTION_SUGGESTIONS = [
@@ -125,7 +127,11 @@ const groupHistoryByDate = (history: Conversation[]) => {
   return Object.entries(groups).filter(([, list]) => list.length > 0);
 };
 
-const AIChatBotContent = ({ userName, readOnly = false }: AIChatBotContentProps) => {
+const AIChatBotContent = ({
+  userName,
+  readOnly = false,
+  planLoading = false,
+}: AIChatBotContentProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [activeTab, setActiveTab] = useState("discussion");
@@ -215,6 +221,8 @@ const AIChatBotContent = ({ userName, readOnly = false }: AIChatBotContentProps)
 
   const firstName = userName?.split(" ")[0] || "Utilisateur";
   const groupedHistory = useMemo(() => groupHistoryByDate(history), [history]);
+  // Formule pas encore connue : ni suggestions de départ, ni badge de formule.
+  const showSuggestions = messages.length === 0 && !planLoading;
 
   return (
     <>
@@ -340,7 +348,7 @@ const AIChatBotContent = ({ userName, readOnly = false }: AIChatBotContentProps)
                 </div>
               )}
 
-              {readOnly && (
+              {!planLoading && readOnly && (
                 <div className="mt-2 flex items-start gap-2 rounded-xl border border-border/15 px-2.5 py-1.5"
                   style={{ background: "hsl(220, 18%, 10%)" }}
                 >
@@ -404,7 +412,7 @@ const AIChatBotContent = ({ userName, readOnly = false }: AIChatBotContentProps)
                     onScroll={handleScroll}
                     className="absolute inset-0 overflow-y-auto px-4 py-3 scroll-smooth"
                   >
-                    {messages.length === 0 ? (
+                    {showSuggestions ? (
                       <div className="grid grid-cols-2 gap-2.5 pt-2">
                         {(readOnly ? READ_ONLY_SUGGESTIONS : ACTION_SUGGESTIONS).map((s) => {
                           const Icon = s.icon;
@@ -442,7 +450,7 @@ const AIChatBotContent = ({ userName, readOnly = false }: AIChatBotContentProps)
                           );
                         })}
                       </div>
-                    ) : (
+                    ) : messages.length === 0 ? null : (
                       <div className="space-y-3.5">
                         {messages.map((msg) => (
                           <ChatMessage
@@ -668,6 +676,7 @@ export const AIChatBot = (props: AIChatBotProps) => {
     <AIChatBotContent
       {...props}
       readOnly={has("ai_assistant") && !has("advanced_ai")}
+      planLoading={isLoading}
     />
   );
 };
