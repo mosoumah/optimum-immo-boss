@@ -10,6 +10,8 @@ import {
   todayGN,
   weekDayShortGN,
 } from "@/lib/dateGuinee";
+// Une réservation occupe le bien sauf si elle est annulée (cf. lib/reservationStatut).
+import { isOccupying } from "@/lib/reservationStatut";
 
 interface FinancialChartProps {
   entrepriseId: string;
@@ -39,15 +41,6 @@ interface ReservationRange {
   date_depart: string;
   statut: string;
 }
-
-/**
- * Une réservation occupe le bien sauf si elle est annulée. Les séjours terminés
- * comptent donc toujours : sans cela, tous les jours passés retombent à 0 %.
- */
-const CANCELLED_STATUTS = new Set(["annulee", "annulée", "annule", "annulé"]);
-
-const isOccupying = (statut: string | null | undefined): boolean =>
-  !CANCELLED_STATUTS.has(String(statut ?? "").trim().toLowerCase());
 
 export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const [period, setPeriod] = useState<Period>("week");

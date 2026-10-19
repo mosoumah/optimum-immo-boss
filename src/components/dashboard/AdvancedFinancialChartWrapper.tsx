@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dayOfMonthGN, daysInMonthGN, monthBoundsGN } from "@/lib/dateGuinee";
+import { isOccupying } from "@/lib/reservationStatut";
 
 interface Props {
   entrepriseId: string;
@@ -32,7 +33,7 @@ export const AdvancedFinancialChartWrapper = ({ entrepriseId }: Props) => {
       // Fetch reservations for court_sejour and mensuel
       const { data: reservations } = await supabase
         .from("reservations")
-        .select("date_arrivee, montant_total, type_location")
+        .select("date_arrivee, montant_total, type_location, statut")
         .eq("entreprise_id", entrepriseId)
         .gte("date_arrivee", startStr);
 
@@ -55,6 +56,8 @@ export const AdvancedFinancialChartWrapper = ({ entrepriseId }: Props) => {
       }
 
       reservations?.forEach((r) => {
+        // Les réservations annulées ne sont pas ventilées.
+        if (!isOccupying(r.statut)) return;
         const day = dayOfMonthGN(r.date_arrivee);
         if (!day) return;
         if (r.type_location === "court_sejour") csMap[day] = (csMap[day] || 0) + Number(r.montant_total);
