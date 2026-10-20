@@ -30,7 +30,10 @@ interface Revenu {
   date: string;
   source: string | null;
   facture_id: string | null;
+  reservation_id: string | null;
   factures: { description: string | null; date: string; clients: { nom: string } | null } | null;
+  /** Réservation à l'origine du revenu (paiement encaissé). */
+  reservations: { property_name: string | null; client_id: string | null } | null;
 }
 
 type FilterPeriod = 'today' | 'week' | 'month' | 'all';
@@ -55,6 +58,8 @@ const Revenus = () => {
   const [selectedRevenu, setSelectedRevenu] = useState<Revenu | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  /** Noms des clients des réservations (jointure imbriquée non exposée par l'API). */
+  const [clientNames, setClientNames] = useState<Record<string, string>>({});
 
   const handleSignOut = async () => {
     await signOut();
@@ -66,11 +71,36 @@ const Revenus = () => {
 
     const { data } = await supabase
       .from("revenus")
-      .select("*, factures(description, date, clients(nom))")
+      .select("*, factures(description, date, clients(nom)), reservations(property_name, client_id)")
       .eq("entreprise_id", entrepriseId)
       .order("date", { ascending: false });
 
-    setRevenus((data as Revenu[]) || []);
+    const rows = (data as unknown as Revenu[]) || [];
+    setRevenus(rows);
+
+    // Titre des revenus de réservation : nom du client, résolu à part.
+    const clientIds = Array.from(
+      new Set(
+        rows
+          .map((r) => r.reservations?.client_id)
+          .filter((id): id is string => typeof id === "string" && id.length > 0),
+      ),
+    );
+
+    if (clientIds.length > 0) {
+      const { data: clientsData } = await supabase
+        .from("clients")
+        .select("id, nom")
+        .eq("entreprise_id", entrepriseId)
+        .in("id", clientIds);
+
+      const names: Record<string, string> = {};
+      (clientsData ?? []).forEach((c) => { names[c.id] = c.nom; });
+      setClientNames(names);
+    } else {
+      setClientNames({});
+    }
+
     setIsLoading(false);
   }, [entrepriseId]);
 
@@ -102,11 +132,10 @@ const Revenus = () => {
     }
   }, []);
 
+  // Filtres et affichage basés sur `revenus.date` (date du paiement), comme le
+  // tableau de bord — plus sur la date de la facture liée.
   const filteredRevenus = useMemo(() => {
-    return revenus.filter((r) => {
-      const effectiveDate = r.factures?.date || r.date;
-      return filterByPeriod(effectiveDate, filterPeriod);
-    });
+    return revenus.filter((r) => filterByPeriod(r.date, filterPeriod));
   }, [revenus, filterPeriod, filterByPeriod]);
 
   const totalFiltered = useMemo(() => {
@@ -118,13 +147,16 @@ const Revenus = () => {
   };
 
   const formatDate = (revenu: Revenu) => {
-    const effectiveDate = revenu.factures?.date || revenu.date;
-    return formatDateGN(effectiveDate);
+    return formatDateGN(revenu.date);
   };
 
   const getRevenuTitle = (revenu: Revenu) => {
     if (revenu.facture_id && revenu.factures?.clients?.nom) {
       return revenu.factures.clients.nom;
+    }
+    if (revenu.reservation_id) {
+      const clientId = revenu.reservations?.client_id;
+      return (clientId && clientNames[clientId]) || "Réservation";
     }
     return "Revenu";
   };
@@ -135,6 +167,9 @@ const Revenus = () => {
     }
     if (revenu.facture_id) {
       return "Paiement facture";
+    }
+    if (revenu.reservation_id) {
+      return revenu.reservations?.property_name || revenu.source || "Paiement réservation";
     }
     return revenu.source || "—";
   };
@@ -306,7 +341,13 @@ const Revenus = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Type</p>
-                  <p className="font-medium">{selectedRevenu.facture_id ? "Facture" : "Manuel"}</p>
+                  <p className="font-medium">
+                    {selectedRevenu.facture_id
+                      ? "Facture"
+                      : selectedRevenu.reservation_id
+                        ? "Réservation"
+                        : "Manuel"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Montant</p>
@@ -318,12 +359,16 @@ const Revenus = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {selectedRevenu.facture_id ? "Client" : "Source"}
+                    {selectedRevenu.facture_id || selectedRevenu.reservation_id ? "Client" : "Source"}
                   </p>
                   <p className="font-medium">
                     {selectedRevenu.facture_id
                       ? selectedRevenu.factures?.clients?.nom || "—"
-                      : selectedRevenu.source || "—"}
+                      : selectedRevenu.reservation_id
+                        ? (selectedRevenu.reservations?.client_id
+                          ? clientNames[selectedRevenu.reservations.client_id] || "—"
+                          : "—")
+                        : selectedRevenu.source || "—"}
                   </p>
                 </div>
               </div>
