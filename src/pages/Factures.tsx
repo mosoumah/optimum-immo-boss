@@ -61,6 +61,18 @@ const resteReservation = (facture: Facture): number => {
   return Math.max(Number(resa.montant_total) - Number(resa.montant_paye), 0);
 };
 
+/**
+ * Facture liée à une réservation partiellement réglée : 0 < payé < total.
+ * La facture garde son statut « Non payée » tant que tout n'est pas payé.
+ */
+const estPartiellementPayee = (facture: Facture): boolean => {
+  const resa = facture.reservations;
+  if (!resa) return false;
+  const paye = Number(resa.montant_paye);
+  const total = Number(resa.montant_total);
+  return paye > 0 && paye < total;
+};
+
 interface Entreprise {
   nom: string;
   logo: string | null;
@@ -903,6 +915,16 @@ const Factures = () => {
                           {facture.statut === "paye" ? "Payée" : "Non payée"}
                         </Badge>
                       </div>
+                      {estPartiellementPayee(facture) && (
+                        <div className="mt-1 flex flex-col items-end gap-0.5">
+                          <Badge className="text-[10px] px-1.5 py-0 bg-info/10 text-info">
+                            Partiellement payée
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            Reste {formatCurrency(resteReservation(facture))}
+                          </span>
+                        </div>
+                      )}
                       <div className="text-xs text-muted-foreground mt-0.5">{formatDateGN(facture.date)}</div>
                     </div>
                   </div>

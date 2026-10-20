@@ -174,7 +174,14 @@ const Reservations = () => {
                       <td className="p-3 text-sm">{clientsMap[r.client_id] || "—"}</td>
                       <td className="p-3 text-sm">{(r.property_id && propertiesMap[r.property_id]) || r.property_name}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</td>
-                      <td className="p-3 text-sm hidden md:table-cell">{formatCurrency(r.montant_total)}</td>
+                      <td className="p-3 text-sm hidden md:table-cell">
+                        <div>{formatCurrency(r.montant_total)}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {resteAPayer(r) > 0
+                            ? `Payé ${formatCurrency(Number(r.montant_paye))} · Reste ${formatCurrency(resteAPayer(r))}`
+                            : "Soldée"}
+                        </div>
+                      </td>
                       <td className="p-3"><Badge className={statutColors[r.statut]}>{statutLabels[r.statut] || r.statut}</Badge></td>
                       <td className="p-3 text-sm">
                         {resteAPayer(r) > 0 && (
