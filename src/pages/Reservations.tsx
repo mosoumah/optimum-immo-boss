@@ -9,6 +9,7 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { supabase } from "@/integrations/supabase/client";
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
+import { PaiementDialog } from "@/components/dialogs/PaiementDialog";
 import { PermissionGate } from "@/components/PermissionGate";
 import type { Database } from "@/integrations/supabase/types";
 import { reservationTimes, toTimeInput } from "@/types/reservations";
@@ -33,6 +34,10 @@ const statutLabels: Record<string, string> = {
 /** "14:30" -> "14h30" */
 const toHourLabel = (value: string) => value.replace(":", "h");
 
+/** Reste à payer d'une réservation (jamais négatif). */
+const resteAPayer = (r: Reservation): number =>
+  Math.max(Number(r.montant_total) - Number(r.montant_paye), 0);
+
 /**
  * Créneau horaire d'une réservation à l'heure, quand les heures existent.
  * Renvoie " · 14h30 – 15h45", ou "" (jour/mensuel ou heures absentes).
@@ -55,6 +60,7 @@ const Reservations = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
+  const [paiementReservation, setPaiementReservation] = useState<Reservation | null>(null);
 
   const fetchReservations = useCallback(async () => {
     if (!entrepriseId) return;
@@ -155,6 +161,7 @@ const Reservations = () => {
                     <th className="text-left p-3 text-sm font-medium hidden md:table-cell">Dates</th>
                     <th className="text-left p-3 text-sm font-medium hidden md:table-cell">Montant</th>
                     <th className="text-left p-3 text-sm font-medium">Statut</th>
+                    <th className="text-left p-3 text-sm font-medium">Paiement</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -169,6 +176,21 @@ const Reservations = () => {
                       <td className="p-3 text-sm hidden md:table-cell">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</td>
                       <td className="p-3 text-sm hidden md:table-cell">{formatCurrency(r.montant_total)}</td>
                       <td className="p-3"><Badge className={statutColors[r.statut]}>{statutLabels[r.statut] || r.statut}</Badge></td>
+                      <td className="p-3 text-sm">
+                        {resteAPayer(r) > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPaiementReservation(r);
+                            }}
+                          >
+                            Encaisser
+                          </Button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -181,6 +203,18 @@ const Reservations = () => {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           reservation={editingReservation}
+          onSuccess={fetchReservations}
+        />
+
+        <PaiementDialog
+          open={paiementReservation !== null}
+          onOpenChange={(open) => { if (!open) setPaiementReservation(null); }}
+          reservation={paiementReservation}
+          contexte={
+            paiementReservation
+              ? `${(paiementReservation.property_id && propertiesMap[paiementReservation.property_id]) || paiementReservation.property_name}`
+              : undefined
+          }
           onSuccess={fetchReservations}
         />
       </main>

@@ -25,6 +25,7 @@ import { PropertyGallery } from "@/components/biens/PropertyGallery";
 
 import { PropertyStatsCards } from "@/components/biens/PropertyStatsCards";
 import { BienDialog } from "@/components/dialogs/BienDialog";
+import { PaiementDialog } from "@/components/dialogs/PaiementDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { formatDateGN, todayGN } from "@/lib/dateGuinee";
 
@@ -78,6 +79,7 @@ const BienDetail = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
+  const [paiementReservation, setPaiementReservation] = useState<Reservation | null>(null);
 
   const { media } = usePropertyMedia(id);
   const stats = usePropertyStats(property, reservations);
@@ -210,7 +212,19 @@ const BienDetail = () => {
                 {formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}
               </div>
             </div>
-            <span className="font-medium text-sm">{formatCurrency(Number(r.montant_total))}</span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="font-medium text-sm">{formatCurrency(Number(r.montant_total))}</span>
+              {Number(r.montant_total) - Number(r.montant_paye) > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setPaiementReservation(r)}
+                >
+                  Encaisser
+                </Button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -403,6 +417,14 @@ const BienDetail = () => {
         open={editOpen}
         onOpenChange={setEditOpen}
         property={property}
+        onSuccess={fetchData}
+      />
+
+      <PaiementDialog
+        open={paiementReservation !== null}
+        onOpenChange={(open) => { if (!open) setPaiementReservation(null); }}
+        reservation={paiementReservation}
+        contexte={paiementReservation ? property.nom : undefined}
         onSuccess={fetchData}
       />
     </div>

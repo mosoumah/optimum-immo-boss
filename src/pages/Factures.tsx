@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2, Pencil, Save, X } from "lucide-react";
+import { Receipt, Plus, ArrowLeft, CheckCircle, Download, FileText, Loader2, Printer, Trash2, Pencil, Save, X, Banknote } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { PermissionGate } from "@/components/PermissionGate";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
+import { PaiementDialog, type PaiementReservation } from "@/components/dialogs/PaiementDialog";
 import { LogoUpload } from "@/components/LogoUpload";
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
@@ -47,8 +48,18 @@ interface Facture {
   montant: number;
   statut: string;
   date: string;
+  reservation_id: string | null;
   clients: { nom: string; telephone: string | null; email: string | null } | null;
+  /** Réservation liée : porte les montants payé / total. */
+  reservations: { id: string; montant_total: number; montant_paye: number } | null;
 }
+
+/** Reste à payer de la réservation liée (0 si aucune ou déjà soldée). */
+const resteReservation = (facture: Facture): number => {
+  const resa = facture.reservations;
+  if (!resa) return 0;
+  return Math.max(Number(resa.montant_total) - Number(resa.montant_paye), 0);
+};
 
 interface Entreprise {
   nom: string;
@@ -79,6 +90,7 @@ const Factures = () => {
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const [isEditingPreview, setIsEditingPreview] = useState(false);
   const [isSavingEdits, setIsSavingEdits] = useState(false);
+  const [paiementReservation, setPaiementReservation] = useState<PaiementReservation | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const { loading: permissionsLoading } = usePermissions();
 
@@ -92,7 +104,7 @@ const Factures = () => {
 
     const { data } = await supabase
       .from("factures")
-      .select("*, clients(nom, telephone, email)")
+      .select("*, clients(nom, telephone, email), reservations(id, montant_total, montant_paye)")
       .eq("entreprise_id", entrepriseId)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false });
@@ -895,6 +907,18 @@ const Factures = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-center sm:justify-end gap-1 mt-2 pt-2 border-t border-border/30 w-full">
+                    {resteReservation(facture) > 0 && facture.reservations && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPaiementReservation(facture.reservations)}
+                        className="h-8 px-2 text-xs gap-1"
+                        title="Encaisser sur la réservation liée"
+                      >
+                        <Banknote className="w-4 h-4" />
+                        Encaisser
+                      </Button>
+                    )}
                     <PermissionGate permission="modifier_facture">
                       {facture.statut !== "paye" && (
                         <Button variant="ghost" size="icon" onClick={() => marquerPayee(facture)} className="h-8 w-8" title="Marquer payée">
@@ -1046,6 +1070,14 @@ const Factures = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PaiementDialog
+        open={paiementReservation !== null}
+        onOpenChange={(open) => { if (!open) setPaiementReservation(null); }}
+        reservation={paiementReservation}
+        contexte="Facture liée à une réservation"
+        onSuccess={fetchFactures}
+      />
       </main>
     </div>
   );
