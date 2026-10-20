@@ -4,9 +4,11 @@ import { FinancialChart } from "@/components/FinancialChart";
 
 interface Props {
   entrepriseId: string;
+  /** Compteur de rafraîchissement fourni par le Dashboard (temps réel). */
+  refreshToken?: number;
 }
 
-export const SimpleChart = ({ entrepriseId }: Props) => {
+export const SimpleChart = ({ entrepriseId, refreshToken }: Props) => {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -24,7 +26,7 @@ export const SimpleChart = ({ entrepriseId }: Props) => {
         </div>
       </div>
       <div className="flex-1 min-h-0">
-        <FinancialChart entrepriseId={entrepriseId} />
+        <FinancialChart entrepriseId={entrepriseId} refreshToken={refreshToken} />
       </div>
     </motion.div>
   );

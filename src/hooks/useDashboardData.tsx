@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
 import type { Database } from "@/integrations/supabase/types";
@@ -135,37 +134,9 @@ export const useDashboardData = (
     staleTime: 2 * 60 * 1000,
   });
 
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!entrepriseId) return;
-
-    const channel = supabase
-      .channel("dashboard-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "factures", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-finance", entrepriseId] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "revenus", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-finance", entrepriseId] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard-top-properties", entrepriseId] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "depenses", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-finance", entrepriseId] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-property", entrepriseId] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard-alerts", entrepriseId] });
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [entrepriseId, queryClient]);
+  // Le temps réel est géré par l'écran qui utilise ce hook (useRealtimeRefresh) :
+  // il invalide les mêmes clés de requête, avec un canal unique et un anti-rebond.
+  // Un abonnement ici créerait un second canal pour les mêmes tables.
 
   return {
     simple: simpleQuery.data || null,

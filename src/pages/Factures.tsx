@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { PermissionGate } from "@/components/PermissionGate";
 import { FactureDialog } from "@/components/dialogs/FactureDialog";
 import { LogoUpload } from "@/components/LogoUpload";
@@ -118,6 +119,10 @@ const Factures = () => {
       fetchEntreprise();
     }
   }, [entrepriseId, fetchFactures, fetchEntreprise]);
+
+  // Temps réel : le serveur passe une facture à « payé » quand la réservation
+  // liée est soldée, et crée un revenu à chaque paiement.
+  useRealtimeRefresh(entrepriseId, ["revenus", "reservations", "factures"], fetchFactures);
 
   // Convert logo URL to DataURL for PDF/HTML export
   const convertLogoToDataUrl = async (logoUrl: string): Promise<string | null> => {

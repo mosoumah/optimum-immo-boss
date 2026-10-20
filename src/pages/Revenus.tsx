@@ -12,6 +12,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { RevenuDialog } from "@/components/dialogs/RevenuDialog";
 import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,10 @@ const Revenus = () => {
       fetchRevenus();
     }
   }, [entrepriseId, fetchRevenus]);
+
+  // Temps réel : un paiement de réservation crée un revenu et passe la facture
+  // en « payé » côté serveur, on recharge donc aussi sur ces deux tables.
+  useRealtimeRefresh(entrepriseId, ["revenus", "reservations", "factures"], fetchRevenus);
 
   // Comparaison sur le jour guinéen : `date` est une DATE (YYYY-MM-DD).
   const filterByPeriod = useCallback((dateStr: string, period: FilterPeriod): boolean => {

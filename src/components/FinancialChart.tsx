@@ -15,6 +15,12 @@ import { isOccupying } from "@/lib/reservationStatut";
 
 interface FinancialChartProps {
   entrepriseId: string;
+  /**
+   * Compteur incrémenté par le parent (via `useRealtimeRefresh`) pour forcer un
+   * rechargement. Le graphique n'ouvre pas son propre canal Realtime : un seul
+   * abonnement par écran, géré par le parent.
+   */
+  refreshToken?: number;
 }
 
 type Period = "week" | "month";
@@ -42,7 +48,7 @@ interface ReservationRange {
   statut: string;
 }
 
-export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
+export const FinancialChart = ({ entrepriseId, refreshToken = 0 }: FinancialChartProps) => {
   const [period, setPeriod] = useState<Period>("week");
   const [revenus, setRevenus] = useState<Revenu[]>([]);
   const [depenses, setDepenses] = useState<Depense[]>([]);
@@ -53,35 +59,6 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
   const [totalBiens, setTotalBiens] = useState<number>(0);
   const [periodRange, setPeriodRange] = useState<{ prevStart: string; prevEnd: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [realtimeTick, setRealtimeTick] = useState(0);
-
-  // Realtime subscription to auto-refresh chart
-  useEffect(() => {
-    if (!entrepriseId) return;
-
-    const channel = supabase
-      .channel("chart-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "revenus", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        setRealtimeTick((t) => t + 1);
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "depenses", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        setRealtimeTick((t) => t + 1);
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "factures", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        setRealtimeTick((t) => t + 1);
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        setRealtimeTick((t) => t + 1);
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "properties", filter: `entreprise_id=eq.${entrepriseId}` }, () => {
-        setRealtimeTick((t) => t + 1);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [entrepriseId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,7 +117,7 @@ export const FinancialChart = ({ entrepriseId }: FinancialChartProps) => {
     };
 
     if (entrepriseId) fetchData();
-  }, [entrepriseId, period, realtimeTick]);
+  }, [entrepriseId, period, refreshToken]);
 
   const computeTaux = (dateStr: string): number => {
     if (totalBiens <= 0) return 0;

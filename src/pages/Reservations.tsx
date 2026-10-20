@@ -6,6 +6,7 @@ import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { supabase } from "@/integrations/supabase/client";
 import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -87,6 +88,10 @@ const Reservations = () => {
   useEffect(() => {
     if (entrepriseId) fetchReservations();
   }, [entrepriseId, fetchReservations]);
+
+  // Temps réel : un encaissement met à jour la réservation, crée le revenu et
+  // solde la facture liée côté serveur.
+  useRealtimeRefresh(entrepriseId, ["revenus", "reservations", "factures"], fetchReservations);
 
   const today = todayGN();
   const arriveesToday = reservations.filter((r) => r.date_arrivee === today && ["en_attente", "en_cours"].includes(r.statut)).length;

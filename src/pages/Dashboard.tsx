@@ -16,6 +16,8 @@ import { useEntreprise } from "@/hooks/useEntreprise";
 
 import { useAgencySettings } from "@/hooks/useAgencySettings";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "@/components/dialogs/ClientDialog";
 
@@ -63,6 +65,27 @@ const Dashboard = () => {
 
   // Fetch dashboard data from views
   const dashboardData = useDashboardData(entrepriseId, "simple", false);
+  const queryClient = useQueryClient();
+  // Compteur passé au graphique : il recharge sans ouvrir son propre canal.
+  const [chartRefresh, setChartRefresh] = useState(0);
+
+  /** Rechargement des cartes + du graphique (local après écriture, et Realtime). */
+  const refreshDashboard = useCallback(() => {
+    if (entrepriseId) {
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-simple", entrepriseId] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-finance", entrepriseId] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-advanced-property", entrepriseId] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard-alerts", entrepriseId] });
+    }
+    setChartRefresh((tick) => tick + 1);
+  }, [queryClient, entrepriseId]);
+
+  // Un seul canal pour tout le tableau de bord (cartes + graphique).
+  useRealtimeRefresh(
+    entrepriseId,
+    ["revenus", "reservations", "factures", "depenses", "properties"],
+    refreshDashboard,
+  );
 
   // Dialog states
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
@@ -96,6 +119,12 @@ const Dashboard = () => {
     }
     setIsLoading(false);
   }, [user]);
+
+  // Après un enregistrement local : rechargement immédiat, sans attendre le Realtime.
+  const handleDataChanged = useCallback(() => {
+    void fetchProfileAndClients();
+    refreshDashboard();
+  }, [fetchProfileAndClients, refreshDashboard]);
 
   // Auto-complete expired reservations
   useEffect(() => {
@@ -266,7 +295,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-1.5 lg:gap-2 flex-1 min-h-0 lg:[grid-template-rows:1fr]">
               {entrepriseId && (
                 <div className="lg:col-span-2 min-h-[520px] sm:min-h-[420px] lg:min-h-0 h-full">
-                  <SimpleChart entrepriseId={entrepriseId} />
+                  <SimpleChart entrepriseId={entrepriseId} refreshToken={chartRefresh} />
                 </div>
 
               )}
@@ -340,31 +369,31 @@ const Dashboard = () => {
             open={clientDialogOpen}
             onOpenChange={setClientDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
+            onSuccess={handleDataChanged}
           />
           <FactureDialog
             open={factureDialogOpen}
             onOpenChange={setFactureDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
+            onSuccess={handleDataChanged}
           />
           <DepenseDialog
             open={depenseDialogOpen}
             onOpenChange={setDepenseDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
+            onSuccess={handleDataChanged}
           />
           <TacheDialog
             open={tacheDialogOpen}
             onOpenChange={setTacheDialogOpen}
             entrepriseId={profile.entreprise_id}
-            onSuccess={fetchProfileAndClients}
+            onSuccess={handleDataChanged}
           />
           <ReservationDialog
             open={reservationDialogOpen}
             onOpenChange={setReservationDialogOpen}
             reservation={null}
-            onSuccess={fetchProfileAndClients}
+            onSuccess={handleDataChanged}
           />
         </>
       )}
