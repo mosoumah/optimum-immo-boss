@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { isFacturePlanLimit, showPlanLimitToast, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
+import { isReservationOverlapError, reservationOverlapMessage } from "@/lib/reservationErrors";
 import { todayGN } from "@/lib/dateGuinee";
 import {
   reservationsTimesTable,
@@ -177,6 +178,17 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       setIsSubmitting(false);
       // Abonnement expiré : le serveur refuse toute écriture (lecture seule).
       if (handleSubscriptionExpiredMessage(result.error.message, { toast, navigate })) return;
+      // Chevauchement refusé par le serveur : on affiche sa phrase sans le préfixe
+      // technique et on laisse le dialogue ouvert pour changer les dates ou le
+      // bien. Aucun bouton n'est désactivé à l'avance : le serveur fait autorité.
+      if (isReservationOverlapError(result.error.message)) {
+        toast({
+          title: "Dates déjà réservées",
+          description: reservationOverlapMessage(result.error.message),
+          variant: "destructive",
+        });
+        return;
+      }
       toast({ title: "Erreur", description: result.error.message, variant: "destructive" });
       return;
     }
@@ -191,8 +203,10 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       : `du ${form.date_arrivee} au ${form.date_depart}`;
     const factureDescription = `Location ${propertyName} ${periode}${resteDesc}`;
 
-    // Générer la facture automatiquement si coché (nouvelle réservation uniquement)
-    if (form.generer_facture && !reservation && !result.error) {
+    // Générer la facture automatiquement si coché (nouvelle réservation uniquement).
+    // `newReservationId` n'est renseigné que si l'insertion a réussi : aucune
+    // facture n'est créée quand la réservation a été refusée.
+    if (form.generer_facture && !reservation && newReservationId) {
       const { error: factureError } = await supabase.from("factures").insert({
         client_id: form.client_id,
         entreprise_id: entrepriseId,
@@ -213,7 +227,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       } else {
         toast({ title: "Succès", description: "Réservation créée et facture générée" });
       }
-    } else if (reservation && !result.error) {
+    } else if (reservation) {
       // Synchroniser la facture liée (si elle existe et non payée) avec le nouveau montant
       const { data: linkedFactures } = await supabase
         .from("factures")
