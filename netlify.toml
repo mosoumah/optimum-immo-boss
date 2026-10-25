@@ -1,0 +1,22 @@
+# Configuration Netlify — Optimum Immo (SPA React + Vite)
+#
+# - `npm run build` produit le dossier `dist` (Vite).
+# - La redirection 200 vers /index.html est indispensable à React Router :
+#   sans elle, un rechargement sur /dashboard ou /factures renverrait 404.
+# - Les en-têtes de sécurité s'appliquent à toutes les réponses.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
