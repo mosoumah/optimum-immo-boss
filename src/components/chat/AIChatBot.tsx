@@ -413,7 +413,8 @@ const AIChatBotContent = ({
                     className="absolute inset-0 overflow-y-auto px-4 py-3 scroll-smooth"
                   >
                     {showSuggestions ? (
-                      <div className="grid grid-cols-2 gap-2.5 pt-2">
+                      // Mobile : chips sur une seule ligne défilable ; écran large : grille.
+                      <div className="flex gap-2.5 overflow-x-auto snap-x pb-1 pt-2 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0">
                         {(readOnly ? READ_ONLY_SUGGESTIONS : ACTION_SUGGESTIONS).map((s) => {
                           const Icon = s.icon;
                           return (
@@ -422,7 +423,7 @@ const AIChatBotContent = ({
                               whileHover={{ scale: 1.02, y: -1 }}
                               whileTap={{ scale: 0.97 }}
                               onClick={() => sendMessage(s.text)}
-                              className="flex items-center gap-2.5 text-left text-xs px-3.5 py-3 rounded-xl border border-border/20 text-foreground/80 hover:text-primary transition-all duration-300 group"
+                              className="flex min-h-11 min-w-[62%] snap-start items-center gap-2.5 text-left text-xs px-3.5 py-3 rounded-xl border border-border/20 text-foreground/80 hover:text-primary transition-all duration-300 group sm:min-w-0"
                               style={{
                                 background:
                                   "linear-gradient(135deg, hsl(220, 20%, 10%) 0%, hsl(220, 18%, 8%) 100%)",
