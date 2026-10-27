@@ -33,6 +33,7 @@ export const PropertyGallery = ({ images, fallbackCover }: PropertyGalleryProps)
           src={list[active].url}
           alt={list[active].alt || ""}
           className="w-full aspect-[16/10] object-cover cursor-zoom-in"
+          decoding="async"
           onClick={() => setLightbox(active)}
         />
         <button
@@ -56,7 +57,15 @@ export const PropertyGallery = ({ images, fallbackCover }: PropertyGalleryProps)
                 i === active ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
               )}
             >
-              <img src={img.url} alt="" className="w-full h-full object-cover" />
+              <img
+                src={img.url}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width={80}
+                height={64}
+                className="w-full h-full object-cover"
+              />
             </button>
           ))}
         </div>

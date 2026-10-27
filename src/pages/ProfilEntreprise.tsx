@@ -10,6 +10,7 @@ import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { optimizeLogo } from "@/lib/imageOptim";
 
 const ProfilEntreprise = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -91,14 +92,16 @@ const ProfilEntreprise = () => {
     setIsUploadingLogo(true);
 
     try {
+      // Logo compressé dans le navigateur (600 px max, WebP qualité 0,8).
+      const optimized = await optimizeLogo(file);
       // Nom unique horodaté : évite d'écraser le logo précédent à une URL stable
-      const fileExt = file.name.split(".").pop();
+      const fileExt = optimized.name.split(".").pop();
       const fileName = `${entrepriseId}/logo-${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("logos")
-        .upload(fileName, file, { upsert: false });
+        .upload(fileName, optimized, { upsert: false, contentType: optimized.type });
 
       if (uploadError) throw uploadError;
 

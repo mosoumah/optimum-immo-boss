@@ -9,6 +9,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { handleStorageRefusal } from "@/lib/planLimitToast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePropertyMedia, type PropertyMediaItem } from "@/hooks/usePropertyMedia";
+import { optimizePropertyPhoto } from "@/lib/imageOptim";
 
 const MAX_IMG = 5 * 1024 * 1024;
 const MAX_PDF = 10 * 1024 * 1024;
@@ -76,7 +77,9 @@ export const PropertyMediaTab = ({ propertyId, entrepriseId, videoUrl, onVideoUr
       const hasCoverAlready = media.some((m) => m.media_type === "image" && m.is_cover);
       let firstImagePath: string | null = null;
 
-      const uploadOne = async (file: File, index: number) => {
+      const uploadOne = async (rawFile: File, index: number) => {
+        // Photo compressée dans le navigateur (1600 px max, WebP) avant envoi.
+        const file = type === "image" ? await optimizePropertyPhoto(rawFile) : rawFile;
         const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
         const path = `${entrepriseId}/${propertyId}/${Date.now()}_${index}_${safeName}`;
         const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, {

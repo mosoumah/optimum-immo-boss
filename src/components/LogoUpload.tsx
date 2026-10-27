@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractLogoColors, DEFAULT_LOGO_COLORS } from "@/lib/extractLogoColors";
+import { optimizeLogo } from "@/lib/imageOptim";
 
 interface LogoUploadProps {
   entrepriseId: string;
@@ -83,13 +84,15 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
     setIsUploading(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
+      // Logo compressé dans le navigateur (600 px max, WebP qualité 0,8).
+      const optimized = await optimizeLogo(file);
+      const fileExt = optimized.name.split(".").pop();
       const fileName = `${entrepriseId}/logo-${Date.now()}.${fileExt}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("logos")
-        .upload(fileName, file, { upsert: false });
+        .upload(fileName, optimized, { upsert: false, contentType: optimized.type });
 
       if (uploadError) {
         console.error("Upload error:", uploadError);
@@ -119,7 +122,7 @@ export const LogoUpload = ({ entrepriseId, currentLogo, onLogoUpdated, currentCo
       toast.success("Logo mis à jour avec succès");
       
       // Extract logo colors locally (browser)
-      const colors = await analyzeLogoColors(file);
+      const colors = await analyzeLogoColors(optimized);
       onLogoUpdated(logoUrl, colors || undefined);
       
     } catch (error) {
