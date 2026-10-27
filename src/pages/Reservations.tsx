@@ -155,55 +155,106 @@ const Reservations = () => {
             </div>
           ) : (
             <div className="rounded-xl border border-border/50 overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-secondary/30">
-                  <tr>
-                    <th className="text-left p-3 text-sm font-medium">Client</th>
-                    <th className="text-left p-3 text-sm font-medium">Bien</th>
-                    <th className="text-left p-3 text-sm font-medium hidden md:table-cell">Dates</th>
-                    <th className="text-left p-3 text-sm font-medium hidden md:table-cell">Montant</th>
-                    <th className="text-left p-3 text-sm font-medium">Statut</th>
-                    <th className="text-left p-3 text-sm font-medium">Paiement</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reservations.slice(0, visibleCount).map((r) => (
-                    <tr
-                      key={r.id}
-                      className="border-t border-border/30 hover:bg-secondary/20 cursor-pointer"
-                      onClick={() => { setEditingReservation(r); setDialogOpen(true); }}
-                    >
-                      <td className="p-3 text-sm">{clientsMap[r.client_id] || "—"}</td>
-                      <td className="p-3 text-sm">{(r.property_id && propertiesMap[r.property_id]) || r.property_name}</td>
-                      <td className="p-3 text-sm hidden md:table-cell">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</td>
-                      <td className="p-3 text-sm hidden md:table-cell">
-                        <div>{formatCurrency(r.montant_total)}</div>
-                        <div className="text-xs text-muted-foreground">
+              {/* Mobile : une carte par réservation (pas de tableau illisible). */}
+              <div className="md:hidden divide-y divide-border/30">
+                {reservations.slice(0, visibleCount).map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => { setEditingReservation(r); setDialogOpen(true); }}
+                    className="w-full text-left p-3 active:bg-secondary/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium text-sm truncate">{clientsMap[r.client_id] || "—"}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {(r.property_id && propertiesMap[r.property_id]) || r.property_name}
+                        </div>
+                      </div>
+                      <Badge className={`${statutColors[r.statut]} shrink-0`}>{statutLabels[r.statut] || r.statut}</Badge>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</span>
+                    </div>
+                    <div className="mt-2 flex items-end justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold amount">{formatCurrency(r.montant_total)}</div>
+                        <div className="text-xs text-muted-foreground amount">
                           {resteAPayer(r) > 0
                             ? `Payé ${formatCurrency(Number(r.montant_paye))} · Reste ${formatCurrency(resteAPayer(r))}`
                             : "Soldée"}
                         </div>
-                      </td>
-                      <td className="p-3"><Badge className={statutColors[r.statut]}>{statutLabels[r.statut] || r.statut}</Badge></td>
-                      <td className="p-3 text-sm">
-                        {resteAPayer(r) > 0 && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 px-2 text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPaiementReservation(r);
-                            }}
-                          >
-                            Encaisser
-                          </Button>
-                        )}
-                      </td>
+                      </div>
+                      {resteAPayer(r) > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPaiementReservation(r);
+                          }}
+                        >
+                          Encaisser
+                        </Button>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Tablette / ordinateur : tableau, défilement interne si besoin. */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full min-w-[720px]">
+                  <thead className="bg-secondary/30">
+                    <tr>
+                      <th className="text-left p-3 text-sm font-medium">Client</th>
+                      <th className="text-left p-3 text-sm font-medium">Bien</th>
+                      <th className="text-left p-3 text-sm font-medium">Dates</th>
+                      <th className="text-left p-3 text-sm font-medium">Montant</th>
+                      <th className="text-left p-3 text-sm font-medium">Statut</th>
+                      <th className="text-left p-3 text-sm font-medium">Paiement</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {reservations.slice(0, visibleCount).map((r) => (
+                      <tr
+                        key={r.id}
+                        className="border-t border-border/30 hover:bg-secondary/20 cursor-pointer"
+                        onClick={() => { setEditingReservation(r); setDialogOpen(true); }}
+                      >
+                        <td className="p-3 text-sm">{clientsMap[r.client_id] || "—"}</td>
+                        <td className="p-3 text-sm">{(r.property_id && propertiesMap[r.property_id]) || r.property_name}</td>
+                        <td className="p-3 text-sm">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</td>
+                        <td className="p-3 text-sm">
+                          <div className="amount">{formatCurrency(r.montant_total)}</div>
+                          <div className="text-xs text-muted-foreground amount">
+                            {resteAPayer(r) > 0
+                              ? `Payé ${formatCurrency(Number(r.montant_paye))} · Reste ${formatCurrency(resteAPayer(r))}`
+                              : "Soldée"}
+                          </div>
+                        </td>
+                        <td className="p-3"><Badge className={statutColors[r.statut]}>{statutLabels[r.statut] || r.statut}</Badge></td>
+                        <td className="p-3 text-sm">
+                          {resteAPayer(r) > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-9 px-2 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPaiementReservation(r);
+                              }}
+                            >
+                              Encaisser
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               {reservations.length > visibleCount && (
                 <div className="p-3 text-center border-t border-border/30">
                   <Button variant="outline" size="sm" onClick={() => setVisibleCount((count) => count + 30)}>

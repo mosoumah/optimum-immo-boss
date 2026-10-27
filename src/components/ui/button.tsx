@@ -21,11 +21,12 @@ const buttonVariants = cva(
         glass: "bg-card/60 backdrop-blur-xl border border-border/50 text-foreground hover:bg-card/80 hover:border-primary/30",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3 text-xs",
+        // Cibles tactiles ≥ 44 px sur mobile, tailles actuelles dès sm.
+        default: "h-11 sm:h-10 px-4 py-2",
+        sm: "h-10 sm:h-9 rounded-md px-3 text-xs",
         lg: "h-12 rounded-lg px-8 text-base",
         xl: "h-14 rounded-xl px-10 text-lg",
-        icon: "h-10 w-10",
+        icon: "h-11 w-11 sm:h-10 sm:w-10",
       },
     },
     defaultVariants: {
