@@ -108,7 +108,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
               <Link
                 to={item.path}
                 onClick={handleLinkClick}
-                className={`flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-300 group ${
+                className={`flex items-center gap-3 px-3 py-2.5 lg:py-1.5 rounded-xl transition-all duration-300 group ${
                   isActive
                     ? "bg-primary/10 text-primary border border-primary/20 glow-primary-sm"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-1"
@@ -142,7 +142,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
           <Link
             to="/parametres"
             onClick={handleLinkClick}
-            className="flex items-center gap-3 px-3 py-1.5 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
+            className="flex items-center gap-3 px-3 py-2.5 lg:py-1.5 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-300 hover:translate-x-1"
           >
             <Settings className="w-[18px] h-[18px]" />
             <span className="font-medium text-[13px]">Paramètres</span>
@@ -150,7 +150,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
         )}
         <button
           onClick={onSignOut}
-          className="flex items-center gap-3 px-3 py-1.5 rounded-xl text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full"
+          className="flex items-center gap-3 px-3 py-2.5 lg:py-1.5 rounded-xl text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full"
         >
           <LogOut className="w-[18px] h-[18px]" />
           <span className="font-medium text-[13px]">Déconnexion</span>
@@ -190,7 +190,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="w-[85vw] max-w-sm sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50 pb-[env(safe-area-inset-bottom)] overflow-y-auto"
+                className="w-[85vw] max-w-sm sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] overflow-y-auto overscroll-contain"
               >
                 {sidebarContent}
               </motion.aside>
@@ -203,7 +203,7 @@ export const DynamicSidebar = ({ onSignOut }: DynamicSidebarProps) => {
 
   // Desktop: Fixed sidebar
   return (
-    <aside className="w-64 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50 hidden lg:flex">
+    <aside className="w-64 sidebar-gradient border-r border-border/30 flex flex-col fixed h-screen z-50 hidden lg:flex pt-[env(safe-area-inset-top)]">
       {sidebarContent}
     </aside>
   );
