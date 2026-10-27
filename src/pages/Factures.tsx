@@ -30,8 +30,6 @@ import { DynamicSidebar } from "@/components/DynamicSidebar";
 import { toast } from "sonner";
 import { handleSubscriptionExpiredFunctionError, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { checkPermission } from "@/lib/checkPermission";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { escapeHtml, sanitizeHexColor } from "@/lib/escapeHtml";
 import { formatDateGN } from "@/lib/dateGuinee";
 import {
@@ -513,6 +511,13 @@ const Factures = () => {
         });
         setTimeout(resolve, 3000);
       });
+
+      // Chargement à la demande : html2canvas + jsPDF ne partent que si
+      // l'utilisateur demande réellement un PDF.
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
 
       const canvas = await html2canvas(doc.body, {
         scale: 2,

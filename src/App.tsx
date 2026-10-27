@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,35 +7,43 @@ import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
-import Index from "./pages/Index";
-import Inscription from "./pages/Inscription";
-import Connexion from "./pages/Connexion";
-import ProfilEntreprise from "./pages/ProfilEntreprise";
-import Dashboard from "./pages/Dashboard";
-import Clients from "./pages/Clients";
-import ClientDetail from "./pages/ClientDetail";
-import Biens from "./pages/Biens";
-import BienDetail from "./pages/BienDetail";
-import Reservations from "./pages/Reservations";
-import Tarifs from "./pages/Tarifs";
-
-import Factures from "./pages/Factures";
-import Revenus from "./pages/Revenus";
-import Depenses from "./pages/Depenses";
-import Taches from "./pages/Taches";
-import Activite from "./pages/Activite";
-
-
-import Parametres from "./pages/Parametres";
-import Utilisateurs from "./pages/Utilisateurs";
-import GestionPermissions from "./pages/GestionPermissions";
-import Abonnement from "./pages/Abonnement";
-
-import ResetPassword from "./pages/ResetPassword";
-import AcceptInvitation from "./pages/AcceptInvitation";
-import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SubscriptionExpiredBanner } from "@/components/SubscriptionExpiredBanner";
+
+// Connexion : seule page chargée immédiatement (premier écran des utilisateurs
+// non connectés). Toutes les autres pages partent en import dynamique pour
+// réduire le JavaScript initial.
+import Connexion from "./pages/Connexion";
+
+const Index = lazy(() => import("./pages/Index"));
+const Inscription = lazy(() => import("./pages/Inscription"));
+const ProfilEntreprise = lazy(() => import("./pages/ProfilEntreprise"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Clients = lazy(() => import("./pages/Clients"));
+const ClientDetail = lazy(() => import("./pages/ClientDetail"));
+const Biens = lazy(() => import("./pages/Biens"));
+const BienDetail = lazy(() => import("./pages/BienDetail"));
+const Reservations = lazy(() => import("./pages/Reservations"));
+const Tarifs = lazy(() => import("./pages/Tarifs"));
+const Factures = lazy(() => import("./pages/Factures"));
+const Revenus = lazy(() => import("./pages/Revenus"));
+const Depenses = lazy(() => import("./pages/Depenses"));
+const Taches = lazy(() => import("./pages/Taches"));
+const Activite = lazy(() => import("./pages/Activite"));
+const Parametres = lazy(() => import("./pages/Parametres"));
+const Utilisateurs = lazy(() => import("./pages/Utilisateurs"));
+const GestionPermissions = lazy(() => import("./pages/GestionPermissions"));
+const Abonnement = lazy(() => import("./pages/Abonnement"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AcceptInvitation = lazy(() => import("./pages/AcceptInvitation"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+/** Indicateur sobre, cohérent avec les écrans de chargement de l'application. */
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center mesh-gradient">
+    <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -47,147 +56,149 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <SubscriptionExpiredBanner />
-            <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/tarifs" element={<Tarifs />} />
-            <Route path="/index" element={<Navigate to="/" replace />} />
-            <Route path="/inscription" element={<Inscription />} />
-            <Route path="/connexion" element={<Connexion />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/accept-invitation" element={<AcceptInvitation />} />
-            <Route
-              path="/profil-entreprise"
-              element={
-                <ProtectedRoute>
-                  <ProfilEntreprise />
-                </ProtectedRoute>
-              }
-            />
-            {/* Admin & Agent routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Dashboard />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Clients />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <ClientDetail />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/biens"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Biens />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/biens/:id"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <BienDetail />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/reservations"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Reservations />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/factures"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Factures />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/taches"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Taches />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/activite"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
-                  <Activite />
-                </RoleProtectedRoute>
-              }
-            />
-            {/* Admin only routes */}
-            <Route
-              path="/revenus"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin"]}>
-                  <Revenus />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/depenses"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin"]}>
-                  <Depenses />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/parametres"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin"]}>
-                  <Parametres />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/utilisateurs"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin"]}>
-                  <Utilisateurs />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/gestion-permissions"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin"]}>
-                  <GestionPermissions />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/abonnement"
-              element={
-                <RoleProtectedRoute allowedRoles={["admin"]}>
-                  <Abonnement />
-                </RoleProtectedRoute>
-              }
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/tarifs" element={<Tarifs />} />
+              <Route path="/index" element={<Navigate to="/" replace />} />
+              <Route path="/inscription" element={<Inscription />} />
+              <Route path="/connexion" element={<Connexion />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/accept-invitation" element={<AcceptInvitation />} />
+              <Route
+                path="/profil-entreprise"
+                element={
+                  <ProtectedRoute>
+                    <ProfilEntreprise />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Admin & Agent routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <Dashboard />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <Clients />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <ClientDetail />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/biens"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <Biens />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/biens/:id"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <BienDetail />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/reservations"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <Reservations />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/factures"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <Factures />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/taches"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <Taches />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/activite"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin", "agent"]}>
+                    <Activite />
+                  </RoleProtectedRoute>
+                }
+              />
+              {/* Admin only routes */}
+              <Route
+                path="/revenus"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin"]}>
+                    <Revenus />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/depenses"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin"]}>
+                    <Depenses />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/parametres"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin"]}>
+                    <Parametres />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/utilisateurs"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin"]}>
+                    <Utilisateurs />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/gestion-permissions"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin"]}>
+                    <GestionPermissions />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/abonnement"
+                element={
+                  <RoleProtectedRoute allowedRoles={["admin"]}>
+                    <Abonnement />
+                  </RoleProtectedRoute>
+                }
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

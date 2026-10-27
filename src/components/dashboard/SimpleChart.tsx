@@ -1,6 +1,12 @@
+import { lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { BarChart3 } from "lucide-react";
-import { FinancialChart } from "@/components/FinancialChart";
+
+// recharts est lourd : le graphique arrive à la demande, le reste du tableau de
+// bord s'affiche immédiatement.
+const FinancialChart = lazy(() =>
+  import("@/components/FinancialChart").then((mod) => ({ default: mod.FinancialChart })),
+);
 
 interface Props {
   entrepriseId: string;
@@ -26,7 +32,15 @@ export const SimpleChart = ({ entrepriseId, refreshToken }: Props) => {
         </div>
       </div>
       <div className="flex-1 min-h-0">
-        <FinancialChart entrepriseId={entrepriseId} refreshToken={refreshToken} />
+        <Suspense
+          fallback={
+            <div className="h-full flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+          }
+        >
+          <FinancialChart entrepriseId={entrepriseId} refreshToken={refreshToken} />
+        </Suspense>
       </div>
     </motion.div>
   );
