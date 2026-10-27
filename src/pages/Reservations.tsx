@@ -61,6 +61,8 @@ const Reservations = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [paiementReservation, setPaiementReservation] = useState<Reservation | null>(null);
+  // Rendu progressif : 30 lignes d'abord, le reste à la demande.
+  const [visibleCount, setVisibleCount] = useState(30);
 
   const fetchReservations = useCallback(async () => {
     if (!entrepriseId) return;
@@ -165,7 +167,7 @@ const Reservations = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {reservations.map((r) => (
+                  {reservations.slice(0, visibleCount).map((r) => (
                     <tr
                       key={r.id}
                       className="border-t border-border/30 hover:bg-secondary/20 cursor-pointer"
@@ -202,6 +204,13 @@ const Reservations = () => {
                   ))}
                 </tbody>
               </table>
+              {reservations.length > visibleCount && (
+                <div className="p-3 text-center border-t border-border/30">
+                  <Button variant="outline" size="sm" onClick={() => setVisibleCount((count) => count + 30)}>
+                    Afficher plus ({reservations.length - visibleCount} restantes)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

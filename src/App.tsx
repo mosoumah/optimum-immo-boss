@@ -45,7 +45,16 @@ const PageLoader = () => (
   </div>
 );
 
-const queryClient = new QueryClient();
+// Données fraîches 45 s et pas de rechargement au retour de focus : le temps
+// réel (useRealtimeRefresh) déclenche déjà les rafraîchissements utiles.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 45_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <ErrorBoundary name="AppRoot">

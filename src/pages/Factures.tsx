@@ -114,7 +114,7 @@ const Factures = () => {
 
     const { data } = await supabase
       .from("factures")
-      .select("*, clients(nom, telephone, email), reservations(id, montant_total, montant_paye)")
+      .select("id, client_id, description, montant, statut, date, reservation_id, clients(nom, telephone, email), reservations(id, montant_total, montant_paye)")
       .eq("entreprise_id", entrepriseId)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false });

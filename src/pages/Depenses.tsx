@@ -49,7 +49,7 @@ const Depenses = () => {
 
     const { data } = await supabase
       .from("depenses")
-      .select("*")
+      .select("id, description, montant, date")
       .eq("entreprise_id", entrepriseId)
       .order("date", { ascending: false });
 

@@ -46,6 +46,8 @@ const Clients = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  // Rendu progressif : les longues listes ne peignent pas tout d'un coup.
+  const [visibleCount, setVisibleCount] = useState(30);
 
   const handleSignOut = async () => {
     await signOut();
@@ -58,7 +60,7 @@ const Clients = () => {
     // RLS will automatically filter based on role
     const { data } = await supabase
       .from("clients")
-      .select("*")
+      .select("id, nom, email, telephone, created_at")
       .eq("entreprise_id", entrepriseId)
       .order("created_at", { ascending: false });
 
@@ -165,7 +167,7 @@ const Clients = () => {
           >
             {clients.length > 0 ? (
               <div className="divide-y divide-border/50">
-                {clients.map((client, index) => (
+                {clients.slice(0, visibleCount).map((client, index) => (
                   <motion.div 
                     key={client.id} 
                     initial={{ opacity: 0, x: -20 }}
@@ -202,6 +204,16 @@ const Clients = () => {
 
                   </motion.div>
                 ))}
+                {clients.length > visibleCount && (
+                  <div className="p-4 text-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => setVisibleCount((count) => count + 30)}
+                    >
+                      Afficher plus ({clients.length - visibleCount} restants)
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-12 text-center">
