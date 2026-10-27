@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { memo, useState, useEffect, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Calendar, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ interface ReservationRange {
   statut: string;
 }
 
-export const FinancialChart = ({ entrepriseId, refreshToken = 0 }: FinancialChartProps) => {
+const FinancialChartImpl = ({ entrepriseId, refreshToken = 0 }: FinancialChartProps) => {
   const [period, setPeriod] = useState<Period>("week");
   const [revenus, setRevenus] = useState<Revenu[]>([]);
   const [depenses, setDepenses] = useState<Depense[]>([]);
@@ -482,3 +482,7 @@ export const FinancialChart = ({ entrepriseId, refreshToken = 0 }: FinancialChar
     </div>
   );
 };
+
+// Le graphique ne se redessine que si ses deux props changent : les etats du
+// tableau de bord (dialogues, profil) ne le font plus re-rendre.
+export const FinancialChart = memo(FinancialChartImpl);
