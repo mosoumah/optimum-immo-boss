@@ -272,7 +272,7 @@ const AIChatBotContent = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.92 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-2 bottom-2 top-2 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto z-50 sm:w-[440px] sm:max-w-[calc(100vw-1rem)] sm:h-[640px] sm:max-h-[calc(100vh-2rem)] rounded-3xl flex flex-col overflow-hidden"
+            className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto z-50 sm:w-[440px] sm:max-w-[calc(100vw-1rem)] sm:h-[640px] sm:max-h-[calc(100vh-2rem)] rounded-none sm:rounded-3xl flex flex-col overflow-hidden h-[100dvh] sm:h-[640px] pt-[env(safe-area-inset-top)] sm:pt-0"
             style={{
               background:
                 "linear-gradient(180deg, hsl(220, 22%, 8%) 0%, hsl(220, 28%, 4%) 100%)",
@@ -482,8 +482,8 @@ const AIChatBotContent = ({
                   </AnimatePresence>
                 </div>
 
-                {/* Input */}
-                <div className="px-4 pb-3 pt-2 flex-shrink-0">
+                {/* Input — collé en bas, au-dessus du clavier mobile. */}
+                <div className="px-4 pb-3 pt-2 flex-shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-3">
                   <div
                     className="flex gap-2 items-end p-1.5 rounded-2xl border border-border/20 focus-within:border-primary/30 focus-within:shadow-[0_0_24px_hsl(72,100%,50%,0.08)] transition-all duration-300"
                     style={{ background: "hsl(220, 20%, 7%)" }}

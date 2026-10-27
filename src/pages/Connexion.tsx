@@ -154,7 +154,7 @@ const Connexion = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 pattern-dots opacity-20" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />

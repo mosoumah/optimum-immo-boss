@@ -905,7 +905,7 @@ const Factures = () => {
                   transition={{ delay: index * 0.05 }}
                   className="p-4 hover:bg-secondary/30 transition-colors premium-list-item"
                 >
-                  <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_minmax(5rem,auto)] sm:grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3 sm:gap-4 w-full min-w-0">
+                  <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_minmax(6.5rem,auto)] sm:grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3 sm:gap-4 w-full min-w-0">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
@@ -913,8 +913,8 @@ const Factures = () => {
                       <div className="font-medium truncate">{facture.clients?.nom || "Client inconnu"}</div>
                       <div className="text-sm text-muted-foreground truncate">{facture.description || "Sans description"}</div>
                     </div>
-                    <div className="text-right min-w-0 max-w-[6rem] sm:max-w-none justify-self-end">
-                      <div className="font-semibold text-[11px] sm:text-base leading-tight [overflow-wrap:anywhere]">{formatCurrency(facture.montant)}</div>
+                    <div className="text-right min-w-0 max-w-[8rem] sm:max-w-none justify-self-end">
+                      <div className="font-semibold text-[11px] sm:text-base leading-tight [overflow-wrap:anywhere] amount">{formatCurrency(facture.montant)}</div>
                       <div className="flex items-center justify-end mt-0.5">
                         <Badge className={`text-[10px] px-1.5 py-0 ${facture.statut === "paye" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
                           {facture.statut === "paye" ? "Payée" : "Non payée"}
