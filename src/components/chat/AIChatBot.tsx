@@ -151,6 +151,10 @@ const AIChatBotContent = ({
     newConversation,
     loadConversation,
     deleteConversation,
+    pendingAction,
+    isConfirming,
+    confirmPendingAction,
+    cancelPendingAction,
   } = useChatAssistant();
 
   // Auto-resize textarea
@@ -461,6 +465,34 @@ const AIChatBotContent = ({
                           />
                         ))}
                         {isAssistantThinking && <TypingIndicator />}
+                        {pendingAction && (
+                          <div
+                            className="rounded-2xl border border-primary/40 p-3 space-y-2"
+                            style={{ background: "hsl(220, 20%, 11%)" }}
+                            role="group"
+                            aria-label="Action en attente de confirmation"
+                          >
+                            <p className="text-xs font-semibold text-foreground">
+                              Action en attente de votre confirmation
+                            </p>
+                            <pre className="text-xs text-muted-foreground whitespace-pre-wrap break-words font-sans">
+                              {pendingAction.response}
+                            </pre>
+                            <div className="flex gap-2 pt-1">
+                              <Button size="sm" onClick={confirmPendingAction} disabled={isConfirming}>
+                                {isConfirming ? "Exécution..." : "Confirmer"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={cancelPendingAction}
+                                disabled={isConfirming}
+                              >
+                                Annuler
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                         <div ref={messagesEndRef} />
                       </div>
                     )}

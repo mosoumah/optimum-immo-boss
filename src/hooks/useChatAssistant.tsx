@@ -22,6 +22,12 @@ export interface Conversation {
   createdAt: string;
 }
 
+/** Action d'écriture proposée par l'assistant, non exécutée tant que l'utilisateur n'a pas confirmé. */
+export interface PendingActionRequest {
+  actions: { name: string; args: Record<string, unknown> }[];
+  response: string;
+}
+
 const HISTORY_KEY = "chat-assistant-history";
 const MAX_HISTORY = 20;
 const MAX_MESSAGES_PER_CONV = 100;
@@ -83,6 +89,8 @@ export const useChatAssistant = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [history, setHistory] = useState<Conversation[]>(loadHistory);
   const [currentConvoId, setCurrentConvoId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingActionRequest | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Refs for queue worker (avoid stale closures)
   const messagesRef = useRef<ChatMessage[]>([]);
@@ -198,6 +206,14 @@ export const useChatAssistant = () => {
 
       const responseText = data?.response || "Je n'ai pas pu traiter votre demande.";
 
+      // Le serveur n'écrit jamais sans un tour de confirmation explicite.
+      if (data?.requires_confirmation && Array.isArray(data.actions)) {
+        setPendingAction({
+          actions: data.actions as { name: string; args: Record<string, unknown> }[],
+          response: responseText,
+        });
+      }
+
       let snapshot: ChatMessage[] = [];
       setMessages((prev) => {
         const updated = prev.map((m) =>
@@ -270,6 +286,84 @@ export const useChatAssistant = () => {
     [processQueue]
   );
 
+  /**
+   * Exécute l'action proposée : requête séparée, un outil à la fois.
+   * Aucune écriture n'a lieu si l'utilisateur n'appelle pas cette fonction.
+   */
+  const confirmPendingAction = useCallback(async () => {
+    const pending = pendingAction;
+    if (!pending || isConfirming) return;
+
+    setIsConfirming(true);
+    setPendingAction(null);
+
+    const assistantId = crypto.randomUUID();
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "user" as const,
+        content: "Je confirme cette action.",
+        status: "completed" as MessageStatus,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: assistantId,
+        role: "assistant" as const,
+        content: "",
+        status: "processing" as MessageStatus,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+
+    try {
+      let accumulated = "";
+      for (const action of pending.actions) {
+        const { data, error } = await supabase.functions.invoke("chat-assistant", {
+          body: {
+            messages: [{ role: "user", content: "Je confirme cette action." }],
+            confirm_action: { name: action.name, args: action.args },
+          },
+        });
+        if (error) throw new Error(error.message || "Erreur de communication");
+        if (data?.error) throw new Error(data.error);
+        const text = data?.response || "Action exécutée.";
+        accumulated = accumulated ? accumulated + "\n\n" + text : text;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? { ...m, content: accumulated, status: "completed" as MessageStatus }
+              : m,
+          ),
+        );
+      }
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : "Erreur inconnue";
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId ? { ...m, status: "failed" as MessageStatus, error: errMsg } : m,
+        ),
+      );
+      toast.error("L'action n'a pas pu être exécutée");
+    } finally {
+      setIsConfirming(false);
+    }
+  }, [pendingAction, isConfirming]);
+
+  const cancelPendingAction = useCallback(() => {
+    setPendingAction(null);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "assistant" as const,
+        content: "Action annulée. Aucune écriture n'a été effectuée.",
+        status: "completed" as MessageStatus,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }, []);
+
   const newConversation = useCallback(() => {
     setMessages([]);
     setCurrentConvoId(null);
@@ -307,5 +401,9 @@ export const useChatAssistant = () => {
     newConversation,
     loadConversation,
     deleteConversation,
+    pendingAction,
+    isConfirming,
+    confirmPendingAction,
+    cancelPendingAction,
   };
 };
