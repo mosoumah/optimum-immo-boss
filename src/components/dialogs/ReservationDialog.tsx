@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
+import { useHeureDepartStandard } from "@/hooks/useHeureDepartStandard";
+import { formatHeureLabel } from "@/types/entreprise";
 import { supabase } from "@/integrations/supabase/client";
 import { isFacturePlanLimit, showPlanLimitToast, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { isReservationOverlapError, reservationOverlapMessage } from "@/lib/reservationErrors";
@@ -38,6 +40,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
   const { toast } = useToast();
   const navigate = useNavigate();
   const { entrepriseId } = useEntreprise();
+  // Heure de fin des réservations "par jour", réglée dans Paramètres (cache partagé).
+  const heureDepartStandard = useHeureDepartStandard();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
   const [properties, setProperties] = useState<{ id: string; nom: string; statut: string; prix: number }[]>([]);
@@ -353,7 +357,17 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Date d'arrivée *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value })} /></div>
-                <div><Label>Date de départ *</Label><Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} /></div>
+                <div>
+                  <Label>Date de départ *</Label>
+                  <Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} />
+                  {/* Rappel non modifiable : l'heure de fin des séjours "par jour"
+                      est fixée par l'agence dans Paramètres. */}
+                  {form.type_location === "jour" && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Départ à {formatHeureLabel(heureDepartStandard)} (heure standard de l'agence)
+                    </p>
+                  )}
+                </div>
               </div>
               {datesInversees && (
                 <p className="text-sm text-orange-500 -mt-2">⚠ La date de départ est avant la date d'arrivée</p>
