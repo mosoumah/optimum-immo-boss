@@ -102,6 +102,29 @@ serve(async (req) => {
       });
     }
 
+    // La clé DeepSeek est unique pour tout le SaaS : sans ces deux gardes, un
+    // simple compte (y compris le portail client) peut épuiser le crédit et
+    // couper l'IA de toutes les agences (l'API renvoie alors 402 partout).
+    const { data: callerRole } = await userClient.rpc("get_user_role", { _user_id: authedUser.id });
+    if (!callerRole || callerRole === "client") {
+      return new Response(JSON.stringify({ error: "Accès refusé" }), {
+        status: 403,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: quotaOk } = await userClient.rpc("consume_ai_quota", {
+      _user_id: authedUser.id,
+      _kind: "generate-facture",
+      _max_per_window: 20,
+    });
+    if (quotaOk === false) {
+      return new Response(JSON.stringify({ error: "Trop de requêtes, réessayez dans quelques instants." }), {
+        status: 429,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     const body = await req.json();
     const { 
       entrepriseNom: _entrepriseNom, 
