@@ -168,6 +168,13 @@ const GestionPermissionsContent = () => {
     setIsSaving(true);
 
     try {
+      // Snapshot avant écriture : si l'insertion est refusée (quota de la
+      // formule, panne réseau), les surcharges existantes doivent survivre.
+      const { data: previousPermissions } = await supabase
+        .from("user_permissions")
+        .select("permission, granted")
+        .eq("user_id", selectedUser.id);
+
       // Delete all existing custom permissions for this user
       await supabase
         .from("user_permissions")
@@ -184,7 +191,18 @@ const GestionPermissionsContent = () => {
           }))
         );
 
-        if (error) throw error;
+        if (error) {
+          if (previousPermissions && previousPermissions.length > 0) {
+            await supabase.from("user_permissions").insert(
+              previousPermissions.map((p) => ({
+                user_id: selectedUser.id,
+                permission: p.permission,
+                granted: p.granted,
+              }))
+            );
+          }
+          throw error;
+        }
       }
 
       toast.success("Permissions mises à jour avec succès");
