@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '0 2 * * 0'  # Weekly security scan
 
+permissions:
+  contents: read
+
 jobs:
   security-audit:
     name: 🔐 Security Audit
@@ -26,16 +29,16 @@ jobs:
         run: npm ci
       
       - name: 🔍 npm audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
+        run: npm audit --audit-level=high
       
-      - name: 🔐 Check for hardcoded secrets
+      - name: Détection de secrets versionnés
         run: |
-          if grep -r "VITE_SUPABASE" src/ --include="*.ts" --include="*.tsx" | grep -v "process.env"; then
-            echo "❌ Hardcoded secrets detected!"
+          set -euo pipefail
+          # Clés privées, jetons d'API et clé service_role laissés dans le dépôt.
+          if git grep -nIE '(-----BEGIN [A-Z ]*PRIVATE KEY-----|\bsk-[A-Za-z0-9]{24,}|SUPABASE_SERVICE_ROLE_KEY[[:space:]]*=[[:space:]]*eyJ)' -- . ':!*.example' ':!package-lock.json' ':!bun.lock' ':!*.patch'; then
+            echo "::error::Secret potentiel détecté dans le dépôt."
             exit 1
           fi
-        continue-on-error: true
 
   lint:
     name: 📝 ESLint
