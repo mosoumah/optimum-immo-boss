@@ -723,4 +723,52 @@ body {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Écrans peu hauts (ex. 1366 × 600) : dialogues plus compacts          */
+/* ------------------------------------------------------------------ */
+
+/* On resserre les espacements pour que davantage de champs tiennent sans
+   défiler. Les zones tactiles ne descendent jamais sous 44 px sur mobile :
+   la réduction des hauteurs de champs est réservée aux écrans >= 640 px. */
+@media (max-height: 700px) {
+  [role="dialog"] {
+    gap: 0.5rem;
+  }
+
+  [role="dialog"] .space-y-4 > * + * {
+    margin-top: 0.5rem;
+  }
+
+  [role="dialog"] .space-y-3 > * + * {
+    margin-top: 0.375rem;
+  }
+
+  [role="dialog"] .space-y-2 > * + * {
+    margin-top: 0.25rem;
+  }
+
+  [role="dialog"] .gap-4 {
+    gap: 0.5rem;
+  }
+
+  [role="dialog"] .mt-2 {
+    margin-top: 0.25rem;
+  }
+
+  [role="dialog"] .pt-4 {
+    padding-top: 0.5rem;
+  }
+}
+
+@media (max-height: 700px) and (min-width: 640px) {
+  [role="dialog"] input:not([type="checkbox"]):not([type="radio"]),
+  [role="dialog"] select,
+  [role="dialog"] textarea,
+  [role="dialog"] [role="combobox"] {
+    height: 2.25rem;
+    min-height: 2.25rem;
+  }
+}
+
+
 

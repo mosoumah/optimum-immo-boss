@@ -156,7 +156,7 @@ export const DepenseDialog = ({ open, onOpenChange, entrepriseId, onSuccess }: D
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sticky bottom-0 -mx-5 -mb-5 mt-2 border-t border-border/40 bg-background/95 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 [&>*]:w-full sm:[&>*]:w-auto">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sticky bottom-0 z-10 -mx-5 -mb-5 mt-2 border-t border-border/40 bg-background px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:-mb-6 sm:px-6 sm:py-3 [&>*]:w-full sm:[&>*]:w-auto">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>

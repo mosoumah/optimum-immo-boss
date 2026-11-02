@@ -147,7 +147,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="left-2 top-2 bottom-2 right-2 max-h-none w-auto max-w-none translate-x-0 translate-y-0 transform-none overflow-y-auto overflow-x-hidden rounded-lg p-0 !block duration-0 data-[state=closed]:animate-none data-[state=open]:animate-none sm:bottom-auto sm:right-auto sm:left-1/2 sm:top-1/2 sm:max-h-[calc(100dvh-1rem)] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0">
+        <DialogHeader className="sticky top-0 z-10 px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0 bg-background border-b border-border/40">
           <DialogTitle>{property ? "Modifier le bien" : "Nouveau bien"}</DialogTitle>
           <DialogDescription>
             Renseignez toutes les informations puis ajoutez vos médias.
@@ -274,7 +274,7 @@ export const BienDialog = ({ open, onOpenChange, property, onSuccess }: BienDial
           </div>
         </Tabs>
 
-        <div className="flex justify-end gap-2 px-4 sm:px-6 py-3 border-t border-border/40 bg-background">
+        <div className="sticky bottom-0 z-10 flex justify-end gap-2 px-4 sm:px-6 py-3 border-t border-border/40 bg-background pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-3 [&>*]:flex-1 sm:[&>*]:flex-none">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>

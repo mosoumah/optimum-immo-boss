@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -266,7 +266,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{reservation ? "Modifier la réservation" : "Nouvelle réservation"}</DialogTitle>
           <DialogDescription>Remplissez les informations de la réservation ci-dessous.</DialogDescription>
@@ -412,10 +412,13 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <Checkbox checked={form.generer_facture} onCheckedChange={(v) => setForm({ ...form, generer_facture: !!v })} />
             <Label className="text-sm cursor-pointer">Générer facture automatiquement</Label>
           </div>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || (!isHeure && !form.date_depart) || (isHeure && (!form.heure_debut || !form.heure_fin || heuresInvalides)) || !form.prix_unitaire} className="w-full">
+        </div>
+        {/* Pied fixe : le bouton d'action reste visible même sur écran peu haut. */}
+        <DialogFooter>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || (!isHeure && !form.date_depart) || (isHeure && (!form.heure_debut || !form.heure_fin || heuresInvalides)) || !form.prix_unitaire} className="w-full sm:w-auto">
             {isSubmitting ? "Enregistrement..." : reservation ? "Modifier" : "Créer la réservation"}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
