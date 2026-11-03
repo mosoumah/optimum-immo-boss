@@ -45,3 +45,8 @@ credentials/
 # Artefacts de patch (generes localement, jamais versionnes)
 *.patch
 *.patch.bak
+
+# Audit visuel local (captures + session navigateur)
+tools/mobile-audit/screenshots/
+tools/mobile-audit/.auth/
+tools/mobile-audit/report.json
