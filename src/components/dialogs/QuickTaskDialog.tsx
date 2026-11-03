@@ -7,6 +7,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogBody,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,7 +111,7 @@ export const QuickTaskDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col"><DialogBody className="space-y-4 pt-2">
           {/* Assignee display */}
           <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -175,7 +177,8 @@ export const QuickTaskDialog = ({
           </div>
 
           {/* Submit */}
-          <div className="flex gap-2 pt-2">
+          </DialogBody>
+          <DialogFooter className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
@@ -196,7 +199,7 @@ export const QuickTaskDialog = ({
               )}
               Envoyer
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

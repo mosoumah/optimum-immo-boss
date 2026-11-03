@@ -6,6 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,7 +110,7 @@ export const PaiementDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col"><DialogBody className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="paiement-montant">Montant reçu (GNF) *</Label>
             <Input
@@ -127,14 +129,14 @@ export const PaiementDialog = ({
             </p>
           </div>
 
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sticky bottom-0 z-10 -mx-5 -mb-5 mt-2 border-t border-border/40 bg-background px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:-mb-6 sm:px-6 sm:py-3 [&>*]:w-full sm:[&>*]:w-auto">
+          </DialogBody><DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting || montantInvalide}>
               {isSubmitting ? "Enregistrement..." : "Enregistrer le paiement"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

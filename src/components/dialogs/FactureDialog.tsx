@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -144,7 +144,7 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
             {isEdit ? "Modifiez les informations de la facture." : "Créez une nouvelle facture pour un client."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col"><DialogBody className="space-y-4">
           <div className="space-y-2">
             <Label>Client *</Label>
             <Select value={clientId} onValueChange={setClientId}>
@@ -200,14 +200,14 @@ export const FactureDialog = ({ open, onOpenChange, entrepriseId, onSuccess, fac
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sticky bottom-0 z-10 -mx-5 -mb-5 mt-2 border-t border-border/40 bg-background px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:-mb-6 sm:px-6 sm:py-3 [&>*]:w-full sm:[&>*]:w-auto">
+          </DialogBody><DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? "Enregistrement..." : isEdit ? "Modifier" : "Enregistrer"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

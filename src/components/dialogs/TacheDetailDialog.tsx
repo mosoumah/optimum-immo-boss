@@ -164,7 +164,7 @@ export const TacheDetailDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg bg-[hsl(220,20%,6%)] border-primary/20">
-        <DialogHeader className="pb-4 border-b border-primary/20 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent -mx-6 -mt-6 px-6 pt-6 rounded-t-lg">
+        <DialogHeader className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-6 pb-4 border-b border-primary/20 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent rounded-t-lg">
           <DialogTitle className="text-lg font-semibold text-foreground">
             {tache.titre}
           </DialogTitle>
