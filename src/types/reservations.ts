@@ -23,9 +23,18 @@ export interface ReservationTimes {
   heure_fin: string | null;
 }
 
+/**
+ * `heure_arrivee` : heure d'arrivée des réservations "par jour" (nullable).
+ * Le départ est calculé par la base à la même heure et minute.
+ * Colonne absente de types.ts (fichier généré, non modifié).
+ */
+export interface ReservationArrivalTime {
+  heure_arrivee?: string | null;
+}
+
 export type ReservationRowWithTimes = ReservationRow & ReservationTimes;
-export type ReservationInsertWithTimes = ReservationInsert & ReservationTimes;
-export type ReservationUpdateWithTimes = ReservationUpdate & ReservationTimes;
+export type ReservationInsertWithTimes = ReservationInsert & ReservationTimes & ReservationArrivalTime;
+export type ReservationUpdateWithTimes = ReservationUpdate & ReservationTimes & ReservationArrivalTime;
 
 /**
  * Lit les heures d'une réservation déjà chargée.
@@ -44,6 +53,17 @@ export const reservationTimes = (
 /** Tronque "HH:MM:SS" en "HH:MM" pour les champs <input type="time">. */
 export const toTimeInput = (value: string | null | undefined): string =>
   typeof value === "string" && value.length >= 5 ? value.slice(0, 5) : "";
+
+/**
+ * Lit l'heure d'arrivée d'une réservation déjà chargée ("HH:MM:SS" ou null).
+ * `select("*")` la ramène même si le type généré l'ignore.
+ */
+export const reservationArrivalTime = (
+  row: ReservationRow | ReservationRowWithTimes | null | undefined,
+): string | null => {
+  const source = row as unknown as ReservationArrivalTime | null | undefined;
+  return source?.heure_arrivee ?? null;
+};
 
 /** Convertit "HH:MM" en minutes depuis minuit. null si invalide. */
 export const timeToMinutes = (value: string | null | undefined): number | null => {

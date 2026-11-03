@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,15 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useEntreprise } from "@/hooks/useEntreprise";
-import { useHeureDepartStandard } from "@/hooks/useHeureDepartStandard";
-import { formatHeureLabel } from "@/types/entreprise";
+import { formatDateGN, nowGN, todayGN } from "@/lib/dateGuinee";
 import { supabase } from "@/integrations/supabase/client";
 import { isFacturePlanLimit, showPlanLimitToast, handleSubscriptionExpiredMessage } from "@/lib/planLimitToast";
 import { isReservationOverlapError, reservationOverlapMessage } from "@/lib/reservationErrors";
-import { todayGN } from "@/lib/dateGuinee";
 import {
   reservationsTimesTable,
   reservationTimes,
+  reservationArrivalTime,
   toTimeInput,
   timeToMinutes,
   timeDurationHours,
@@ -40,8 +39,6 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
   const { toast } = useToast();
   const navigate = useNavigate();
   const { entrepriseId } = useEntreprise();
-  // Heure de fin des réservations "par jour", réglée dans Paramètres (cache partagé).
-  const heureDepartStandard = useHeureDepartStandard();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
   const [properties, setProperties] = useState<{ id: string; nom: string; statut: string; prix: number }[]>([]);
@@ -53,6 +50,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
     type_location: "jour",
     date_arrivee: "",
     date_depart: "",
+    // "Par jour" : heure d'arrivée (le départ se calcule à la même heure).
+    heure_arrivee: nowGN().time,
     heure_debut: "",
     heure_fin: "",
     prix_unitaire: "",
@@ -84,6 +83,8 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         type_location: reservation.type_location || "jour",
         date_arrivee: reservation.date_arrivee || "",
         date_depart: reservation.date_depart || "",
+        // Tronque "HH:MM:SS" en "HH:MM" ; champ vide si l'heure n'est pas renseignée.
+        heure_arrivee: toTimeInput(reservationArrivalTime(reservation)),
         // Tronque "HH:MM:SS" en "HH:MM" ; champs vides si heures absentes.
         heure_debut: toTimeInput(times.heure_debut),
         heure_fin: toTimeInput(times.heure_fin),
@@ -95,7 +96,7 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
         notes: reservation.notes || "",
       });
     } else {
-      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", heure_debut: "", heure_fin: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "en_attente", generer_facture: false, notes: "" });
+      setForm({ client_id: "", property_id: "", property_name: "", type_location: "jour", date_arrivee: "", date_depart: "", heure_arrivee: nowGN().time, heure_debut: "", heure_fin: "", prix_unitaire: "", montant_paye: "", caution: "", statut: "en_attente", generer_facture: false, notes: "" });
     }
   }, [reservation, open]);
 
@@ -156,6 +157,9 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
       // heure_debut / heure_fin.
       date_arrivee: form.date_arrivee,
       date_depart: isHeure ? form.date_arrivee : form.date_depart,
+      // "Par jour" : heure d'arrivée enregistrée ; le départ se déduit de la
+      // même heure et minute côté base (cycles de 24 h).
+      heure_arrivee: isHeure ? null : form.heure_arrivee || null,
       heure_debut: isHeure ? form.heure_debut || null : null,
       heure_fin: isHeure ? form.heure_fin || null : null,
       prix_unitaire: parseFloat(form.prix_unitaire) || 0,
@@ -267,11 +271,16 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{reservation ? "Modifier la réservation" : "Nouvelle réservation"}</DialogTitle>
-          <DialogDescription>Remplissez les informations de la réservation ci-dessous.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
+        {/* Le formulaire enveloppe les 3 zones : en-tête et pied fixes, corps défilant. */}
+        <form
+          onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <DialogHeader>
+            <DialogTitle>{reservation ? "Modifier la réservation" : "Nouvelle réservation"}</DialogTitle>
+            <DialogDescription>Remplissez les informations de la réservation ci-dessous.</DialogDescription>
+          </DialogHeader>
+          <DialogBody className="space-y-4">
           <div>
             <Label>Client *</Label>
             <Select value={form.client_id} onValueChange={(v) => setForm({ ...form, client_id: v })}>
@@ -358,16 +367,24 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Date d'arrivée *</Label><Input type="date" value={form.date_arrivee} onChange={(e) => setForm({ ...form, date_arrivee: e.target.value })} /></div>
                 <div>
-                  <Label>Date de départ *</Label>
-                  <Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} />
-                  {/* Rappel non modifiable : l'heure de fin des séjours "par jour"
-                      est fixée par l'agence dans Paramètres. */}
-                  {form.type_location === "jour" && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Départ à {formatHeureLabel(heureDepartStandard)} (heure standard de l'agence)
-                    </p>
-                  )}
+                  <Label>Heure d'arrivée</Label>
+                  <Input
+                    type="time"
+                    step={60}
+                    value={form.heure_arrivee}
+                    onChange={(e) => setForm({ ...form, heure_arrivee: e.target.value })}
+                  />
                 </div>
+              </div>
+              <div>
+                <Label>Date de départ *</Label>
+                <Input type="date" value={form.date_depart} onChange={(e) => setForm({ ...form, date_depart: e.target.value })} />
+                {/* Le départ reprend l'heure d'arrivée : simple information calculée. */}
+                {form.date_depart && form.heure_arrivee && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Départ prévu le {formatDateGN(form.date_depart).slice(0, 5)} à {form.heure_arrivee.replace(":", "h")}
+                  </p>
+                )}
               </div>
               {datesInversees && (
                 <p className="text-sm text-orange-500 -mt-2">⚠ La date de départ est avant la date d'arrivée</p>
@@ -412,13 +429,17 @@ export const ReservationDialog = ({ open, onOpenChange, reservation, onSuccess }
             <Checkbox checked={form.generer_facture} onCheckedChange={(v) => setForm({ ...form, generer_facture: !!v })} />
             <Label className="text-sm cursor-pointer">Générer facture automatiquement</Label>
           </div>
-        </div>
-        {/* Pied fixe : le bouton d'action reste visible même sur écran peu haut. */}
-        <DialogFooter>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !form.client_id || !form.date_arrivee || (!isHeure && !form.date_depart) || (isHeure && (!form.heure_debut || !form.heure_fin || heuresInvalides)) || !form.prix_unitaire} className="w-full sm:w-auto">
-            {isSubmitting ? "Enregistrement..." : reservation ? "Modifier" : "Créer la réservation"}
-          </Button>
-        </DialogFooter>
+          </DialogBody>
+          {/* Pied fixe : le bouton d'action reste visible, hors de la zone qui défile. */}
+          <DialogFooter>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !form.client_id || !form.date_arrivee || (!isHeure && !form.date_depart) || (isHeure && (!form.heure_debut || !form.heure_fin || heuresInvalides)) || !form.prix_unitaire}
+            >
+              {isSubmitting ? "Enregistrement..." : reservation ? "Modifier" : "Créer la réservation"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

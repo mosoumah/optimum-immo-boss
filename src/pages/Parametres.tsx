@@ -10,14 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { LogoUpload } from "@/components/LogoUpload";
 import { SignaturePad } from "@/components/SignaturePad";
-import {
-  HEURE_DEPART_STANDARD_DEFAUT,
-  entrepriseSettingsTable,
-  entrepriseSettingsUpdate,
-  isValidHeureInput,
-  toHeureInput,
-  type EntrepriseSettingsUpdate,
-} from "@/types/entreprise";
 
 interface Profile {
   nom: string;
@@ -31,8 +23,6 @@ interface Entreprise {
   email: string | null;
   logo: string | null;
   signature: string | null;
-  /** Colonne non générée dans types.ts (cf. src/types/entreprise.ts). */
-  heure_depart_standard: string;
 }
 
 const Parametres = () => {
@@ -40,7 +30,7 @@ const Parametres = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile>({ nom: "", email: "" });
-  const [entreprise, setEntreprise] = useState<Entreprise>({ nom: "", adresse: "", telephone: "", email: "", logo: null, signature: null, heure_depart_standard: HEURE_DEPART_STANDARD_DEFAUT });
+  const [entreprise, setEntreprise] = useState<Entreprise>({ nom: "", adresse: "", telephone: "", email: "", logo: null, signature: null });
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,8 +48,9 @@ const Parametres = () => {
         setEntrepriseId(profileData.entreprise_id);
 
         if (profileData.entreprise_id) {
-          const { data: entrepriseData } = await entrepriseSettingsTable()
-            .select("nom, adresse, telephone, email, logo, signature, heure_depart_standard")
+          const { data: entrepriseData } = await supabase
+            .from("entreprises")
+            .select("nom, adresse, telephone, email, logo, signature")
             .eq("id", profileData.entreprise_id)
             .maybeSingle();
 
@@ -71,7 +62,6 @@ const Parametres = () => {
               email: entrepriseData.email || "",
               logo: entrepriseData.logo || null,
               signature: entrepriseData.signature || null,
-              heure_depart_standard: toHeureInput(entrepriseData.heure_depart_standard),
             });
           }
         }
@@ -85,16 +75,6 @@ const Parametres = () => {
   const handleSave = async () => {
     if (!user || !entrepriseId) return;
 
-    // Format HH:MM obligatoire : on refuse une valeur vide ou invalide.
-    if (!isValidHeureInput(entreprise.heure_depart_standard)) {
-      toast({
-        title: "Heure de départ invalide",
-        description: "Indiquez une heure au format HH:MM (par exemple 12:00).",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSaving(true);
 
     const { error: profileError } = await supabase
@@ -102,16 +82,14 @@ const Parametres = () => {
       .update({ nom: profile.nom })
       .eq("id", user.id);
 
-    const entreprisePatch: EntrepriseSettingsUpdate = {
-      nom: entreprise.nom,
-      adresse: entreprise.adresse || null,
-      telephone: entreprise.telephone || null,
-      email: entreprise.email || null,
-      heure_depart_standard: entreprise.heure_depart_standard,
-    };
-
-    const { error: entrepriseError } = await entrepriseSettingsUpdate()
-      .update(entreprisePatch)
+    const { error: entrepriseError } = await supabase
+      .from("entreprises")
+      .update({
+        nom: entreprise.nom,
+        adresse: entreprise.adresse || null,
+        telephone: entreprise.telephone || null,
+        email: entreprise.email || null,
+      })
       .eq("id", entrepriseId);
 
     setIsSaving(false);
@@ -273,21 +251,7 @@ const Parametres = () => {
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="entreprise-heure-depart">Heure de départ standard</Label>
-                <Input
-                  id="entreprise-heure-depart"
-                  type="time"
-                  step={60}
-                  required
-                  value={entreprise.heure_depart_standard}
-                  onChange={(e) => setEntreprise({ ...entreprise, heure_depart_standard: e.target.value })}
-                  className="h-11 sm:h-10"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Heure à laquelle se terminent les réservations par jour. Un rappel de départ est envoyé 1 heure avant.
-                </p>
-              </div>
+
             </div>
           </motion.div>
 

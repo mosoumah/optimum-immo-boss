@@ -12,7 +12,7 @@ import { ReservationDialog } from "@/components/dialogs/ReservationDialog";
 import { PaiementDialog } from "@/components/dialogs/PaiementDialog";
 import { PermissionGate } from "@/components/PermissionGate";
 import type { Database } from "@/integrations/supabase/types";
-import { reservationTimes, toTimeInput } from "@/types/reservations";
+import { reservationTimes, reservationArrivalTime, toTimeInput } from "@/types/reservations";
 import { formatDateGN, todayGN } from "@/lib/dateGuinee";
 
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
@@ -49,6 +49,16 @@ const hourRangeSuffix = (r: Reservation): string => {
   const fin = toTimeInput(times.heure_fin);
   if (!debut || !fin) return "";
   return ` · ${toHourLabel(debut)} – ${toHourLabel(fin)}`;
+};
+
+/**
+ * Heure d'arrivée (et de départ, identique) d'une réservation "par jour".
+ * Renvoie " 10h06" ou "" (type à l'heure/mensuel, ou heure non renseignée).
+ */
+const jourHeureSuffix = (r: Reservation): string => {
+  if (r.type_location !== "jour") return "";
+  const heure = toTimeInput(reservationArrivalTime(r));
+  return heure ? ` ${toHourLabel(heure)}` : "";
 };
 
 const Reservations = () => {
@@ -174,7 +184,7 @@ const Reservations = () => {
                       <Badge className={`${statutColors[r.statut]} shrink-0`}>{statutLabels[r.statut] || r.statut}</Badge>
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span>{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</span>
+                      <span>{formatDate(r.date_arrivee)}{jourHeureSuffix(r)} → {formatDate(r.date_depart)}{jourHeureSuffix(r)}{hourRangeSuffix(r)}</span>
                     </div>
                     <div className="mt-2 flex items-end justify-between gap-2">
                       <div className="min-w-0">
@@ -225,7 +235,7 @@ const Reservations = () => {
                       >
                         <td className="p-3 text-sm">{clientsMap[r.client_id] || "—"}</td>
                         <td className="p-3 text-sm">{(r.property_id && propertiesMap[r.property_id]) || r.property_name}</td>
-                        <td className="p-3 text-sm">{formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}{hourRangeSuffix(r)}</td>
+                        <td className="p-3 text-sm">{formatDate(r.date_arrivee)}{jourHeureSuffix(r)} → {formatDate(r.date_depart)}{jourHeureSuffix(r)}{hourRangeSuffix(r)}</td>
                         <td className="p-3 text-sm">
                           <div className="amount">{formatCurrency(r.montant_total)}</div>
                           <div className="text-xs text-muted-foreground amount">

@@ -28,6 +28,7 @@ import { BienDialog } from "@/components/dialogs/BienDialog";
 import { PaiementDialog } from "@/components/dialogs/PaiementDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { formatDateGN, todayGN } from "@/lib/dateGuinee";
+import { reservationArrivalTime, toTimeInput } from "@/types/reservations";
 
 type Property = Database["public"]["Tables"]["properties"]["Row"];
 type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
@@ -57,6 +58,13 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("fr-GN", { style: "decimal", minimumFractionDigits: 0 }).format(amount) + " GNF";
 
 const formatDate = (date: string) => formatDateGN(date);
+
+/** " 10h06" pour une réservation par jour avec heure d'arrivée, sinon "". */
+const jourHeureSuffix = (r: Reservation): string => {
+  if (r.type_location !== "jour") return "";
+  const heure = toTimeInput(reservationArrivalTime(r));
+  return heure ? ` ${heure.replace(":", "h")}` : "";
+};
 
 const getVideoEmbed = (url: string): string | null => {
   if (!url) return null;
@@ -209,7 +217,7 @@ const BienDetail = () => {
             <div className="min-w-0">
               <div className="font-medium text-sm truncate">{clientNames[r.client_id] || "Client"}</div>
               <div className="text-xs text-muted-foreground">
-                {formatDate(r.date_arrivee)} → {formatDate(r.date_depart)}
+                {formatDate(r.date_arrivee)}{jourHeureSuffix(r)} → {formatDate(r.date_depart)}{jourHeureSuffix(r)}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
